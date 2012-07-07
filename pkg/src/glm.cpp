@@ -3,8 +3,6 @@
 // 16-333-2011
 
 #include "resampTest.h"
-//#include "time.h"
-#include <stdio.h>
 #include <string.h>
 #include <gsl/gsl_sf_gamma.h>  
 #include <gsl/gsl_sf_psi.h>
@@ -14,18 +12,19 @@
 glm::glm(const reg_Method *mm)
    : mmRef(mm), Yref(NULL), Xref(NULL), Oref(NULL), 
      Beta(NULL), varBeta(NULL), Mu(NULL), Eta(NULL), Res(NULL), 
-     Var(NULL), wHalf(NULL), sqrt1_Hii(NULL), phi(NULL),
-     ll(NULL), dev(NULL), aic(NULL), iterconv(NULL) 
+     Var(NULL), wHalf(NULL), sqrt1_Hii(NULL), PitRes(NULL), 
+     phi(NULL), ll(NULL), dev(NULL), aic(NULL), iterconv(NULL) 
 { 
      mintol = mmRef->tol;
      lTol=-log(mintol);
      maxiter = 50;
+     n=mmRef->n;
 }
 
 PoissonGlm::PoissonGlm(const reg_Method *mm):glm(mm){
 }
 
-LogiGlm::LogiGlm(const reg_Method *mm):PoissonGlm(mm) {
+BinGlm::BinGlm(const reg_Method *mm):PoissonGlm(mm) {
 }
 
 NBinGlm::NBinGlm(const reg_Method *mm):PoissonGlm(mm){ 
@@ -38,7 +37,7 @@ glm::~glm() {
 PoissonGlm::~PoissonGlm() {
 }
 
-LogiGlm::~LogiGlm() {
+BinGlm::~BinGlm() {
 }
 
 NBinGlm::~NBinGlm() {
@@ -48,6 +47,8 @@ void glm::releaseGlm(void)
 { 
     if (Beta!=NULL)
        gsl_matrix_free(Beta);
+    if (varBeta!=NULL)
+        gsl_matrix_free(varBeta);
     if (Mu!=NULL)
         gsl_matrix_free(Mu);
     if (Eta!=NULL)
@@ -60,8 +61,8 @@ void glm::releaseGlm(void)
         gsl_matrix_free(wHalf);
     if (sqrt1_Hii!=NULL)
         gsl_matrix_free(sqrt1_Hii);
-    if (varBeta!=NULL)
-        gsl_matrix_free(varBeta);
+    if (PitRes!=NULL)
+        gsl_matrix_free(PitRes);
     if (phi!=NULL)
         delete[] phi;
     if (ll!=NULL)	
@@ -95,13 +96,14 @@ void glm::initialGlm(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O)
 
     //Xref = gsl_matrix_alloc(nRows, nParams);
     Beta = gsl_matrix_alloc(nParams, nVars);
+    varBeta = gsl_matrix_alloc(nParams, nVars);
     Mu = gsl_matrix_alloc(nRows, nVars);
     Eta = gsl_matrix_alloc(nRows, nVars);
     Res = gsl_matrix_alloc(nRows, nVars);
     Var = gsl_matrix_alloc(nRows, nVars);
     wHalf = gsl_matrix_alloc(nRows, nVars);
     sqrt1_Hii = gsl_matrix_alloc(nRows, nVars);
-    varBeta = gsl_matrix_alloc(nParams, nVars);
+    PitRes = gsl_matrix_alloc(nRows, nVars);
 
     gsl_matrix_set_zero (Beta);
     gsl_matrix_set_zero (varBeta);
@@ -139,13 +141,14 @@ int glm::copyGlm(glm *src)
     Xref = gsl_matrix_alloc(src->nRows, src->nParams);
     gsl_matrix_memcpy(Xref, src->Xref);
     gsl_matrix_memcpy(Beta, src->Beta);
+    gsl_matrix_memcpy(varBeta, src->varBeta);
     gsl_matrix_memcpy(Mu, src->Mu);
     gsl_matrix_memcpy(Eta, src->Eta);
     gsl_matrix_memcpy(Res, src->Res);
     gsl_matrix_memcpy(Var, src->Var);
     gsl_matrix_memcpy(wHalf, src->wHalf);
     gsl_matrix_memcpy(sqrt1_Hii, src->sqrt1_Hii);
-    gsl_matrix_memcpy(varBeta, src->varBeta);
+    gsl_matrix_memcpy(PitRes, src->PitRes);
     
     for (unsigned int i=0; i<nVars; i++) {
         phi[i] = src->phi[i];	
@@ -158,14 +161,14 @@ int glm::copyGlm(glm *src)
     return SUCCESS;    
 }
 
-
-
 int PoissonGlm::EstIRLS(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, double *a)
 {
     initialGlm(Y, X, O);
 
+    // random number generator
+    gsl_rng *rnd=gsl_rng_alloc(gsl_rng_mt19937);
     unsigned int i, j;   
-    double yij, mij, vij, wij, rij, tol, hii;
+    double yij, mij, vij, wij, rij, tol, hii, uij, wei;
     gsl_matrix *WX = gsl_matrix_alloc(nRows, nParams);   
     gsl_matrix *TMP = gsl_matrix_alloc(nRows, nParams);   
     gsl_matrix *XwX = gsl_matrix_alloc(nParams, nParams);   
@@ -192,7 +195,14 @@ int PoissonGlm::EstIRLS(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, double *a)
             gsl_matrix_set(Res, i, j, rij);        
             // get elementry log-likelihood	   
             ll[j] = ll[j] + llfunc( yij, mij, phi[j] );
-            dev[j] = dev[j] + devfunc( yij, mij, phi[j] );            
+            dev[j] = dev[j] + devfunc( yij, mij, phi[j] );
+            // get PIT residuals for discrete data
+            wei = gsl_rng_uniform_pos (rnd); // wei ~ U(0, 1)
+            if (yij==0) uij = wei*cdf(yij, mij, phi[j]);
+            else uij = wei*cdf(yij,mij,phi[j])+(1-wei)*cdf((yij-1),mij,phi[j]);
+//            if ( (uij==0) | (uij==1) )
+//               printf("wei=%.1f, cdf(%u)=%.1f ", wei, (unsigned int)yij, cdf(yij, mij, phi[j]));
+            gsl_matrix_set(PitRes, i, j, uij);
        }      
        aic[j]=-ll[j]+2*(nParams);
 
@@ -231,6 +241,7 @@ int PoissonGlm::EstIRLS(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, double *a)
    gsl_matrix_free(WX);
    gsl_matrix_free(TMP);
    gsl_vector_free(t);
+   gsl_rng_free(rnd);
 
    return SUCCESS;    
 }
@@ -297,7 +308,10 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
 	// Test convergence as the glm function in R
         diff = dev[id]-dev_old;        
         *tol = GSL_MAX(diff, -diff)/(GSL_MAX(dev[id], -dev[id])+0.1);
-        if ( (*tol < mintol) | (step == iter )) break;
+        if (*tol < mintol ) //{ printf("\ttol=%.4f < mintol break IRLS.\n", *tol); 
+           break; //}
+        if ( step == iter ) //{ printf("\tstep=%u reached maximum %d break IRLS.\n", step, iter); 
+           break; //}
    } 
    gsl_vector_free(z);
    gsl_vector_free(y_m);
@@ -313,10 +327,11 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O)
 {   
     initialGlm(Y, X, O);
 
+    gsl_rng *rnd=gsl_rng_alloc(gsl_rng_mt19937);
     unsigned int i, j, isConv;
-    double yij, mij, vij, hii;
-    double a, tol, fA, fAdash;
-    double initphi=1e-4;
+    double yij, mij, vij, hii, uij, wei;
+    double a, tol, fA, fAdash, eps=1e-4;
+    double initphi=eps;
     gsl_vector_view b0j, m0j, e0j, v0j;
     gsl_matrix *WX = gsl_matrix_alloc(nRows, nParams);   
     gsl_matrix *TMP = gsl_matrix_alloc(nRows, nParams);   
@@ -360,10 +375,14 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O)
 	    while ( isConv != TRUE ) {
                 iterconv[j]++;	    
 	        betaEst(j, 1, &tol, phi[j]); // 1-step beta
-                getfAfAdash(phi[j], j, &fA, &fAdash); // 1-step phi
-                phi[j] = phi[j]-fA/fAdash;
+                getfAfAdash(phi[j], j, &fA, &fAdash); // 1-step phi                
+                if ( GSL_MAX(fAdash, -fAdash)>eps )
+                    phi[j] = phi[j]-fA/fAdash;
+                else //random guess
+                    phi[j]=gsl_rng_uniform_pos (rnd); 
 	        if ((tol<mintol) | (iterconv[j]==maxiter) | (phi[j]<0) | (phi[j]!=phi[j])) break;
        }   }
+
        // restore poisson if phi[j]<0 or nan
        if ( (phi[j] < 0) | (phi[j]!=phi[j]) ) { 
             phi[j]=0;
@@ -382,13 +401,25 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O)
            gsl_matrix_set(wHalf, i, j, sqrt(weifunc(mij, phi[j]))); 
            gsl_matrix_set(Res, i, j, (yij-mij)/sqrt(vij));        
            ll[j] = ll[j] + llfunc( yij, mij, phi[j] );
+           // get PIT residuals for discrete data
+           wei = gsl_rng_uniform_pos (rnd); // wei ~ U(0, 1)
+           if ( phi[j]==0 ) { // Poisson
+              if (yij==0) uij=wei*gsl_cdf_poisson_P(yij, mij);
+              else uij=wei*gsl_cdf_poisson_P(yij,mij)+(1-wei)*gsl_cdf_poisson_P((yij-1),mij);
+           }
+           else { // Negative binomial
+              if (yij==0) uij = wei*cdf(yij, mij, phi[j]);
+              else uij = wei*cdf(yij,mij,phi[j])+(1-wei)*cdf((yij-1),mij,phi[j]);
+//              if (uij>=1)
+//                 printf("wei=%.1f, cdf(%u)=%.1f, 1/a=%.1f, phi[j]=%.1f\n", wei, (unsigned int)yij, cdf(yij, mij, phi[j]), 1/phi[j], phi[j]);
+           }
+           gsl_matrix_set(PitRes, i, j, uij);
        }
        aic[j]=-ll[j]+2*(nParams+1);
 
        // Get X * W^1/2
        wj = gsl_matrix_column (wHalf, j);
-       for (i=0; i<nParams; i++) 
-           gsl_matrix_set_col (WX, i, &wj.vector);
+       for (i=0; i<nParams; i++) gsl_matrix_set_col (WX, i, &wj.vector);
        gsl_matrix_mul_elements (WX, X);
        // X^T * W * X
        gsl_matrix_set_zero (XwX);
@@ -420,6 +451,7 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O)
    gsl_matrix_free(WX);
    gsl_matrix_free(TMP);
    gsl_vector_free(t);
+   gsl_rng_free(rnd);
 
    return SUCCESS;    
 }
@@ -438,7 +470,8 @@ double PoissonGlm::getDisper( unsigned int id ) const
 	ss2 = (yij-mij)*(yij-mij); // ss = (y-mu)^2
 	if ( mij < mintol ) mij = 1;
 	else  nNonZero++;	   
-        chi2 = chi2 + ss2/varfunc(mij, phi[id]); // dist dependant
+        if ( varfunc(mij, phi[id])>1e-4 )
+            chi2 = chi2 + ss2/varfunc(mij, phi[id]); // dist dependant
     }
     if (nNonZero > nParams) 
         df = nNonZero - nParams; 
@@ -505,8 +538,10 @@ void glm::display(void)
        printf("Linear regression:\n");
     else if ( mmRef->model == POISSON )
        printf("Poisson regression:\n");
-    else if ( mmRef->model == LOGIT )
-       printf("Logistic regression:\n");
+    else if ( mmRef->model == BIN ) {
+       if (n==1 ) printf("Logistic regression:\n");
+       else printf("Binomial regression:\n");
+    }
     else if ( mmRef->model == NB ) {
        printf("Negative Binomial regression ");	
        switch (mmRef->estiMethod) {
@@ -530,16 +565,16 @@ void glm::display(void)
     printf("Two-log-like=\n " );
     for ( j=0; j<nVars; j++ ) printf("%.2f ", ll[j]);	
     printf("\n");
-    printf("AIC=\n " );
-    for ( j=0; j<nVars; j++ ) printf("%.2f ", aic[j]);	
-    printf("\n");
-//    printf("# of convergence\n");    
-//    for ( j=0; j<nVars; j++ )
-//        printf("%d ", iterconv[j]); 
-//    printf("\n");	       
-//    printf("Residual deviance=\n " );
-//    for ( j=0; j<nVars; j++ ) printf("%.2f ", dev[j]);
-//    printf("\n");	       
+//    printf("AIC=\n " );
+//    for ( j=0; j<nVars; j++ ) printf("%.2f ", aic[j]);	
+//    printf("\n");
+    printf("# of convergence\n");    
+    for ( j=0; j<nVars; j++ )
+        printf("%d ", iterconv[j]); 
+    printf("\n");	       
+    printf("Residual deviance=\n " );
+    for ( j=0; j<nVars; j++ ) printf("%.2f ", dev[j]);
+    printf("\n");	       
     if ( mmRef->model == NB ) {
         printf("\nphi=\n ");
         for (j=0; j<nVars; j++ ) printf("%.2f ", phi[j]);
@@ -553,7 +588,7 @@ void glm::display(void)
 //    displaymatrix(varBeta, "varBeta");
 //    displaymatrix(Mu, "Mu");
 //    displaymatrix(Var, "Var");    
-//    displaymatrix(Res, "Res");    
+//    displaymatrix(PitRes, "PitRes");    
 //    displaymatrix(sqrt1_Hii, "sqrt1_Hii");    
 //    displaymatrix(wHalf, "wHalf");
     

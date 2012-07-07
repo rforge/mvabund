@@ -5,7 +5,7 @@
 #ifndef _RESAMPTEST_H
 #define _RESAMPTEST_H
 
-// original resampTest.h
+#include "Rmath.h"
 #include "R.h"
 #include <time.h>
 #include <stdio.h>
@@ -21,6 +21,7 @@
 #include <gsl/gsl_statistics_double.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+#include <gsl/gsl_cdf.h>
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_sort_vector.h>
 #include <gsl/gsl_sort_double.h>
@@ -34,7 +35,6 @@
 #define SUCCESS 0
 #define FAILED 1
 #define CannotOpenFile 2  
-
 // logic
 #define TRUE 1
 #define FALSE 0
@@ -42,7 +42,7 @@
 #define LM 0
 #define POISSON 1
 #define NB 2
-#define LOGIT 3
+#define BIN 3
 // shrinkage
 #define NOSHRINK 0
 #define IDENTITY 1
@@ -69,6 +69,7 @@
 #define MONTECARLO 5
 #define RESIZ 6 
 #define SCOREZ 7
+#define PITSBOOT 8
 // p-value adjustment
 #define NONE 0
 #define UNADJUST 1
@@ -80,18 +81,17 @@
 #define HOOPER 0
 #define VECTOR 1
 // others
-#define TOL 1e-8
-#define MAXITER 499 
+#define TOL 1e-6
+#define MAXITER 500 
 #define LAMBDA 0.8  // no shrinkage 
 #define NaN -100000
 #define MAX_LINE_LENGTH 65536
 #define WRAP 4
 #define MIN(a, b) ((a)<(b)?(a):(b))
 #define MAX(a, b) ((a)>(b)?(a):(b))
-#define ABS(a) MAX(a, -a)  
-#define printf Rprintf
+#define ABS(a) GSL_MAX(a, -a)  
 //simulations
-#define NSIMU 1000
+#define NSIMU 1
 #define NQ 6
 #define RHO 0.5
 #define ALFA 0.05
@@ -111,6 +111,7 @@ typedef struct MethodStruc {
     unsigned int nVars;
     unsigned int nParam;
     unsigned int showtime;
+
     // numeric
     double shrink_param;
     gsl_vector *smry_lambda;
@@ -140,6 +141,7 @@ typedef struct RegressionMethod{
     unsigned int varStab;
     unsigned int estiMethod;
     double tol;
+    unsigned int n; // used in binomial regression
 } reg_Method;
 
 // ManyLM related
@@ -238,14 +240,16 @@ class glm
 	   gsl_matrix *Var;
 	   gsl_matrix *wHalf;
 	   gsl_matrix *sqrt1_Hii;
+           gsl_matrix *PitRes;
 
+           unsigned int n; // used in binomial and logistic regression
            unsigned int rdf;
 	   double *phi, *ll, *dev, *aic;
 	   unsigned int *iterconv;  
            unsigned int maxiter;
 	   double mintol, lTol;
            unsigned int nRows, nVars, nParams;
-   private: 
+//   private: 
   	   // abstract 	
 	   virtual double link(double) const=0;	   
 	   virtual double invLink(double) const=0;	   
@@ -254,6 +258,9 @@ class glm
 	   virtual double varfunc(double, double) const=0;	   
 	   virtual double llfunc(double, double, double) const=0;	   
 	   virtual double devfunc(double, double, double) const=0;	   
+	   virtual double pdf(double, double, double) const=0;	   
+	   virtual double cdf(double, double, double) const=0;	   
+	   virtual unsigned int cdfinv(double, double, double) const=0;	   
 };
 
 // poisson regression
@@ -268,7 +275,7 @@ class PoissonGlm : public glm
 	   int betaEst( unsigned int id, unsigned int iter, double *tol, double a );
 	   double getDisper( unsigned int id ) const;
 
-    private: 
+//    private: 
            // Log-link and property functions
            double link(double mui) const 
                 { return log(mui); } 
@@ -282,39 +289,51 @@ class PoissonGlm : public glm
 	        { return mui; }
 	   double llfunc(double yi, double mui, double a) const
 	        { if (yi==0) return 2*(-mui); else
-		  return 2*(yi*log(mui) - mui - gsl_sf_lngamma(yi+1)); }
+		  return 2*(yi*log(mui) - mui - gsl_sf_lngamma(yi+1) ); }
 	   double devfunc(double yi, double mui, double a) const
 	        { return 2*(yi*log(GSL_MAX(yi, mintol)/mui)-yi+mui); }
+	   double pdf(double yi, double mui, double a) const
+                { return Rf_dpois(yi, mui, FALSE); }
+	   double cdf(double yi, double mui, double a) const
+                { return Rf_ppois(yi, mui, TRUE, FALSE); }
+           unsigned int cdfinv(double u, double mui, double a) const
+                { return (unsigned int)Rf_qpois(u, mui, TRUE, FALSE); }
 };
 
-// logistic regression 
-class LogiGlm : public PoissonGlm
+
+// Binomial regression yi ~ BIN(n, pi), mui=n*pi
+class BinGlm : public PoissonGlm
 {
     public: // public functions
-           LogiGlm(const reg_Method *);
-	   virtual ~LogiGlm();
-
-    private: // logit link and property functions 
-           double link(double mui) const
-	       { return log(mui/(1-mui)); }
-           double invLink(double etai) const 
-	        { return exp(etai)/(1+exp(etai)); }
-	   double rcpLinkDash(double mui) const
-                { return mui*(1-mui); }
-	   double weifunc(double mui, double a) const
-	        { return mui*(1-mui); }
-	   double varfunc(double mui, double a) const
-	        { return mui*(1-mui); }
-	   double llfunc(double yi, double mui, double a) const
-//	   { return 2*((yi==0)?0:yi*log(mui) + (yi==1)?0:(1-yi)*log(1-mui)); }
-	        { return 2*(yi*log(mui) + (1-yi)*log(1-mui)); }
-	   double devfunc(double yi, double mui, double a) const
-//     { return 2*((yi<=mintol)?(-log(1-MAX(mui, 1e-5))):(-log(MIN(mui, 1-1e-5)))); }
-           { return 2*(yi*log((yi==0)?1:yi)+(1-yi)*log((yi==1)?1:(1-yi)))-llfunc(yi,mui,a);  }
+           BinGlm(const reg_Method *);
+           virtual ~BinGlm();
+//    private: // logit link and property functions          
+           double link(double mui) const // pi=mui/n
+               { return log(mui/(n-mui)); }
+           double invLink(double ei) const
+                { return n*exp(ei)/(1+exp(ei)); }
+           double rcpLinkDash(double mui) const
+                { return (mui/n)*(1-mui/n); }
+           double weifunc(double mui, double a) const
+                { return rcpLinkDash(mui)/n; }
+           double varfunc(double mui, double a) const
+                { return mui*(1-mui/n); } // n*pi*(1-pi)
+           double llfunc(double yi, double mui, double a) const
+                { if (n==1) return 2*((yi==0)?(((1-mui)<TOL)?0:log(1-mui)):0+(yi==1)?((mui<TOL)?0:log(mui)):0);
+                  else return 2*((yi>0)?yi*log(mui/n):0+(yi<n)?(n-yi)*log(1-mui/n):0+(n>1)?(gsl_sf_lngamma(n+1)-gsl_sf_lngamma(yi+1)-gsl_sf_lngamma(n-yi+1)):0); }
+           double devfunc(double yi, double mui, double a) const
+                { if (n==1) return 2*((yi==0)?(((1-mui)<TOL)?0:-log(1-mui)):0+(yi==1)?((mui<TOL)?0:-log(mui)):0);
+                  else return 2*((yi>0)?(yi*log(yi/mui)):0+(yi<n)?((n-yi)*log((n-yi)/(n-mui))):0);}
+	   double pdf(double yi, double mui, double a) const
+                { return Rf_dbinom(yi, n, mui/n, FALSE); }
+           double cdf(double yi, double mui, double a) const
+                { return Rf_pbinom(yi, n, mui/n, TRUE, FALSE); }
+           unsigned int cdfinv(double ui, double mui, double a) const
+                { return (unsigned int) Rf_qbinom(ui, n, mui/n, TRUE, FALSE); }
 };
 
 // negative binomial regression
-class NBinGlm : public PoissonGlm
+class NBinGlm : public PoissonGlm // Y~NB(n, p)
 {
     public:
            NBinGlm(const reg_Method *mm);
@@ -322,7 +341,7 @@ class NBinGlm : public PoissonGlm
 	   virtual int regression(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O)
 	      { return nbinfit ( Y, X, O); }
 	   int nbinfit(gsl_matrix *, gsl_matrix *, gsl_matrix *);
-    private:
+//    private:
 	   double weifunc(double mui, double a) const
 	        { return (mui/(1+a*mui)); }
 	   double varfunc(double mui, double a) const
@@ -330,9 +349,21 @@ class NBinGlm : public PoissonGlm
 	   double llfunc(double yi, double mui, double a) const;
 	   double devfunc(double yi, double mui, double a) const
                 { return 2*((yi==0)?0:yi*log(yi/mui)-(yi+1/GSL_MAX(a,mintol))*log((1+yi*a)/(1+mui*a))); }
+           // mu=y*p(y), y=k, r=1/phi, p=1-(1+phi*mu)^-1 (the wiki definition)
+           // mu=y*p(y), y=k, n=1/phi, p=(1+phi*mu)^-1 (the GSL definition)
+	   double pdf(double yi, double mui, double a) const
+                { if (a<TOL) return Rf_dpois(yi, mui, FALSE);
+                  else return Rf_dnbinom(yi, 1/a, 1/(1+a*mui), FALSE); }
+	   double cdf(double yi, double mui, double a) const
+                { if (a<TOL) return Rf_ppois(yi, mui, TRUE, FALSE);
+                  else return Rf_pnbinom(yi, 1/a, 1/(1+a*mui), TRUE, FALSE); }
+           unsigned int cdfinv(double ui, double mui, double a) const
+                { if (a<TOL) return Rf_qpois(ui, mui, TRUE, FALSE);
+                  else return (unsigned int)Rf_qnbinom(ui, 1/a, 1/(1+a*mui), TRUE, FALSE); }
 
 	   int getfAfAdash (double a, unsigned int id, double *fA, double *fAdash);
 };
+
 
 // base test class
 class GlmTest
@@ -372,7 +403,6 @@ class GlmTest
 
             int resampData(glm *, gsl_matrix *, GrpMat *, GrpMat *, unsigned int i ); // summary
 	    int resampNonCase(glm *, gsl_matrix *, unsigned int i);
-//	    int resampAnovaCase(glm *, gsl_matrix *, gsl_matrix *, gsl_matrix *, gsl_matrix *, gsl_matrix *, unsigned int i);
 	    int resampAnovaCase(glm *, gsl_matrix *, gsl_matrix *, gsl_matrix *, unsigned int i);
 	    int setMonteCarlo(glm *model, gsl_matrix *, gsl_matrix *);
 

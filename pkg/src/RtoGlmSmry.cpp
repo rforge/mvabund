@@ -21,6 +21,7 @@ RcppExport SEXP RtoGlmSmry(SEXP mpar, SEXP tpar, SEXP Ysexp, SEXP Xsexp,
     mm.model = as<unsigned int>(sparam["regression"]);
     mm.estiMethod = as<unsigned int>(sparam["estimation"]);
     mm.varStab = as<unsigned int>(sparam["stablizer"]);
+    mm.n = as<unsigned int>(sparam["n"]);
 
     List rparam(tpar);
     // pass parameters
@@ -74,7 +75,7 @@ RcppExport SEXP RtoGlmSmry(SEXP mpar, SEXP tpar, SEXP Ysexp, SEXP Xsexp,
 
     // Glm fit
     PoissonGlm pfit(&mm);
-    LogiGlm lfit(&mm);
+    BinGlm lfit(&mm);
     NBinGlm nbfit(&mm);
     glm *glmPtr[3] = { &pfit, &nbfit, &lfit };
     unsigned int mtype = mm.model-1;
