@@ -103,7 +103,7 @@ RcppExport SEXP RtoGlmAnova(SEXP mpar, SEXP tpar, SEXP Ysexp, SEXP Xsexp,
     BinGlm binfit(&mm);
     glm *glmPtr[3] = { &pfit, &nbfit, &binfit };
     unsigned int mtype = mm.model-1;
-    glmPtr[mtype]->regression(Y, X, NULL);
+    glmPtr[mtype]->regression(Y, X, NULL, NULL);
 //    glmPtr[mtype]->display();
 
     GlmTest myTest(&tm);

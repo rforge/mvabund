@@ -4,7 +4,7 @@
 # 05-Jan-2010
 ###############################################################################
 
-summary.manyglm <- function(object, resamp="montecarlo", test="LR", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.cor = FALSE, show.est=FALSE, show.residuals=FALSE, symbolic.cor = FALSE, show.time=FALSE, ... ) 
+summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.cor = FALSE, show.est=FALSE, show.residuals=FALSE, symbolic.cor = FALSE, show.time=FALSE, ... ) 
 {
     tol = object$tol
     allargs <- match.call(expand.dots = FALSE)

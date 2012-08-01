@@ -20,7 +20,8 @@ int vector_filesize(FILE *f)
 void matrix_filesize(FILE *f, unsigned int * row, unsigned int * col)
 {
 	char line[MAX_LINE_LENGTH];
-        char *tmp=fgets(line, MAX_LINE_LENGTH-1, f);
+
+	fgets(line, MAX_LINE_LENGTH-1, f);
 	*row = 1;
 	strtok(line, " \t");
 	*col = 1;
@@ -86,7 +87,7 @@ void displaymatrix(gsl_matrix * m, const char * name)
 	for (i = 0; i < m->size1; i++)
 	{
 	    for (j = 0; j < m->size2; j++)
-		printf("%.1f ", gsl_matrix_get(m, i, j));
+		printf("%.4f\t", gsl_matrix_get(m, i, j));
 	    printf("\n");
 	}
 

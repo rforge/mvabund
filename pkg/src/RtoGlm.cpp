@@ -68,7 +68,7 @@ RcppExport SEXP RtoGlm(SEXP params, SEXP Ysexp, SEXP Xsexp)
     NBinGlm nbfit(&mm);
     glm *glmPtr[3] = { &pfit, &nbfit, &lfit };
     unsigned int mtype = mm.model-1;
-    glmPtr[mtype]->regression(Y, X, NULL);
+    glmPtr[mtype]->regression(Y, X, NULL, NULL);
 //    glmPtr[mtype]->display();
 	
     clk_end = clock();
