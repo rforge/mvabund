@@ -13,11 +13,11 @@ manylm.influence <- function (model, do.coef = TRUE) {
 
      # For the calculation of '.Fortran("lminfl",... ' : package "base" is safer
      # however, in R2.6.1 'Fortran symbol name "lminfl" is not in DLL for package "base" '
-    if (R.version$major == "2" & R.version$minor == "6.1") {
-      pack <- "stats"
-    } else if (R.version$major == "2" & R.version$minor == "2.1") {
-      pack <- "base"
-    } else pack <- "base"      
+#    if (R.version$major == "2" & R.version$minor == "6.1") {
+#      pack <- "stats"
+#    } else if (R.version$major == "2" & R.version$minor == "2.1") {
+#      pack <- "base"
+#    } else pack <- "base"      
 
     wt.res <- as.matrix(weighted.residuals(model))
 
@@ -78,25 +78,25 @@ manylm.influence <- function (model, do.coef = TRUE) {
         
           for ( i in 1:p) {
 
-            res <- try(.Fortran("lminfl", Qr$qr, n, n, k, as.integer(do.coef),
+            res <- try(.Fortran(C_lminfl, Qr$qr, n, n, k, as.integer(do.coef),
                 Qr$qraux, wt.res = e[,i, drop=FALSE], hat = double(n),
                 coefficients = if (do.coef) matrix(0, 
                     n, k) else double(0), sigma = double(n), tol = 10 * 
-                    .Machine$double.eps, DUP = FALSE, PACKAGE = pack)[c("hat",  
+                    .Machine$double.eps, DUP = FALSE, PACKAGE = "stat")[c("hat",  
                 "coefficients", "sigma", "wt.res")] , silent=TRUE)
                 
-            if(inherits(res, "try-error"))  {
-            # If the pack="base" and that didn't work, try package = "stats.
-                res <- try(.Fortran("lminfl", Qr$qr, n, n, k, as.integer(do.coef),
-                    Qr$qraux, wt.res = e[,i, drop=FALSE], hat = double(n),
-                    coefficients = if (do.coef) matrix(0, 
-                        n, k) else double(0), sigma = double(n), tol = 10 * 
-                        .Machine$double.eps, DUP = FALSE, PACKAGE = "stats")[c("hat",
-                    "coefficients", "sigma", "wt.res")] , silent=TRUE)
-
-            if(inherits(res, "try-error")) stop(geterrmessage())
-            
-            }  
+#            if(inherits(res, "try-error"))  {
+#            # If the pack="base" and that didn't work, try package = "stats.
+#                res <- try(.Fortran(C_lminfl, Qr$qr, n, n, k, as.integer(do.coef),
+#                    Qr$qraux, wt.res = e[,i, drop=FALSE], hat = double(n),
+#                    coefficients = if (do.coef) matrix(0, 
+#                        n, k) else double(0), sigma = double(n), tol = 10 * 
+#                        .Machine$double.eps, DUP = FALSE, PACKAGE = "stats")[c("hat",
+#                    "coefficients", "sigma", "wt.res")] , silent=TRUE)
+#
+#            if(inherits(res, "try-error")) stop(geterrmessage())
+#            
+#            }  
             coefficients[[i]] <- res$coefficients
             if (do.coef) names(coefficients ) <- colnames(coef(model))
             sigma[,i] <- res$sigma
@@ -123,23 +123,23 @@ manylm.influence <- function (model, do.coef = TRUE) {
             for ( i in 1:p) {
 
             Qr <- model$qr[[i]] 
-            res <- try( .Fortran("lminfl", Qr$qr, n, n, k, as.integer(do.coef), 
+            res <- try( .Fortran(C_lminfl, Qr$qr, n, n, k, as.integer(do.coef), 
                 Qr$qraux, wt.res = e[,i, drop=FALSE], hat = double(n),
                 coefficients = if (do.coef) matrix(0, 
                     n, k) else double(0), sigma = double(n), tol = 10 * 
                     .Machine$double.eps, DUP = FALSE, PACKAGE = pack)[c("hat",
                 "coefficients", "sigma", "wt.res")], silent=TRUE)
             
-            if(inherits(res, "try-error"))  {
-            # If the pack="base" and that didn't work, try package = NULL.
-                res <- try(.Fortran("lminfl", Qr$qr, n, n, k, as.integer(do.coef), 
-                    Qr$qraux, wt.res = e[,i, drop=FALSE], hat = double(n),
-                    coefficients = if (do.coef) matrix(0, 
-                        n, k) else double(0), sigma = double(n), tol = 10 * 
-                        .Machine$double.eps, DUP = FALSE, PACKAGE = "stats")[c("hat",
-                    "coefficients", "sigma", "wt.res")] , silent=TRUE)
-            
-            } 
+#            if(inherits(res, "try-error"))  {
+#            # If the pack="base" and that didn't work, try package = NULL.
+#                res <- try(.Fortran("lminfl", Qr$qr, n, n, k, as.integer(do.coef), 
+#                    Qr$qraux, wt.res = e[,i, drop=FALSE], hat = double(n),
+#                    coefficients = if (do.coef) matrix(0, 
+#                        n, k) else double(0), sigma = double(n), tol = 10 * 
+#                        .Machine$double.eps, DUP = FALSE, PACKAGE = "stats")[c("hat",
+#                    "coefficients", "sigma", "wt.res")] , silent=TRUE)
+#            
+#            } 
             
             hat[,i] <- res$hat          
             coefficients[[i]] <- res$coefficients   

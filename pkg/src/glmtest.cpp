@@ -505,8 +505,8 @@ int GlmTest::GeeScore(gsl_matrix *X1, glm *PtrNull, gsl_vector *teststat, double
            }
            status=gsl_linalg_cholesky_decomp(XwX); 
            if (status) {
-              fprintf(stderr, "Singular info mat in GeeScore, gsl_errno=%d\n", status);           
-              exit(-1);
+              printf("Singular info mat in GeeScore, gsl_errno=%d\n", status);           
+//              exit(-1);
            }
            tmp2=gsl_vector_subvector(tmp, 0, nP);
            gsl_linalg_cholesky_solve(XwX, &uj.vector, &tmp2.vector);
@@ -534,8 +534,8 @@ int GlmTest::GeeScore(gsl_matrix *X1, glm *PtrNull, gsl_vector *teststat, double
         }
         status=gsl_linalg_cholesky_decomp (kRlNull);
         if (status) {
-           fprintf(stderr, "Singular kRlNull in GeeWald, gsl_errno=%d\n", status);
-           exit(-1);
+           printf("Singular kRlNull in GeeWald, gsl_errno=%d\n", status);
+//           exit(-1);
         }
         gsl_linalg_cholesky_solve (kRlNull, U, tmp);
         gsl_blas_ddot (U, tmp, &result);
@@ -601,8 +601,8 @@ int GlmTest::GeeWald(glm *Alt, gsl_matrix *LL, gsl_vector *teststat, double lamb
        }
        status=gsl_linalg_cholesky_decomp (XwX);
        if (status) {
-          fprintf(stderr, "Singular info mat in wald test, gsl_errno=%d\n", status);
-          exit(-1);
+          printf("Singular info mat in wald test, gsl_errno=%d\n", status);
+//          exit(-1);
        }
        gsl_linalg_cholesky_invert (XwX);
        gsl_blas_dgemm (CblasNoTrans, CblasTrans, 1.0, XwX, w1jX1, 0.0, Z[j].matrix);
@@ -619,8 +619,8 @@ int GlmTest::GeeWald(glm *Alt, gsl_matrix *LL, gsl_vector *teststat, double lamb
           }
           status=gsl_linalg_cholesky_decomp (IinvN);
           if (status) {
-             fprintf(stderr, "Singular IinvN in univariate Wald test, calcDet(IinvN)=%.4f\n", calcDet(IinvN));
-             exit(-1);
+             printf("Singular IinvN in univariate Wald test, calcDet(IinvN)=%.4f\n", calcDet(IinvN));
+//             exit(-1);
           }
           tmp2=gsl_vector_subvector(tmp, 0, nDF);
           gsl_linalg_cholesky_solve (IinvN, &LBj.vector, &tmp2.vector);
@@ -652,8 +652,8 @@ int GlmTest::GeeWald(glm *Alt, gsl_matrix *LL, gsl_vector *teststat, double lamb
         }
         status=gsl_linalg_cholesky_decomp (IinvRl);
         if (status) {
-           fprintf(stderr, "Singular IinvRl in multivariate Wald test, gsl_errno=%d\n", status);
-           exit(-1);
+           printf("Singular IinvRl in multivariate Wald test, gsl_errno=%d\n", status);
+//           exit(-1);
         }
         gsl_linalg_cholesky_solve (IinvRl, LBeta, tmp);
         gsl_blas_ddot (LBeta, tmp, &result);

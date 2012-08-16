@@ -112,7 +112,7 @@ RcppExport SEXP RtoGlmSmry(SEXP mpar, SEXP tpar, SEXP Ysexp, SEXP Xsexp,
 //    myTest.displaySmry();
 
     clk_end = clock();
-    long int dif = floor((double)(clk_end - clk_start)/(double)(CLOCKS_PER_SEC));
+    unsigned long int dif = floor((double)(clk_end - clk_start)/(double)(CLOCKS_PER_SEC));
     unsigned int hours = floor((double)dif/(double)3600);
     unsigned int min = floor((double)(dif-hours*3600)/(double)60);
     unsigned int sec = dif - hours*3600 - min*60;

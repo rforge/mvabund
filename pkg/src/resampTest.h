@@ -9,20 +9,6 @@
 //#include "/usr/local/R/2.13/lib64/R/include/Rmath.h"
 #include "Rmath.h"
 #include "R.h"
-/*//Rmath
-#define Rf_dpois dpois
-#define Rf_ppois ppois
-#define Rf_qpois qpois
-#define Rf_rpois rpois
-#define Rf_dbinom dbinom
-#define Rf_pbinom pbinom
-#define Rf_qbinom qbinom 
-#define Rf_rbinom rbinom 
-#define Rf_dnbinom dnbinom
-#define Rf_pnbinom pnbinom
-#define Rf_qnbinom qnbinom
-#define Rf_rnbinom rnbinom
-*/
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,6 +28,7 @@
 #include <gsl/gsl_sort_vector.h>
 #include <gsl/gsl_sort_double.h>
 #include <gsl/gsl_errno.h>
+//#include <R_ext/Rdynload.h>
 
 // rmv.h
 #include <gsl/gsl_eigen.h>
@@ -97,6 +84,7 @@
 #define HOOPER 0
 #define VECTOR 1
 // others
+#define printf Rprintf
 #define TOL 1e-6
 #define MAXITER 999 
 #define LAMBDA 0.8  // no shrinkage 
@@ -353,7 +341,7 @@ class BinGlm : public PoissonGlm
                 { return Rf_pbinom(yi, n, mui/n, TRUE, FALSE); }
            unsigned int cdfinv(double ui, double mui, double a) const
 //                { if (n==1) return (ui<1)?0:1;
-                { return (unsigned int) Rf_qbinom(ui, n, mui/n, TRUE, FALSE); }
+                { return (unsigned int)Rf_qbinom(ui, n, mui/n, TRUE, FALSE); }
            unsigned int genRandist(double mui, double a) const
                 { return Rf_rbinom(n, mui/n); }
 
@@ -452,6 +440,7 @@ class GlmTest
 	    GrpMat *GrpOs;  // group offset
 
 };
+
 
 // io.cpp - input/output functions
 int vector_filesize(FILE *f);

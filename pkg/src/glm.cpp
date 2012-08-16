@@ -255,8 +255,8 @@ int PoissonGlm::EstIRLS(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix 
        } 
        status=gsl_linalg_cholesky_decomp (XwX);
        if (status) {
-          fprintf(stderr, "Singular info matrix in EstIRLS, gsl_errno=%d\n", status);
-          exit(-1);
+          printf("Singular info matrix in EstIRLS, gsl_errno=%d\n", status);
+//          exit(-1);
        }
        gsl_linalg_cholesky_invert (XwX);
 
@@ -329,7 +329,7 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
            displayvector(&ej.vector, "ej");
            displayvector(&mj.vector, "mj");
            printf("Error: ngoodobs=0\n");      
-           exit(-1);
+//           exit(-1);
        }
 
 //       gsl_vector_set_zero (&wj.vector);
@@ -370,8 +370,8 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
        }   
        status=gsl_linalg_cholesky_decomp(XwX);
        if (status) {
-          fprintf(stderr, "Singular XwX in betaEst, gsl_errno=%d\n", status);
-          exit(-1);
+          printf("Singular XwX in betaEst, gsl_errno=%d\n", status);
+//          exit(-1);
        }
        gsl_linalg_cholesky_solve (XwX, Xwz, &bj.vector);
 //       invLSQ(XwX, Xwz, &bj.vector); 
@@ -634,8 +634,8 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
        status=gsl_linalg_cholesky_decomp (XwX);
        if (status) {
           displaymatrix(XwX, "XwX");
-          fprintf(stderr, "Singular info mat in NBinFit - calcDet(XwX)=%.4f\n", calcDet(XwX)); 
-          exit(-1);
+          printf("Singular info mat in NBinFit - calcDet(XwX)=%.4f\n", calcDet(XwX)); 
+//          exit(-1);
        }
        gsl_linalg_cholesky_invert (XwX); // (X'WX)^-1
 

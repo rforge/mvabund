@@ -136,7 +136,7 @@ RcppExport SEXP RtoGlmAnova(SEXP mpar, SEXP tpar, SEXP Ysexp, SEXP Xsexp,
 //    myTest.displayAnova();
 
     clk_end = clock();
-    long int dif = floor((double)(clk_end - clk_start)/(double)(CLOCKS_PER_SEC));  
+    unsigned long int dif = floor((double)(clk_end - clk_start)/(double)(CLOCKS_PER_SEC));  
     unsigned int hours = floor((double)(dif/(double)3600));
     unsigned int min = floor((double)(dif%3600)/(double)60);
     unsigned int sec = dif%60;   
