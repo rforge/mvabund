@@ -9,6 +9,24 @@
 //#include "/usr/local/R/2.13/lib64/R/include/Rmath.h"
 #include "Rmath.h"
 #include "R.h"
+/*//Rmath
+#define Rf_dpois dpois
+#define Rf_ppois ppois
+#define Rf_qpois qpois
+#define Rf_rpois rpois
+#define Rf_dbinom dbinom
+#define Rf_pbinom pbinom
+#define Rf_qbinom qbinom 
+#define Rf_rbinom rbinom 
+#define Rf_dnbinom dnbinom
+#define Rf_pnbinom pnbinom
+#define Rf_qnbinom qnbinom
+#define Rf_rnbinom rnbinom
+*/
+
+#define printf Rprintf
+
+#include <inttypes.h> // To use the uintptr_t and intptr_t to make code portable
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +46,6 @@
 #include <gsl/gsl_sort_vector.h>
 #include <gsl/gsl_sort_double.h>
 #include <gsl/gsl_errno.h>
-//#include <R_ext/Rdynload.h>
 
 // rmv.h
 #include <gsl/gsl_eigen.h>
@@ -84,7 +101,6 @@
 #define HOOPER 0
 #define VECTOR 1
 // others
-#define printf Rprintf
 #define TOL 1e-6
 #define MAXITER 999 
 #define LAMBDA 0.8  // no shrinkage 
@@ -103,18 +119,18 @@
 
 typedef struct MethodStruc {
     // hypo test methods
-    unsigned int nboot;
-    unsigned int corr;
-    unsigned int test;
-    unsigned int resamp;
-    unsigned int reprand;
-    unsigned int student;
-    unsigned int punit;
-    unsigned int rsquare;
-    unsigned int nRows;
-    unsigned int nVars;
-    unsigned int nParam;
-    unsigned int showtime;
+    uintptr_t nboot;
+    uintptr_t corr;
+    uintptr_t test;
+    uintptr_t resamp;
+    uintptr_t reprand;
+    uintptr_t student;
+    uintptr_t punit;
+    uintptr_t rsquare;
+    uintptr_t nRows;
+    uintptr_t nVars;
+    uintptr_t nParam;
+    uintptr_t showtime;
 
     // numeric
     double shrink_param;
@@ -141,11 +157,11 @@ typedef struct GroupMatrix{
 // ManyGlm related
 typedef struct RegressionMethod{
     // regression methods
-    unsigned int model;
-    unsigned int varStab;
-    unsigned int estiMethod;
+    uintptr_t model;
+    uintptr_t varStab;
+    uintptr_t estiMethod;
     double tol;
-    unsigned int n; // used in binomial regression
+    uintptr_t n; // used in binomial regression
 } reg_Method;
 
 // ManyLM related
@@ -155,19 +171,19 @@ public: mv_Method *mmRef;
 	gsl_matrix *Yref;
 	gsl_matrix *Xref;
 	gsl_matrix *inRef;
-	unsigned int nSamp;
+	uintptr_t nSamp;
 
 	double *multstat;
 	double *Pmultstat;
 	gsl_matrix *statj;
 	gsl_matrix *Pstatj;
-	unsigned int *dfDiff;
+	uintptr_t *dfDiff;
 	gsl_matrix *bootID;	 
 
        // Methods
        AnovaTest(mv_Method *, gsl_matrix *, gsl_matrix *, gsl_matrix *isXvarIn);
        virtual ~AnovaTest();
-       int resampTest(void); 
+       intptr_t resampTest(void); 
        void releaseTest(void);
        void display(void);
 
@@ -175,11 +191,11 @@ private: mv_mat *Hats;
          gsl_permutation **sortid;
 	 gsl_vector *bStatj;
 	 double bMultStat;
-	 unsigned int nModels, nRows, nVars, nParam;
+	 uintptr_t nModels, nRows, nVars, nParam;
 
          // Methods
-	 int anovacase(gsl_matrix *bY, gsl_matrix *bX);
-         int anovaresi(gsl_matrix *bY, const unsigned int p);
+	 intptr_t anovacase(gsl_matrix *bY, gsl_matrix *bX);
+         intptr_t anovaresi(gsl_matrix *bY, const uintptr_t p);
 };
 
 // summary.cpp
@@ -188,7 +204,7 @@ class Summary
 public: mv_Method *mmRef;
 	gsl_matrix *Yref;
 	gsl_matrix *Xref;
-	unsigned int nSamp;
+	uintptr_t nSamp;
 
         double R2;	
 	double *multstat;
@@ -200,20 +216,20 @@ public: mv_Method *mmRef;
        // Methods
        Summary(mv_Method *, gsl_matrix *, gsl_matrix *);
        virtual ~Summary();
-       int resampTest(void); 
+       intptr_t resampTest(void); 
        void releaseSummary(void);
        void display(void);
 
 private: mv_mat *Hats;
 	 gsl_permutation **sortid;
-	 unsigned int nRows, nVars, nParam;
+	 uintptr_t nRows, nVars, nParam;
 	 double *bMultStat;
 	 gsl_matrix *bUnitStat;
 
 	 // Methods
-         int calcR2(void);
-	 int smrycase(gsl_matrix *bY, gsl_matrix *bX);
-         int smryresi(gsl_matrix *bY);
+         intptr_t calcR2(void);
+	 intptr_t smrycase(gsl_matrix *bY, gsl_matrix *bX);
+         intptr_t smryresi(gsl_matrix *bY);
 
 };
 
@@ -225,9 +241,9 @@ class glm
 	   virtual ~glm();	   
 	   void initialGlm(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B);
 	   void releaseGlm(void);
-	   virtual int regression(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)=0;
-	   virtual int EstIRLS(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B, double *a)=0;
-	   int copyGlm(glm *src);
+	   virtual intptr_t regression(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)=0;
+	   virtual intptr_t EstIRLS(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B, double *a)=0;
+	   intptr_t copyGlm(glm *src);
            void display(void); 	  
 
            // input arguments
@@ -246,13 +262,13 @@ class glm
 	   gsl_matrix *sqrt1_Hii;
            gsl_matrix *PitRes;
 
-           unsigned int n; // used in binomial and logistic regression
-           unsigned int rdf;
+           uintptr_t n; // used in binomial and logistic regression
+           uintptr_t rdf;
 	   double *phi, *ll, *dev, *aic;
-	   unsigned int *iterconv;  
-           unsigned int maxiter;
+	   uintptr_t *iterconv;  
+           uintptr_t maxiter;
 	   double eps, maxtol;
-           unsigned int nRows, nVars, nParams;
+           uintptr_t nRows, nVars, nParams;
 //   private: 
   	   // abstract 	
 	   virtual double link(double) const=0;	   
@@ -264,8 +280,8 @@ class glm
 	   virtual double devfunc(double, double, double) const=0;	   
 	   virtual double pdf(double, double, double) const=0;	   
 	   virtual double cdf(double, double, double) const=0;	   
-	   virtual unsigned int cdfinv(double, double, double) const=0;	   
-           virtual unsigned int genRandist(double, double) const=0;
+	   virtual uintptr_t cdfinv(double, double, double) const=0;	   
+           virtual uintptr_t genRandist(double, double) const=0;
 };
 
 // poisson regression
@@ -274,13 +290,13 @@ class PoissonGlm : public glm
     public: // public functions
            PoissonGlm(const reg_Method *);
 	   virtual ~PoissonGlm();
-	   virtual int regression(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B) 
+	   virtual intptr_t regression(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B) 
 	        { return EstIRLS ( Y, X, O, B, NULL); }
-	   int EstIRLS( gsl_matrix *, gsl_matrix *, gsl_matrix *, gsl_matrix *, double * );
-	   int betaEst( unsigned int id, unsigned int iter, double *tol, double a );
-	   double getDisper( unsigned int id ) const;
-           int update(gsl_vector *bj, unsigned int id);
-           int predict(gsl_vector_view bj, gsl_vector *coef_old, unsigned int id, double a);
+	   intptr_t EstIRLS( gsl_matrix *, gsl_matrix *, gsl_matrix *, gsl_matrix *, double * );
+	   intptr_t betaEst( uintptr_t id, uintptr_t iter, double *tol, double a );
+	   double getDisper( uintptr_t id ) const;
+           intptr_t update(gsl_vector *bj, uintptr_t id);
+           intptr_t predict(gsl_vector_view bj, gsl_vector *coef_old, uintptr_t id, double a);
 
 
 //    private: 
@@ -304,9 +320,9 @@ class PoissonGlm : public glm
                 { return Rf_dpois(yi, mui, FALSE); }
 	   double cdf(double yi, double mui, double a) const
                 { return Rf_ppois(yi, mui, TRUE, FALSE); }
-           unsigned int cdfinv(double u, double mui, double a) const
-                { return (unsigned int)Rf_qpois(u, mui, TRUE, FALSE); }
-           unsigned int genRandist(double mui, double a) const
+           uintptr_t cdfinv(double u, double mui, double a) const
+                { return (uintptr_t)Rf_qpois(u, mui, TRUE, FALSE); }
+           uintptr_t genRandist(double mui, double a) const
                 { return Rf_rpois(mui); }
 
 };
@@ -339,11 +355,11 @@ class BinGlm : public PoissonGlm
            double cdf(double yi, double mui, double a) const
 //                { if (n==1) return (yi<1)?(1-mui):1;
                 { return Rf_pbinom(yi, n, mui/n, TRUE, FALSE); }
-           unsigned int cdfinv(double ui, double mui, double a) const
+           uintptr_t cdfinv(double ui, double mui, double a) const
 //                { if (n==1) return (ui<1)?0:1;
-                { return (unsigned int)Rf_qbinom(ui, n, mui/n, TRUE, FALSE); }
-           unsigned int genRandist(double mui, double a) const
-                { return Rf_rbinom(n, mui/n); }
+                { return (uintptr_t) Rf_qbinom(ui, n, mui/n, TRUE, FALSE); }
+           uintptr_t genRandist(double mui, double a) const
+                { return (uintptr_t) Rf_rbinom(n, mui/n); }
 
 };
 
@@ -353,9 +369,9 @@ class NBinGlm : public PoissonGlm // Y~NB(n, p)
     public:
            NBinGlm(const reg_Method *mm);
 	   virtual ~NBinGlm();
-	   virtual int regression(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
+	   virtual intptr_t regression(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
 	      { return nbinfit ( Y, X, O, B); }
-	   int nbinfit(gsl_matrix *, gsl_matrix *, gsl_matrix *, gsl_matrix *);
+	   intptr_t nbinfit(gsl_matrix *, gsl_matrix *, gsl_matrix *, gsl_matrix *);
 //    private:
 	   double weifunc(double mui, double a) const
 	        { return (mui/(1+a*mui)); }
@@ -372,14 +388,14 @@ class NBinGlm : public PoissonGlm // Y~NB(n, p)
 	   double cdf(double yi, double mui, double a) const
                 { if (a==0) return Rf_ppois(yi, mui, TRUE, FALSE);
                   else return Rf_pnbinom(yi, 1/a, 1/(1+a*mui), TRUE, FALSE); }
-           unsigned int cdfinv(double ui, double mui, double a) const
-                { if (a==0) return Rf_qpois(ui, mui, TRUE, FALSE);
-                  else return (unsigned int)Rf_qnbinom(ui, 1/a, 1/(1+a*mui), TRUE, FALSE); }
-           unsigned int genRandist(double mui, double a) const
-                { if (a==0) return Rf_rpois(mui);
-                  else return Rf_rnbinom(1/a, 1/(1+a*mui)); }
+           uintptr_t cdfinv(double ui, double mui, double a) const
+                { if (a==0) return (uintptr_t) Rf_qpois(ui, mui, TRUE, FALSE);
+                  else return (uintptr_t)Rf_qnbinom(ui, 1/a, 1/(1+a*mui), TRUE, FALSE); }
+           uintptr_t genRandist(double mui, double a) const
+                { if (a==0) return (uintptr_t) Rf_rpois(mui);
+                  else return (uintptr_t) Rf_rnbinom(1/a, 1/(1+a*mui)); }
 
-	   int getfAfAdash (double a, unsigned int id, double *fA, double *fAdash);
+	   intptr_t getfAfAdash (double a, uintptr_t id, double *fA, double *fAdash);
 };
 
 
@@ -393,39 +409,39 @@ class GlmTest
 	    gsl_matrix *smryStat, *Psmry;
 	    gsl_matrix *anovaStat, *Panova;
 	    gsl_matrix *bootID;
-            unsigned int nSamp;	    
+            uintptr_t nSamp;	    
             double *aic;
-            unsigned int *dfDiff;
+            uintptr_t *dfDiff;
 
             // methods
             GlmTest(const mv_Method *tm);
             virtual ~GlmTest(void);
             void releaseTest(void);	
 
-	    int summary(glm *);
+	    intptr_t summary(glm *);
 	    void displaySmry(glm *);
 
-	    int anova(glm *, gsl_matrix *);
+	    intptr_t anova(glm *, gsl_matrix *);
             void displayAnova(void);
             
     private:
-	    int getBootID(void);
+	    intptr_t getBootID(void);
 
-//	    int geeCalc(glm *PtrAlt, glm *PtrNull, gsl_matrix *);
-	    int GeeWald(glm *, gsl_matrix *, gsl_vector *, double lambda);
-	    int GeeScore(gsl_matrix *, glm *, gsl_vector *, double lambda);
-	    int GeeLR(glm *PtrAlt, glm *PtrNull, gsl_vector *teststat);
+//	    intptr_t geeCalc(glm *PtrAlt, glm *PtrNull, gsl_matrix *);
+	    intptr_t GeeWald(glm *, gsl_matrix *, gsl_vector *, double lambda);
+	    intptr_t GeeScore(gsl_matrix *, glm *, gsl_vector *, double lambda);
+	    intptr_t GeeLR(glm *PtrAlt, glm *PtrNull, gsl_vector *teststat);
 
-//            int resampSmryCase(glm *, gsl_matrix *, GrpMat *, GrpMat *, unsigned int i ); // summary
-            int resampSmryCase(glm *, gsl_matrix *, GrpMat *, gsl_matrix *, unsigned int i ); // summary
-	    int resampAnovaCase(glm *, gsl_matrix *, gsl_matrix *, gsl_matrix *, unsigned int i);
-	    int resampNonCase(glm *, gsl_matrix *, unsigned int i);
-	    int setMonteCarlo(glm *model, gsl_matrix *, gsl_matrix *);
+//          intptr_t resampSmryCase(glm *, gsl_matrix *, GrpMat *, GrpMat *, uintptr_t i ); // summary
+            intptr_t resampSmryCase(glm *, gsl_matrix *, GrpMat *, gsl_matrix *, uintptr_t i ); // summary
+	    intptr_t resampAnovaCase(glm *, gsl_matrix *, gsl_matrix *, gsl_matrix *, uintptr_t i);
+	    intptr_t resampNonCase(glm *, gsl_matrix *, uintptr_t i);
+	    intptr_t setMonteCarlo(glm *model, gsl_matrix *, gsl_matrix *);
 
 	    // the following used in resampling
-	    unsigned int nModels;
+	    uintptr_t nModels;
             gsl_rng *rnd;
-            unsigned int *permid;   // only useful in permutation test
+            uintptr_t *permid;   // only useful in permutation test
             double lambda, eps;    // intermediate shrinkage parameter
                 
             // the following are used in geeCalc
@@ -441,10 +457,9 @@ class GlmTest
 
 };
 
-
 // io.cpp - input/output functions
-int vector_filesize(FILE *f);
-void matrix_filesize(FILE *f, int * row, int * col);
+intptr_t vector_filesize(FILE *f);
+void matrix_filesize(FILE *f, intptr_t * row, intptr_t * col);
 gsl_matrix * load_m(const char * file);
 gsl_vector * load_v(const char * file);
 void displaymatrix(gsl_matrix * m, const char * name);
@@ -452,35 +467,35 @@ void displayvector(gsl_vector * v, const char * name);
 
 // calctest.c - utility functions
 double calcDet(gsl_matrix *SS);
-int is_sym_matrix(const gsl_matrix *mat);
-int subX(gsl_matrix *X, gsl_vector *ref, gsl_matrix *Xi);
-int subX1(gsl_matrix *X, gsl_vector *ref, gsl_matrix *Xi);
-int subX2(gsl_matrix *X, unsigned int id, gsl_matrix *Xi);
-int subXrow(gsl_matrix *X, gsl_vector *ref, gsl_matrix *Xi);
-int subXrow2(gsl_matrix *X, gsl_vector *ref, gsl_matrix *Xi);
-int addXrow2(gsl_matrix *X, gsl_vector *ref, gsl_matrix *Xi);
-int subXrow1(gsl_matrix *X, gsl_vector *ref0, gsl_vector *ref1, gsl_matrix *Xi);
-int GetR(gsl_matrix *Res, unsigned int corr, double lambda, gsl_matrix *R); 
-int subtractMean(gsl_matrix *dat);
+intptr_t is_sym_matrix(const gsl_matrix *mat);
+intptr_t subX(gsl_matrix *X, gsl_vector *ref, gsl_matrix *Xi);
+intptr_t subX1(gsl_matrix *X, gsl_vector *ref, gsl_matrix *Xi);
+intptr_t subX2(gsl_matrix *X, uintptr_t id, gsl_matrix *Xi);
+intptr_t subXrow(gsl_matrix *X, gsl_vector *ref, gsl_matrix *Xi);
+intptr_t subXrow2(gsl_matrix *X, gsl_vector *ref, gsl_matrix *Xi);
+intptr_t addXrow2(gsl_matrix *X, gsl_vector *ref, gsl_matrix *Xi);
+intptr_t subXrow1(gsl_matrix *X, gsl_vector *ref0, gsl_vector *ref1, gsl_matrix *Xi);
+intptr_t GetR(gsl_matrix *Res, uintptr_t corr, double lambda, gsl_matrix *R); 
+intptr_t subtractMean(gsl_matrix *dat);
 // calctest.c - manylm related functions
-int testStatCalc(mv_mat *H0, mv_mat *H1, mv_Method *mmRef, const unsigned int ifcalcH1det, double *stat, gsl_vector *statj);
-int calcSS(gsl_matrix *Y, mv_mat *Hat, mv_Method *mmRef, const unsigned int ifcalcHat, const unsigned int ifcalcCoef, const unsigned int ifcalcSS);
-int calcAdjustP(const unsigned int punit, const unsigned int nVars, double *bj, double *sj, double *pj, gsl_permutation *sortid);
-int reinforceP(double *p, unsigned int nVars, gsl_permutation *sortid);
-int getHat(gsl_matrix *X, gsl_matrix *W, gsl_matrix *Hat);
-int invLSQ(gsl_matrix *A, gsl_vector *b, gsl_vector *x);
-int rcalc(gsl_matrix *Res, double, unsigned int, gsl_matrix *SS);
+intptr_t testStatCalc(mv_mat *H0, mv_mat *H1, mv_Method *mmRef, const uintptr_t ifcalcH1det, double *stat, gsl_vector *statj);
+intptr_t calcSS(gsl_matrix *Y, mv_mat *Hat, mv_Method *mmRef, const uintptr_t ifcalcHat, const uintptr_t ifcalcCoef, const uintptr_t ifcalcSS);
+intptr_t calcAdjustP(const uintptr_t punit, const uintptr_t nVars, double *bj, double *sj, double *pj, gsl_permutation *sortid);
+intptr_t reinforceP(double *p, uintptr_t nVars, gsl_permutation *sortid);
+intptr_t getHat(gsl_matrix *X, gsl_matrix *W, gsl_matrix *Hat);
+intptr_t invLSQ(gsl_matrix *A, gsl_vector *b, gsl_vector *x);
+intptr_t rcalc(gsl_matrix *Res, double, uintptr_t, gsl_matrix *SS);
 
 // simutility.cpp - functions used in simulation tests 
-int GetMean(gsl_matrix *X, gsl_matrix *Y, gsl_matrix *Mu);
-int GetPdstbtion(double *p, unsigned int nVars, unsigned int *isH0var, unsigned int *cnt, unsigned int *cntfwe);
-//int GetCov (gsl_matrix *Mu, gsl_matrix *Y, unsigned int AR1MAT, gsl_matrix *Sigma);
-//int GetMeanCov(gsl_matrix *X, gsl_matrix *Y, mv_Method *mm, unsigned int AR1MAT, gsl_matrix *Mu, gsl_matrix *Sigma);
+intptr_t GetMean(gsl_matrix *X, gsl_matrix *Y, gsl_matrix *Mu);
+intptr_t GetPdstbtion(double *p, uintptr_t nVars, uintptr_t *isH0var, uintptr_t *cnt, uintptr_t *cntfwe);
+//intptr_t GetCov (gsl_matrix *Mu, gsl_matrix *Y, uintptr_t AR1MAT, gsl_matrix *Sigma);
+//intptr_t GetMeanCov(gsl_matrix *X, gsl_matrix *Y, mv_Method *mm, uintptr_t AR1MAT, gsl_matrix *Mu, gsl_matrix *Sigma);
 
 // rnd.c - functions to generate random numbers from multivariate (normal) distributions
 // MVN random number generator
-int rmvnorm(const gsl_rng *, const unsigned int, const gsl_matrix *, gsl_vector *);
+intptr_t rmvnorm(const gsl_rng *, const uintptr_t, const gsl_matrix *, gsl_vector *);
 // MVN with positive-semi definite covariance matrix
-int semirmvnorm(const gsl_rng *, const unsigned int, const gsl_matrix *, gsl_vector *);
+intptr_t semirmvnorm(const gsl_rng *, const uintptr_t, const gsl_matrix *, gsl_vector *);
 
 #endif

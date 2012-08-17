@@ -256,7 +256,6 @@ int PoissonGlm::EstIRLS(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix 
        status=gsl_linalg_cholesky_decomp (XwX);
        if (status) {
           printf("Singular info matrix in EstIRLS, gsl_errno=%d\n", status);
-//          exit(-1);
        }
        gsl_linalg_cholesky_invert (XwX);
 
@@ -329,7 +328,6 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
            displayvector(&ej.vector, "ej");
            displayvector(&mj.vector, "mj");
            printf("Error: ngoodobs=0\n");      
-//           exit(-1);
        }
 
 //       gsl_vector_set_zero (&wj.vector);
@@ -371,7 +369,6 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
        status=gsl_linalg_cholesky_decomp(XwX);
        if (status) {
           printf("Singular XwX in betaEst, gsl_errno=%d\n", status);
-//          exit(-1);
        }
        gsl_linalg_cholesky_solve (XwX, Xwz, &bj.vector);
 //       invLSQ(XwX, Xwz, &bj.vector); 
@@ -565,7 +562,6 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
                    phi[j]=phi_old;
                    betaEst(j, 1, &tol, phi[j]);
 //                   printf("tol_grad=%.6f, restore previous estimates\n", tol_grad);
-//                   exit(-1);
                    break;
                 }
                 getfAfAdash(phi[j], j, &fA, &fAdash); // 1-step phi
@@ -581,7 +577,6 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
                 if ( (phi[j]<0) | (phi[j]!=phi[j]) ) break; // invalid phi
                 if (iterconv[j]>maxiter) {                
 //                  printf("NBinFit(ML) reached %d, phi[j]=%.4f, fA=%.4f, (.)=%.4f, tol=%.6f, tol_old=%.6f, tol_grad=%.6f\n", iterconv[j], phi[j], fA, (fA/fAdash), tol, tol_old, tol_grad); 
-//                  exit(-1);
                    break; 
                 } 
            }
@@ -635,7 +630,6 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
        if (status) {
           displaymatrix(XwX, "XwX");
           printf("Singular info mat in NBinFit - calcDet(XwX)=%.4f\n", calcDet(XwX)); 
-//          exit(-1);
        }
        gsl_linalg_cholesky_invert (XwX); // (X'WX)^-1
 
