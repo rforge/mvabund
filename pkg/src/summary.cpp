@@ -4,6 +4,12 @@
 
 
 #include "resampTest.h"
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+#include <gsl/gsl_permutation.h>
+#include <gsl/gsl_statistics.h> // only gsl_stats_vairaince used in rcalc 
+#include <gsl/gsl_sort_vector.h>
+#include <gsl/gsl_sort_double.h>
 
 // Use gsl functions as much as poosible to increase speed and stabilitiy
 
@@ -240,7 +246,11 @@ int Summary::resampTest(void)
     bY = gsl_matrix_alloc(nRows, nVars);
     bX = gsl_matrix_alloc(nRows, nParam);
 
-    gsl_rng *rnd=gsl_rng_alloc(gsl_rng_mt19937);
+    gsl_rng *rnd;
+    const gsl_rng_type *T; 
+    gsl_rng_env_setup();
+    T=gsl_rng_default;
+    rnd=gsl_rng_alloc(T);
 
     // initialize permid
     unsigned int *permid=NULL;

@@ -103,7 +103,7 @@ RcppExport SEXP RtoGlmAnova(SEXP mpar, SEXP tpar, SEXP Ysexp, SEXP Xsexp,
     BinGlm binfit(&mm);
     glm *glmPtr[3] = { &pfit, &nbfit, &binfit };
     unsigned int mtype = mm.model-1;
-    glmPtr[mtype]->regression(Y, X, NULL, NULL);
+    glmPtr[mtype]->regression(Y, X, NULL);
 //    glmPtr[mtype]->display();
 
     GlmTest myTest(&tm);
@@ -136,7 +136,7 @@ RcppExport SEXP RtoGlmAnova(SEXP mpar, SEXP tpar, SEXP Ysexp, SEXP Xsexp,
 //    myTest.displayAnova();
 
     clk_end = clock();
-    unsigned long int dif = floor((double)(clk_end - clk_start)/(double)(CLOCKS_PER_SEC));  
+    long int dif = floor((double)(clk_end - clk_start)/(double)(CLOCKS_PER_SEC));  
     unsigned int hours = floor((double)(dif/(double)3600));
     unsigned int min = floor((double)(dif%3600)/(double)60);
     unsigned int sec = dif%60;   
