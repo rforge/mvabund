@@ -6,7 +6,7 @@ Fits for Abundance Data}
 \description{Compute an analysis of deviance table for one or more multivariate
 generalized linear model fits.}
 \usage{
-\method{anova}{manyglm}(object, \dots, resamp="montecarlo", test="LR", 
+\method{anova}{manyglm}(object, \dots, resamp="pit.trap", test="LR", 
     p.uni="none", nBoot=1000, cor.type=object$cor.type, show.time=FALSE, ld.perm=FALSE, filename=NULL) 
 \method{print}{anova.manyglm}(x, \dots) 
 }

@@ -4,7 +4,7 @@
 \title{Summarizing Multivariate Generalized Linear Model Fits for Abundance Data}
 \description{\code{summary} method for class "manyglm". }
 \usage{
-\method{summary}{manyglm}(object, resamp="montecarlo", test="wald", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.cor = FALSE, show.est=FALSE, show.residuals=FALSE, symbolic.cor = FALSE, show.time=FALSE,\dots)
+\method{summary}{manyglm}(object, resamp="pit.trap", test="wald", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.cor = FALSE, show.est=FALSE, show.residuals=FALSE, symbolic.cor = FALSE, show.time=FALSE,\dots)
 \method{print}{summary.manyglm}(x, \dots)
 }
 \arguments{

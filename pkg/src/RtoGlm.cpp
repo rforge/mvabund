@@ -60,22 +60,22 @@ RcppExport SEXP RtoGlm(SEXP params, SEXP Ysexp, SEXP Xsexp)
     }
        
     // do stuff	
-    clock_t clk_start, clk_end;
-    clk_start = clock();
+//    clock_t clk_start, clk_end;
+//    clk_start = clock();
 
     PoissonGlm pfit(&mm);
     BinGlm lfit(&mm);
     NBinGlm nbfit(&mm);
     glm *glmPtr[3] = { &pfit, &nbfit, &lfit };
     unsigned int mtype = mm.model-1;
-    glmPtr[mtype]->regression(Y, X, NULL);
+    glmPtr[mtype]->regression(Y, X, NULL, NULL);
 //    glmPtr[mtype]->display();
 	
-    clk_end = clock();
-    long int dif = floor((double)(clk_end - clk_start)/(double)(CLOCKS_PER_SEC));
-    unsigned int hours = floor((double)(dif/(double)3600));
-    unsigned int min = floor((double)(dif%3600)/(double)60);
-    unsigned int sec = dif%60;
+//    clk_end = clock();
+//    unsigned long int dif = floor((double)(clk_end - clk_start)/(double)(CLOCKS_PER_SEC));
+//    unsigned int hours = floor((double)(dif/(double)3600));
+//    unsigned int min = floor((double)(dif%3600)/(double)60);
+//    unsigned int sec = dif%60;
 //    Rprintf("Time elapsed: %d hr %d min %d sec (%d seconds)\n", hours, min, sec, dif);
 
     // Wrap the glm object with Rcpp 

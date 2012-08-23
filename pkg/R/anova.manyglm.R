@@ -4,7 +4,7 @@
 # 11-Nov-2011
 ###############################################################################
 
-anova.manyglm <- function(object, ..., resamp="montecarlo", test="LR", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.time=FALSE, ld.perm=FALSE, filename=NULL ) 
+anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.time=FALSE, ld.perm=FALSE, filename=NULL ) 
 {
     if (cor.type!="I" & test=="LR") {
         warning("The likelihood ratio test can only be used if correlation matrix of the abundances is is assumed to be the Identity matrix. The Wald Test will be used.")
