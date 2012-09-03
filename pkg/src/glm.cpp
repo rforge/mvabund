@@ -396,18 +396,16 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
             if (*tol<eps) break;
             step1++;
             if (step1>maxiter) {
-               printf("\t Internal loop reached max iter, d_dev=%.4f\n", dev_grad);
+               printf("\t Internal loop I reached maximum iter %d: gradient=%.4f\n", step1, dev_grad);
                break;
             }
        }
-
        gsl_vector_free(z);
        gsl_matrix_free(WX); 
-       if ((isValid==TRUE))
-          gsl_vector_memcpy (coef_old, &bj.vector);
+       if ((isValid==TRUE)) 
+          gsl_vector_memcpy (coef_old, &bj.vector); 
        step++;
        if (*tol<eps) break;
-
    } 
 
 //   if ((step>1)&(isValid==FALSE)) { // restore previous valid one
@@ -455,13 +453,13 @@ int PoissonGlm::update(gsl_vector *bj, unsigned int id)
 
 int PoissonGlm::predict(gsl_vector_view bj, gsl_vector *coef_old, unsigned int id, double phi) 
 {
-    unsigned int i;
+    unsigned int step, i;
     double yij, mij;
+//    double bij, diff, delta;
     
     int isValid=update(&bj.vector, id);
 
-/*  unsigned int step=0;
-    double bij, diff, delta;
+/*    step=0;
     while ( isValid==FALSE ) {
          // Step too large, half step 
          gsl_vector_add (&bj.vector, coef_old);
@@ -555,13 +553,26 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
             a = (fA>0)?-fA/fAdash:0;
             phi[j] = (a<0)? eps:a; 
 	    isConv = (fA>0)? FALSE:TRUE;
-            phi_old = phi[j];
+//            tol=100;
 	    while ( isConv != TRUE ) {
                 iterconv[j]++;	    
-	        betaEst(j, 1, &tol, phi[j]); // 1-step beta (better than m-step beta)
+//                tol_old = tol;
+	        betaEst(j, 1, &tol, phi[j]); // 1-step beta
+/*                tol_grad = tol - tol_old; // ensure decreasing tol
+                if ( (iterconv[j]>10)&((tol_grad>0)|(ABS(tol_grad)<mmRef->tol))){ 
+                   // restore previous estimate
+                   phi[j]=phi_old;
+                   betaEst(j, 1, &tol, phi[j]);
+//                   printf("tol_grad=%.6f, restore previous estimates\n", tol_grad);
+//                   exit(-1);
+                   break;
+                }
+*/
                 getfAfAdash(phi[j], j, &fA, &fAdash); // 1-step phi
-                if ( (ABS(fAdash)<eps)|(ABS(fA/fAdash)>0.5) ) 
+                if ( (ABS(fAdash)<eps)|(ABS(fA/fAdash)>0.5) ) {
                    phi[j] = (phi[j]+phi_old)/2; // half step
+//                   printf("fA/fAdash=%.4f , ABS(.)=%.4f\n", (fA/fAdash), ABS(fA/fAdash));
+                }
                 else {
                    phi_old = phi[j];
                    phi[j] = phi[j]-fA/fAdash;
@@ -569,7 +580,8 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
 	        if ( tol<eps ) break; // Normal break;
                 if ( (phi[j]<0) | (phi[j]!=phi[j]) ) break; // invalid phi
                 if (iterconv[j]>maxiter) {                
-//                   printf("NBinFit(ML) reached %d, phi[j]=%.4f, fA=%.4f, (.)=%.4f, tol=%.6f, tol_old=%.6f, tol_grad=%.6f\n", iterconv[j], phi[j], fA, (fA/fAdash), tol, tol_old, tol_grad); 
+//                  printf("NBinFit(ML) reached %d, phi[j]=%.4f, fA=%.4f, (.)=%.4f, tol=%.6f, tol_old=%.6f, tol_grad=%.6f\n", iterconv[j], phi[j], fA, (fA/fAdash), tol, tol_old, tol_grad); 
+//                  exit(-1);
                    break; 
                 } 
            }
@@ -597,8 +609,8 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
            ll[j] = ll[j] + llfunc( yij, mij, phi[j] );
            // get PIT residuals for discrete data
            wei = gsl_rng_uniform_pos (rnd); // wei ~ U(0, 1)
-           uij = wei*cdf(yij, mij, phi[j]);
-           if (yij>0) uij=uij+(1-wei)*cdf((yij-1),mij,phi[j]);           
+           uij=wei*cdf(yij, mij, phi[j]);
+           if (yij>0) uij=uij+(1-wei)*cdf((yij-1),mij,phi[j]); 
            gsl_matrix_set(PitRes, i, j, uij);
            // W^1/2 X
            Xwi = gsl_matrix_row (WX, i);
@@ -609,7 +621,7 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
        // X^T * W * X
        gsl_matrix_set_zero (XwX);
        gsl_blas_dsyrk (CblasLower, CblasTrans, 1.0, WX, 0.0, XwX);
-       if (calcDet(XwX)<eps) { //XwX + eps*I
+       if (calcDet(XwX)<eps) {
           dj=gsl_matrix_diagonal(XwX);
           gsl_vector_add_constant(&dj.vector, eps);
        }       
@@ -617,6 +629,7 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
        if (status) {
           displaymatrix(XwX, "XwX");
           printf("Singular info mat in NBinFit - calcDet(XwX)=%.4f\n", calcDet(XwX)); 
+//          exit(-1);
        }
        gsl_linalg_cholesky_invert (XwX); // (X'WX)^-1
 

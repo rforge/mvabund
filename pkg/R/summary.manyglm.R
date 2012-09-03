@@ -4,7 +4,7 @@
 # 05-Jan-2010
 ###############################################################################
 
-summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.cor = FALSE, show.est=FALSE, show.residuals=FALSE, symbolic.cor = FALSE, show.time=FALSE, ... ) 
+summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.cor = FALSE, show.est=FALSE, show.residuals=FALSE, symbolic.cor = FALSE, show.time=FALSE, rep.seed=FALSE, ... ) 
 {
     tol = object$tol
     allargs <- match.call(expand.dots = FALSE)
@@ -86,14 +86,9 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
     else if (cor.type == "shrink") corrnum <- 2
     else stop("'cor.type' not defined. Choose one of 'I', 'R', 'shrink'")
 
-    if (ld.perm && !is.null(filename)) {
+    if (ld.perm && !is.null(filename)) 
         bootID <- as.matrix(read.table(filename), nrow=nBoot, ncol=nRows)
-        rep <- 1
-    }
-    else {
-        bootID <- c(FALSE)
-        rep <- 0
-    }
+    else bootID <- c(FALSE)
 
     if (substr(p.uni,1,1) == "n"){
        pu <- 0
@@ -130,7 +125,7 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
     
     modelParam <- list(tol=tol, regression=familynum, estimation=methodnum, stablizer=0, n=object$K)
     # note that nboot excludes the original dataset
-    testParams <- list(tol=tol, nboot=nBoot-1, cor_type=corrnum, test_type=testnum, resamp=resampnum, reprand=rep, punit=pu, showtime=st)
+    testParams <- list(tol=tol, nboot=nBoot-1, cor_type=corrnum, test_type=testnum, resamp=resampnum, reprand=rep.seed, punit=pu, showtime=st)
 
     ######## Call Summary Rcpp #########
     val <- .Call("RtoGlmSmry", modelParam, testParams, Y, X, bootID, shrink.param, PACKAGE="mvabund")

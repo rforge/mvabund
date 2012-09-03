@@ -4,7 +4,7 @@
 # 11-Nov-2011
 ###############################################################################
 
-anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.time=FALSE, ld.perm=FALSE, filename=NULL ) 
+anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.time=FALSE, rep.seed=FALSE, ld.perm=FALSE, filename=NULL ) 
 {
     if (cor.type!="I" & test=="LR") {
         warning("The likelihood ratio test can only be used if correlation matrix of the abundances is is assumed to be the Identity matrix. The Wald Test will be used.")
@@ -107,14 +107,10 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
     else if (cor.type == "shrink") corrnum <- 2
     else stop("'cor.type' not defined. Choose one of 'I', 'R', 'shrink'")  
 
-    if (ld.perm && !is.null(filename)) {
+    if (ld.perm && !is.null(filename)) 
         bootID <- as.matrix(read.table(filename), nrow=nBoot, ncol=nRows)
-        rep <- 1
-    }
-    else {
+    else 
         bootID <- c(FALSE)
-        rep <- 0
-    }
 
     if(substr(p.uni,1,1) == "n"){
        pu <- 0
@@ -134,7 +130,7 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
                        estimation=methodnum, stablizer=0, n=object$K)
     # note that nboot excludes the original data set
     testParams <- list(tol=tol, nboot=nBoot-1, cor_type=corrnum, 
-              test_type=testnum, resamp=resampnum, reprand=rep, punit=pu, showtime=st)
+              test_type=testnum, resamp=resampnum, reprand=rep.seed, punit=pu, showtime=st)
 
     # ANOVA
     if (nModels==1) {

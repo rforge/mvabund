@@ -28,6 +28,7 @@ GlmTest::GlmTest(const mv_Method *tm):tm(tm)
     Wj=gsl_matrix_alloc(tm->nRows, tm->nRows);
 
     rnd=gsl_rng_alloc(gsl_rng_mt19937);    
+//    if (tm->reprand==TRUE) printf("GSL rng with repeated seeds\n");
     if ( tm->resamp==PERMUTE ) {
         permid = (unsigned int *)malloc(tm->nRows*sizeof(unsigned int));
 	for (unsigned int i=0; i<tm->nRows; i++) permid[i]=i;
@@ -148,8 +149,7 @@ int GlmTest::summary(glm *fit)
 
     if (tm->resamp==MONTECARLO) {
        lambda=gsl_vector_get(tm->smry_lambda,0);
-       GetR(fit->Res, SHRINK, lambda, Rlambda);
-       setMonteCarlo(fit, NULL, Rlambda);
+       setMonteCarlo(fit, lambda, XBeta, Sigma);
     }
 
     nSamp=0;
@@ -351,8 +351,7 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
 //        displayvector(&teststat.vector, "teststat");
         if (tm->resamp==MONTECARLO) {
             lambda=gsl_vector_get(tm->anova_lambda,ID0);
-            GetR(PtrNull[mtype]->Res, SHRINK, lambda, Rlambda);
-            setMonteCarlo (PtrNull[mtype], NULL, Rlambda);
+            setMonteCarlo (PtrNull[mtype], lambda, XBeta, Sigma);
         }
 
 	// ======= Get univariate test statistics =======//
@@ -687,11 +686,14 @@ int GlmTest::resampSmryCase(glm *model, gsl_matrix *bT, GrpMat *GrpXs, gsl_matri
     
     if (bootID == NULL) {
        tXX = gsl_matrix_alloc(nParam, nParam);
-       isSingular=TRUE;
+       isSingular=TRUE;       
        while (isSingular==TRUE) { // if all isSingular==TRUE
+           if (tm->reprand!=TRUE) GetRNGstate();
            for (j=0; j<nRows; j++) {
                // resample Y, X, offsets accordingly
-               id = gsl_rng_uniform_int(rnd, nRows);
+               if (tm->reprand==TRUE)
+                   id = (unsigned int) gsl_rng_uniform_int(rnd, nRows);
+               else id = (unsigned int) nRows * Rf_runif(0, 1);
                xj = gsl_matrix_row(model->Xref, id);
                gsl_matrix_set_row(GrpXs[0].matrix, j, &xj.vector);
                yj = gsl_matrix_row(model->Yref, id);
@@ -699,6 +701,7 @@ int GlmTest::resampSmryCase(glm *model, gsl_matrix *bT, GrpMat *GrpXs, gsl_matri
                oj = gsl_matrix_row(model->Eta, id);
                gsl_matrix_set_row(bO, j, &oj.vector);
            }
+           if (tm->reprand!=TRUE) PutRNGstate();
            gsl_matrix_set_zero(tXX);
            gsl_blas_dsyrk (CblasLower,CblasTrans,1.0,GrpXs[0].matrix,0.0,tXX);
            if ( calcDet(tXX) < eps ) {
@@ -742,8 +745,11 @@ int GlmTest::resampAnovaCase(glm *model, gsl_matrix *bT, gsl_matrix *bX, gsl_mat
     if (bootID == NULL) {
        isSingular=TRUE;
        while (isSingular==TRUE) {
+            if (tm->reprand!=TRUE) GetRNGstate();
             for (j=0; j<nRows; j++) {   
-                id = gsl_rng_uniform_int(rnd, nRows);
+                if (tm->reprand==TRUE)
+                   id = (unsigned int) gsl_rng_uniform_int(rnd, nRows);
+                else id = (unsigned int) nRows * Rf_runif(0, 1);
                 // resample Y and X and offset
                 yj=gsl_matrix_row(model->Yref, id);
                 xj = gsl_matrix_row(model->Xref, id);
@@ -754,6 +760,7 @@ int GlmTest::resampAnovaCase(glm *model, gsl_matrix *bT, gsl_matrix *bX, gsl_mat
                 gsl_matrix_set_row(bO, j, &oj.vector);
 //                gsl_matrix_set_row(bOnull, j, &o0j.vector);
              }
+             if (tm->reprand!=TRUE) PutRNGstate();
              gsl_blas_dsyrk (CblasLower, CblasTrans, 1.0, bX, 0.0, txX);
              if (calcDet(txX)<eps) isSingular=TRUE;
              else isSingular=TRUE;
@@ -790,27 +797,35 @@ int GlmTest::resampNonCase(glm *model, gsl_matrix *bT, unsigned int i)
    // note that residuals have got means subtracted
    switch (tm->resamp) {
    case RESIBOOT: 
+       if (tm->reprand!=TRUE) GetRNGstate();
        for (j=0; j<nRows; j++) {
-           if (bootID==NULL) id = gsl_rng_uniform_int(rnd, nRows);
-           else id = (unsigned int) gsl_matrix_get(bootID, i, j);
+           if (bootID!=NULL)
+               id = (unsigned int) gsl_matrix_get(bootID, i, j);
+           else if (tm->reprand==TRUE)
+               id = (unsigned int) gsl_rng_uniform_int(rnd, nRows);
+           else id = (unsigned int) nRows * Rf_runif(0, 1);
            // bY = mu+(bootr*sqrt(variance))
            for (k=0; k<nVars; k++) { 
                bt=gsl_matrix_get(model->Mu,j,k)+sqrt(gsl_matrix_get(model->Var,j,k))*gsl_matrix_get(model->Res, id, k);  
                bt = MAX(bt, 0.0);
                bt = MIN(bt, model->maxtol);
                gsl_matrix_set(bT, j, k, bt);
-        }   }   	  	
+        }   }
+        if (tm->reprand!=TRUE) PutRNGstate();   	  	
         break;
    case SCOREBOOT: 
         for (j=0; j<nRows; j++) {
-            if (bootID==NULL) score = gsl_ran_ugaussian (rnd);
-            else score = (double)gsl_matrix_get(bootID, i, j);
-            // bY = mu + score*sqrt(variance)  
-	    for (k=0; k<nVars; k++){
-                bt=gsl_matrix_get(model->Mu, j, k)+sqrt(gsl_matrix_get(model->Var, j, k))*gsl_matrix_get(model->Res, j, k)*score;
-                bt = MAX(bt, 0.0);
-                bt = MIN(bt, model->maxtol);
-                gsl_matrix_set(bT, j, k, bt);
+           if (bootID!=NULL)
+               score = (double) gsl_matrix_get(bootID, i, j);
+           else if (tm->reprand==TRUE)
+               score = gsl_ran_ugaussian (rnd); 
+           else score = Rf_rnorm(0.0, 1.0);
+           // bY = mu + score*sqrt(variance)  
+	   for (k=0; k<nVars; k++){
+               bt=gsl_matrix_get(model->Mu, j, k)+sqrt(gsl_matrix_get(model->Var, j, k))*gsl_matrix_get(model->Res, j, k)*score;
+               bt = MAX(bt, 0.0);
+               bt = MIN(bt, model->maxtol);
+               gsl_matrix_set(bT, j, k, bt);
         }   }	    
 	break;
    case PERMUTE: 
@@ -895,94 +910,26 @@ int GlmTest::resampNonCase(glm *model, gsl_matrix *bT, unsigned int i)
         }
         break;
     case PITSBOOT:
+       if (tm->reprand!=TRUE) GetRNGstate();
        for (j=0; j<nRows; j++) {
-           if (bootID==NULL) id = gsl_rng_uniform_int(rnd, nRows);
-           else id = (unsigned int) gsl_matrix_get(bootID, i, j);
+           if (bootID!=NULL) 
+               id = (unsigned int) gsl_matrix_get(bootID, i, j);
+           else if (tm->reprand==TRUE) 
+               id = (unsigned int) gsl_rng_uniform_int(rnd, nRows);
+           else id = (unsigned int) nRows * Rf_runif(0, 1);
            for (k=0; k<nVars; k++) {
                bt = gsl_matrix_get(model->PitRes, id, k); 
                mij = gsl_matrix_get(model->Mu, j, k);                
                yij = model->cdfinv(bt, mij, model->phi[k]); 
                gsl_matrix_set(bT, j, k, yij);
-        }   }
-        break;
+           }
+       }
+       if (tm->reprand!=TRUE) PutRNGstate();
+       break;
     default: GSL_ERROR("The resampling method is not supported", GSL_ERANGE); break;
     }
     return SUCCESS;
 } 
-
-int GlmTest::setMonteCarlo(glm *model, gsl_matrix *Os, gsl_matrix *R)
-{
-   unsigned int j;
-   double vij, sd, scale;
-   double k = 16*sqrt(3)/15/M_PI;
-   unsigned int nVars=tm->nVars;
-
-   gsl_matrix *Sd = gsl_matrix_alloc (nVars, nVars);
-   gsl_vector  *s = gsl_vector_alloc (nVars);
-   gsl_vector_view mj, d;
-
-   if (model->mmRef->model == POISSON) {
-       // Assuming no random effects, i.e. e*=0
-       // M = X * Beta
-       gsl_matrix_memcpy (XBeta, model->Eta);
-       gsl_matrix_set_identity (Sigma);
-    }          
-//   else if (model->mmRef->model == BIN) {
-//       gsl_matrix_memcpy (XBeta, model->Eta);
-//       gsl_matrix_set_identity (Sigma);
-//   }
-   else if (model->mmRef->model == BIN) { 
-       gsl_matrix_memcpy (XBeta, model->Eta);
-       gsl_matrix_memcpy (Sigma, R);
-       if (model->n==1) {
-       // Adjusting all betas and assuming var=1 
-       // logit(M) = X * sqrt(1+0.346 var) beta = 1.1601 Eta 
-       // See MATH5885 LDA lecture notes W9-11, Section 6.6.1
-          sd = 1;
-          scale = sqrt(1 + gsl_pow_2(k)*gsl_pow_2(sd));
-          gsl_matrix_scale (XBeta, scale);
-       }
-   }
-   else if (model->mmRef->model == NB) {
-       // Adjusting the intercept to account for random effects
-       //  i.e., M = X * beta - 0.5 * var 
-       // var = log(1+phi)    
-       gsl_matrix_memcpy(XBeta, model->Eta);
-       for ( j=0; j<nVars; j++) {
-           mj=gsl_matrix_column (XBeta, j);
-           // adjust E(mj) = X*beta for the random effects
-           vij = log(1+model->phi[j]);
-           gsl_vector_add_constant(&mj.vector, -0.5*vij);         
-           gsl_vector_set(s, j, sqrt(vij));
-       }
-       gsl_matrix_set_zero (Sd);
-       gsl_blas_dger (1.0, s, s, Sd);    
-
-       // if phi=0, then vij=0, i.e., no random effects (independence)
-       // So it has zero impact / correlation on other variables 
-       d = gsl_matrix_diagonal(Sd);
-       for (j=0; j<nVars; j++) {
-           if (model->phi[j]==0) 
-               gsl_vector_set(&d.vector, j, 1.0);
-       }
-       
-       // Sigma = diag(var)*R*diag(var)
-       gsl_matrix_memcpy(Sigma, R);
-       gsl_matrix_mul_elements(Sigma, Sd);
-       // displaymatrix(Sigma, "log-normal Sigma");
-        
-       // free memory
-       gsl_matrix_free(Sd);
-       gsl_vector_free(s);
-   }
-   else GSL_ERROR("The model type is not supported", GSL_ERANGE); 
-   
-   // subtract the offset
-   if ( Os != NULL ) gsl_matrix_sub(XBeta, Os);
-
-   return SUCCESS;
-}
-
 
 void GlmTest::displaySmry(glm *fit)
 {
