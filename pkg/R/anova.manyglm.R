@@ -4,7 +4,7 @@
 # 11-Nov-2011
 ###############################################################################
 
-anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.time=FALSE, rep.seed=FALSE, ld.perm=FALSE, filename=NULL ) 
+anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.time=FALSE, rep.seed=FALSE, ld.perm=FALSE, bootID=NULL) 
 {
     if (cor.type!="I" & test=="LR") {
         warning("The likelihood ratio test can only be used if correlation matrix of the abundances is is assumed to be the Identity matrix. The Wald Test will be used.")
@@ -16,10 +16,10 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
 
     if (any(class(object) == "manylm")) {
         if ( test == "LR" ) 
-	    return(anova.manylm(object, ..., resamp=resamp, test="LR", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, shrink.param=object$shrink.param, tol=tol, ld.perm=ld.perm, filename=filename))
+	    return(anova.manylm(object, ..., resamp=resamp, test="LR", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, shrink.param=object$shrink.param, tol=tol, ld.perm=ld.perm, bootID=bootID))
         else {
 	    warning("For an manylm object, only the likelihood ratio test and F test are supported. So the test option is changed to `'F''. ")
-	    return(anova.manylm(object, resamp=resamp, test="F", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, tol=tol, ld.perm=ld.perm, filename=filename, ... ))
+	    return(anova.manylm(object, resamp=resamp, test="F", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, tol=tol, ld.perm=ld.perm, bootID=bootID, ... ))
 	}
     }   
     else if (!any(class(object)=="manyglm"))
@@ -107,11 +107,6 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
     else if (cor.type == "shrink") corrnum <- 2
     else stop("'cor.type' not defined. Choose one of 'I', 'R', 'shrink'")  
 
-    if (ld.perm && !is.null(filename)) 
-        bootID <- as.matrix(read.table(filename), nrow=nBoot, ncol=nRows)
-    else 
-        bootID <- c(FALSE)
-
     if(substr(p.uni,1,1) == "n"){
        pu <- 0
        calc.pj <- adjust.pj <- FALSE
@@ -125,12 +120,27 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
     } else
        stop("'p.uni' not defined. Choose one of 'adjusted', 'unadjusted', 'none'.")
 
+#browser()
+    if (ld.perm && is.null(bootID)) {
+       warning("bootID not supplied. Calc bootID on the fly (default)...")
+       ld.perm <- FALSE
+    }
+    else if (is.integer(bootID)) {
+       ld.perm <- TRUE
+       nBoot <- dim(bootID)[2]
+    }
+    else {
+       warning("Invalid bootID. Calc bootID on the fly (default)...")
+       ld.perm <- FALSE
+       bootID <- NULL
+    }
+
     # construct for param list     
     modelParam <- list(tol=tol, regression=familynum, 
                        estimation=methodnum, stablizer=0, n=object$K)
     # note that nboot excludes the original data set
-    testParams <- list(tol=tol, nboot=nBoot-1, cor_type=corrnum, 
-              test_type=testnum, resamp=resampnum, reprand=rep.seed, punit=pu, showtime=st)
+    testParams <- list(tol=tol, nboot=nBoot-1, cor_type=corrnum, test_type=testnum, 
+              resamp=resampnum, reprand=rep.seed, punit=pu, showtime=st)
 
     # ANOVA
     if (nModels==1) {

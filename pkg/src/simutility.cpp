@@ -281,9 +281,9 @@ int setMonteCarlo(glm *model, double lambda, gsl_matrix *XBeta, gsl_matrix *Sigm
  
    gsl_matrix_memcpy (XBeta, model->Eta);
    if (mtype == POISSON) {
-       // Assuming no random effects, i.e. e*=0
        gsl_matrix_set_identity (Sigma);
-    }
+       // Assuming no random effects, i.e. e*=0
+   }
    else if (mtype == BIN) {
        if (model->n==1) {
        // Adjusting all betas and assuming var=1 
@@ -335,4 +335,52 @@ int setMonteCarlo(glm *model, double lambda, gsl_matrix *XBeta, gsl_matrix *Sigm
    return SUCCESS;
 }
 
+int McSample(glm *model, gsl_rng *rnd, gsl_matrix *XBeta, gsl_matrix *Sigma, gsl_matrix *bY) 
+{
+   unsigned int j, k;
+   unsigned int nRows=XBeta->size1;
+   unsigned int nVars=Sigma->size1;
+   gsl_vector_view yj;
+   double eij, mij, yij;
 
+   if (model->mmRef->model == NB){  // Poisson log-normal
+      for (j=0; j<nRows; j++) {
+          yj = gsl_matrix_row(bY, j);
+          semirmvnorm(rnd, nVars, Sigma, &yj.vector); // random effect
+          for (k=0; k<nVars; k++) {
+              eij=gsl_matrix_get (XBeta, j, k);
+              // m_j = X_j * Beta_j + random_effect
+              if ( model->phi[k]>0 ) { // add random effect
+                 eij = eij + gsl_vector_get(&yj.vector, k);
+              }
+              // Sample from Poisson-Log-Normal dist
+              yij = Rf_rpois(exp(eij));
+              gsl_matrix_set(bY, j, k, yij);
+          }
+       }
+   }
+   else if (model->mmRef->model==BIN) {
+       for (j=0; j<nRows; j++) {
+            yj = gsl_matrix_row(bY, j);
+            semirmvnorm(rnd, nVars, Sigma, &yj.vector); // random effect
+            for (k=0; k<nVars; k++) {
+                eij = gsl_matrix_get (XBeta, j, k); // logit(m)
+                eij = eij + gsl_vector_get(&yj.vector, k);
+                mij = model->invLink(eij);
+                yij = model->genRandist(mij, model->phi[k]);
+                gsl_matrix_set(bY, j, k, yij);
+            }
+       }
+   }
+   else {
+       // Method 1 use R random gen func directly, no random effects
+       for (j=0; j<nRows; j++)
+       for (k=0; k<nVars; k++) {
+            mij = gsl_matrix_get(model->Mu, j, k);
+            yij = model->genRandist(mij, model->phi[k]);
+            gsl_matrix_set(bY, j, k, yij);
+       }
+   }
+
+   return SUCCESS;
+}

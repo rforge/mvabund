@@ -492,6 +492,7 @@ int GetPdstbtion(double *p, unsigned int nVars, unsigned int *isH0var, unsigned 
 //int GetCov (gsl_matrix *Mu, gsl_matrix *Y, unsigned int AR1MAT, gsl_matrix *Sigma);
 //int GetMeanCov(gsl_matrix *X, gsl_matrix *Y, mv_Method *mm, unsigned int AR1MAT, gsl_matrix *Mu, gsl_matrix *Sigma);
 int setMonteCarlo(glm *model, double lambda, gsl_matrix *XBeta, gsl_matrix *Sigma);
+int McSample(glm *model, gsl_rng *rnd, gsl_matrix *XBeta, gsl_matrix *Sigma, gsl_matrix *bT);
 
 // rnd.c - functions to generate random numbers from multivariate (normal) distributions
 // MVN random number generator

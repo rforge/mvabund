@@ -6,10 +6,14 @@
 
 summary.manylm <- function(object, nBoot=1000,resamp="residual", test=object$test, cor.type=object$cor.type, shrink.param=NULL, p.uni="none", studentize=TRUE, R2="h", show.cor = FALSE, show.est=FALSE, show.residuals=FALSE, symbolic.cor = FALSE, tol=1.0e-10, ... ) 
 {
-  # ld.perm and filename for debug use only
-  # ld.perm=TRUE load bootID from file
-   ld.perm = FALSE
-   filename = NULL
+    allargs <- match.call(expand.dots = FALSE)
+    dots <- allargs$...
+    if ("rep.seed" %in% names(dots)) rep.seed <- dots$rep.seed
+    else rep.seed <- FALSE
+    if ("ld.perm" %in% names(dots)) ld.perm <- dots$ld.perm
+    else ld.perm <- FALSE
+    if ("bootID" %in% names(dots)) bootID <- dots$bootID
+    else bootID <- NULL
 
     if(!any(class(object)=="manylm"))
        stop("The function 'summary.manylm' can only be used for a manylm object.")
@@ -77,23 +81,20 @@ summary.manylm <- function(object, nBoot=1000,resamp="residual", test=object$tes
    else if (cor.type == "R")
       shrink.param <- 0 
 
-    if (ld.perm) {
-       if (is.null(filename)) {
-          paths <- .find.package("mvabund")
-          if (resamp == "score")
-             filename <- file.path(getwd(), "data", "scores.dat")
-          else if (resamp == "perm.resid")
-             filename <- file.path(getwd(), "data", "permID.dat")
-          else
-             filename <- file.path(getwd(), "data", "bootID.dat")
-       }
-       bootID <- as.matrix(read.table(filename), nrow=nBoot, ncol=nRows)
-       rep <- 1
-     }
-    else {
-       bootID <- c(FALSE)
-       rep <- 0
+    if (ld.perm && is.null(bootID)) {
+       warning("bootID not supplied. Calc bootID on the fly (default)...")
+       ld.perm <- FALSE
     }
+    else if (is.integer(bootID)) {
+       ld.perm <- TRUE
+       nBoot <- dim(bootID)[2]
+    }
+    else {
+       warning("Invalid bootID. Calc bootID on the fly (default)...")
+       ld.perm <- FALSE
+       bootID <- NULL
+    }
+
     if (studentize) st <- 1
     else st <- 0
     if (substr(R2,1,1) == "h") {
@@ -108,7 +109,7 @@ summary.manylm <- function(object, nBoot=1000,resamp="residual", test=object$tes
        stop ("No such R2 method.")   
 
     # construct for param list      
-    params <- list(tol=tol, nboot=nBoot, cor_type=corr, shrink_param=shrink.param, test_type=testype, resamp=resam, reprand=rep, studentize=st, punit=pu, rsquare=rsq)
+    params <- list(tol=tol, nboot=nBoot, cor_type=corr, shrink_param=shrink.param, test_type=testype, resamp=resam, reprand=rep.seed, studentize=st, punit=pu, rsquare=rsq)
 
     ######## Call Summary Rcpp #########
     val <- .Call("RtoSmryCpp", params, Y, X, bootID, PACKAGE="mvabund")
@@ -148,8 +149,7 @@ summary.manylm <- function(object, nBoot=1000,resamp="residual", test=object$tes
         corrnames <- paste(corrnames, rep(1:nVars, each=rankX), sep="")
         colnames(correlation) <- rownames(correlation) <- corrnames 
     }
-    else
-        correlation <- NULL
+    else correlation <- NULL
     dimnames(R) <- dimnames(X)[c(2,2)]
 
     # test statistics

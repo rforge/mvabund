@@ -853,61 +853,7 @@ int GlmTest::resampNonCase(glm *model, gsl_matrix *bT, unsigned int i)
  	 }
 	 break;
    case MONTECARLO:
-/*        if ( (model->mmRef->model==NB)|(model->mmRef->model==BIN)){
-        // Poisson log-normal with random effects
-           for (j=0; j<nRows; j++) {
-               yj = gsl_matrix_row(bT, j); // borrow space of yj to get
-               semirmvnorm(rnd, nVars, Sigma, &yj.vector); // random effect 
-               for (k=0; k<nVars; k++) {
-                   eij=gsl_matrix_get (XBeta, j, k);
-                   // m_j = X_j * Beta_j + random_effect
-                   if ( model->phi[k]>0 ) // add random effect
-                        eij = eij + gsl_vector_get(&yj.vector, k);
-                   mij = model->invLink(eij);
-                   yij = model->genRandist(mij, model->phi[k]);
-                   gsl_matrix_set(bT, j, k, yij);
-//                   printf("%.2f ", yij);
-               }
-//               printf("\n");
-            }
-        } */
-        if (model->mmRef->model == NB){  // Poisson log-normal
-           for (j=0; j<nRows; j++) {
-               yj = gsl_matrix_row(bT, j);
-               // get random effect ej*         
-               semirmvnorm(rnd, nVars, Sigma, &yj.vector);
-               for (k=0; k<nVars; k++) {
-                   eij=gsl_matrix_get (XBeta, j, k);
-                   // m_j = X_j * Beta_j + random_effect
-                   if ( model->phi[k]>0 ) // add random effect
-                      eij = eij + gsl_vector_get(&yj.vector, k);
-                      yij = gsl_ran_poisson(rnd, exp(eij));
-                      gsl_matrix_set(bT, j, k, yij);
-         }   }   }
-        else if (model->mmRef->model==BIN) {
-           for (j=0; j<nRows; j++) {
-               yj = gsl_matrix_row(bT, j);
-               // get random effect ej*         
-             //   rmvnorm(rnd, nVars, Sigma, &yj.vector);
-               semirmvnorm(rnd, nVars, Sigma, &yj.vector);
-               for (k=0; k<nVars; k++) {
-                   eij = gsl_matrix_get (XBeta, j, k); // logit(m)
-                   eij = eij + gsl_vector_get(&yj.vector, k);
-                   mij = model->invLink(eij);
-                   yij = model->genRandist(mij, model->phi[k]);
-                   gsl_matrix_set(bT, j, k, yij);
-               }
-            }
-        }
-        else {
-            // Method 1 use R random gen func directly
-            for (j=0; j<nRows; j++)
-            for (k=0; k<nVars; k++) {
-                  mij = gsl_matrix_get(model->Mu, j, k);
-                  yij = model->genRandist(mij, model->phi[k]);
-                  gsl_matrix_set(bT, j, k, yij);
-            }
-        }
+        McSample(model, rnd, XBeta, Sigma, bT);
         break;
     case PITSBOOT:
        if (tm->reprand!=TRUE) GetRNGstate();

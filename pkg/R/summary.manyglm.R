@@ -4,15 +4,17 @@
 # 05-Jan-2010
 ###############################################################################
 
-summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.cor = FALSE, show.est=FALSE, show.residuals=FALSE, symbolic.cor = FALSE, show.time=FALSE, rep.seed=FALSE, ... ) 
+summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.cor = FALSE, show.est=FALSE, show.residuals=FALSE, symbolic.cor = FALSE, show.time=FALSE, ... ) 
 {
     tol = object$tol
     allargs <- match.call(expand.dots = FALSE)
     dots <- allargs$...
+    if ("rep.seed" %in% names(dots)) rep.seed <- dots$rep.seed
+    else rep.seed <- FALSE
     if ("ld.perm" %in% names(dots)) ld.perm <- dots$ld.perm
     else ld.perm <- FALSE
-    if ("filename" %in% names(dots)) filename <- dots$filename
-    else filename <- NULL
+    if ("bootID" %in% names(dots)) bootID <- dots$bootID
+    else bootID <- NULL
 
     if (show.time==FALSE) st=0
     else st=1
@@ -23,20 +25,15 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
     }
     if (any(class(object)=="manylm")) {
         if ( test == "LR" ) 
-           return(summary.manylm(object, resamp=resamp, test="LR", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, show.cor=show.cor, show.est=show.est, show.residuals=show.residuals, symbolic.cor=symbolic.cor, tol=tol, ld.perm=ld.perm, filename=filename, ... ))
+           return(summary.manylm(object, resamp=resamp, test="LR", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, show.cor=show.cor, show.est=show.est, show.residuals=show.residuals, symbolic.cor=symbolic.cor, tol=tol, ld.perm=ld.perm, bootID=bootID, ... ))
 	else {   
 	   warning("For an manylm object, only the likelihood ratio test and F test are supported. So the test option is changed to `'F''. ")
-           return(summary.manylm(object, resamp=resamp, test="F", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, show.cor=show.cor, show.est=show.est, show.residuals=show.residuals, symbolic.cor=symbolic.cor, tol=tol, ld.perm=ld.perm, filename=filename, ... ))
+           return(summary.manylm(object, resamp=resamp, test="F", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, show.cor=show.cor, show.est=show.est, show.residuals=show.residuals, symbolic.cor=symbolic.cor, tol=tol, ld.perm=ld.perm, bootID=bootID, ... ))
 	}   
     }
     else if (!any(class(object)=="manyglm"))
        stop("The function 'summary.manyglm' can only be used for a manyglm or manylm object.")
     
-    # ld.perm and filename for debug use only
-    # ld.perm=TRUE load bootID from file
-#    ld.perm = TRUE
-#    filename = NULL 
-
     nRows = nrow(object$y)
     nVars = ncol(object$y)
     nParam = ncol(object$x)
@@ -86,10 +83,6 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
     else if (cor.type == "shrink") corrnum <- 2
     else stop("'cor.type' not defined. Choose one of 'I', 'R', 'shrink'")
 
-    if (ld.perm && !is.null(filename)) 
-        bootID <- as.matrix(read.table(filename), nrow=nBoot, ncol=nRows)
-    else bootID <- c(FALSE)
-
     if (substr(p.uni,1,1) == "n"){
        pu <- 0
        calc.pj <- FALSE
@@ -104,6 +97,20 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
        calc.pj <- TRUE
     } else
        stop("'p.uni' not defined. Choose one of 'single', 'adjusted', 'unadjusted', 'none'.")
+
+    if (ld.perm && is.null(bootID)) {
+       warning("bootID not supplied. Calc bootID on the fly (default)...")
+       ld.perm <- FALSE
+    }
+    else if (is.integer(bootID)) {
+       ld.perm <- TRUE
+       nBoot <- dim(bootID)[2]
+    }
+    else {
+       warning("Invalid bootID. Calc bootID on the fly (default)...")
+       ld.perm <- FALSE
+       bootID <- NULL
+    }
 
     if (corrnum == 2 | resampnum==5 ) {
        # get the shrinkage estimates
