@@ -106,12 +106,13 @@ int GlmTest::summary(glm *fit)
         teststat = gsl_matrix_row(smryStat, 0);
         L1=gsl_matrix_submatrix(L,1,0,nParam-1,nParam);
         lambda=gsl_vector_get(tm->smry_lambda, 0);
-        GeeWald(fit, &L1.matrix, &teststat.vector, lambda);
+        GetR(fit->Res, tm->corr, lambda, Rlambda);
+        GeeWald(fit, &L1.matrix, &teststat.vector);
         // the significance test 
         for (k=2; k<nParam+2; k++) {
             teststat = gsl_matrix_row(smryStat, k-1);
-            L1 = gsl_matrix_submatrix(L, k-2, 0, 1, nParam);
-            GeeWald(fit, &L1.matrix, &teststat.vector, lambda);
+            L1 = gsl_matrix_submatrix(L, k-2, 0, 1, nParam);            
+            GeeWald(fit, &L1.matrix, &teststat.vector);
         }
     }
     else if (tm->test==SCORE) {
@@ -119,7 +120,8 @@ int GlmTest::summary(glm *fit)
             teststat=gsl_matrix_row(smryStat, k-1);
             PtrNull[mtype]->regression(fit->Yref,GrpXs[k].matrix,NULL,NULL); 
             lambda=gsl_vector_get(tm->smry_lambda, k);
-            GeeScore(GrpXs[0].matrix, PtrNull[mtype], &teststat.vector, lambda);
+            GetR(PtrNull[mtype]->Res, tm->corr, lambda, Rlambda);
+            GeeScore(GrpXs[0].matrix, PtrNull[mtype], &teststat.vector);
         }
     }
     else {
@@ -149,7 +151,8 @@ int GlmTest::summary(glm *fit)
 
     if (tm->resamp==MONTECARLO) {
        lambda=gsl_vector_get(tm->smry_lambda,0);
-       setMonteCarlo(fit, lambda, XBeta, Sigma);
+       GetR(fit->Res, tm->corr, lambda, Sigma);
+       setMonteCarlo(fit, XBeta, Sigma);
     }
 
     nSamp=0;
@@ -174,13 +177,13 @@ int GlmTest::summary(glm *fit)
             teststat = gsl_matrix_row(bStat, 0);
             L1=gsl_matrix_submatrix(L,1,0,nParam-1,nParam);
             lambda=gsl_vector_get(tm->smry_lambda, 0);
-            GeeWald(PtrAlt[mtype], &L1.matrix, &teststat.vector, lambda);
+            GetR(PtrAlt[mtype]->Res, tm->corr, lambda, Rlambda);
+            GeeWald(PtrAlt[mtype], &L1.matrix, &teststat.vector);
             // the significance test 
             for (k=2; k<nParam+2; k++) {
                teststat = gsl_matrix_row(bStat, k-1);
                L1 = gsl_matrix_submatrix(L, k-2, 0, 1, nParam);
-               lambda=gsl_vector_get(tm->smry_lambda, k);
-               GeeWald(PtrAlt[mtype], &L1.matrix, &teststat.vector,lambda);
+               GeeWald(PtrAlt[mtype], &L1.matrix, &teststat.vector);
             }
         }
         else if (tm->test==SCORE) {
@@ -188,7 +191,8 @@ int GlmTest::summary(glm *fit)
                teststat=gsl_matrix_row(bStat, k-1);
                PtrNull[mtype]->regression(bY,GrpXs[k].matrix,bO,NULL); 
                lambda=gsl_vector_get(tm->smry_lambda,k);
-               GeeScore(GrpXs[0].matrix, PtrNull[mtype], &teststat.vector, lambda);
+               GetR(PtrNull[mtype]->Res, tm->corr, lambda, Rlambda);
+               GeeScore(GrpXs[0].matrix, PtrNull[mtype], &teststat.vector);
             }
         }
         else {  // use single bAlt estimate works better
@@ -290,14 +294,13 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
     glm *bNull[3] = { &pNullb, &nbNullb, &binNullb };
     glm *bAlt[3] = { &pAltb, &nbAltb, &binAltb };
 
-    gsl_permutation *sortid=NULL;
-    if (tm->punit==FREESTEP) sortid = gsl_permutation_alloc(nVars);
-
     double *suj, *buj, *puj;
     gsl_vector_view teststat, unitstat,ref1, ref0; 
     gsl_matrix *X0=NULL, *X1=NULL, *L1=NULL, *tmp1=NULL, *BetaO=NULL;
     gsl_matrix *bY=gsl_matrix_alloc(nRows, nVars);
     gsl_matrix *bO = gsl_matrix_alloc(nRows, nVars);
+    gsl_permutation *sortid=NULL;
+    if (tm->punit==FREESTEP) sortid = gsl_permutation_alloc(nVars);
 
     // ======= Fit the (first) Alt model =========//
     for (i=0; i<nModels; i++) {
@@ -306,6 +309,8 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
 	     if (gsl_matrix_get(Xin,i,k)!=FALSE) nP++;   
         rdf[i] = nRows-nP;
     }
+//    PtrAlt[mtype]->copyGlm(fit);
+
     for (i=1; i<nModels; i++) {       
         // ======= Fit the Null model =========//
         ID0 = i; ID1 = i-1;
@@ -328,19 +333,19 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
         teststat = gsl_matrix_row(anovaStat, (i-1));
         PtrNull[mtype]->regression(fit->Yref, X0, NULL, NULL); 
         if (tm->test == SCORE) {
-           lambda=gsl_vector_get(tm->anova_lambda,ID0);
-           GeeScore(X1,PtrNull[mtype],&teststat.vector,lambda);
+           lambda = gsl_vector_get(tm->anova_lambda, ID0);
+           GetR(PtrNull[mtype]->Res, tm->corr, lambda, Rlambda);
+           GeeScore(X1, PtrNull[mtype], &teststat.vector);
         }
         else if (tm->test==WALD) {
-//           BetaO = gsl_matrix_alloc(nP1, nVars);
-//           addXrow2(PtrNull[mtype]->Beta, &ref1.vector, BetaO); 
-           PtrAlt[mtype]->regression(fit->Yref, X1, NULL, BetaO);
+           PtrAlt[mtype]->regression(fit->Yref, X1, NULL, NULL);
            L1 = gsl_matrix_alloc (nP1-nP0, nP1);
            tmp1 = gsl_matrix_alloc (nParam, nP1);
            subX(L, &ref1.vector, tmp1);
            subXrow1(tmp1, &ref0.vector, &ref1.vector, L1);
-           lambda=gsl_vector_get(tm->anova_lambda,ID1);
-           GeeWald(PtrAlt[mtype], L1, &teststat.vector, lambda);
+           lambda = gsl_vector_get(tm->anova_lambda, ID1);
+           GetR(PtrAlt[mtype]->Res, tm->corr, lambda, Rlambda);
+           GeeWald(PtrAlt[mtype], L1, &teststat.vector);
         }
         else {              
            BetaO = gsl_matrix_alloc(nP1, nVars);
@@ -351,7 +356,8 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
 //        displayvector(&teststat.vector, "teststat");
         if (tm->resamp==MONTECARLO) {
             lambda=gsl_vector_get(tm->anova_lambda,ID0);
-            setMonteCarlo (PtrNull[mtype], lambda, XBeta, Sigma);
+            GetR(fit->Res, tm->corr, lambda, Sigma);
+            setMonteCarlo (PtrNull[mtype], XBeta, Sigma);
         }
 
 	// ======= Get univariate test statistics =======//
@@ -379,11 +385,15 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
 
             if ( tm->test == WALD ) {
                 bAlt[mtype]->regression(bY,X1,NULL,NULL); 
-                GeeWald(bAlt[mtype], L1, bStat, lambda);
+                lambda = gsl_vector_get(tm->anova_lambda, ID1);
+                GetR(bAlt[mtype]->Res, tm->corr, lambda, Rlambda);
+                GeeWald(bAlt[mtype], L1, bStat);
             }
             else if ( tm->test == SCORE ) {
                 bNull[mtype]->regression(bY,X0,NULL,NULL); 
-                GeeScore(X1, bNull[mtype], bStat, lambda);
+                lambda = gsl_vector_get(tm->anova_lambda, ID0);
+                GetR(bNull[mtype]->Res, tm->corr, lambda, Rlambda);
+                GeeScore(X1, bNull[mtype], bStat);
             }
             else {
 //                bNull[mtype]->regression(bY,X0,NULL,NULL); 
@@ -467,7 +477,7 @@ int GlmTest::GeeLR(glm *PtrAlt, glm *PtrNull, gsl_vector *teststat)
 
 }
 
-int GlmTest::GeeScore(gsl_matrix *X1, glm *PtrNull, gsl_vector *teststat, double lambda)
+int GlmTest::GeeScore(gsl_matrix *X1, glm *PtrNull, gsl_vector *teststat)
 {
     gsl_set_error_handler_off();
 
@@ -518,7 +528,6 @@ int GlmTest::GeeScore(gsl_matrix *X1, glm *PtrNull, gsl_vector *teststat, double
         }
 
         if ( tm->corr!=IDENTITY) {
-            GetR(PtrNull->Res, tm->corr, lambda, Rlambda);
             for (l=0; l<=j; l++) { // lower half
                 alpha = gsl_matrix_get(Rlambda, j, l);
                 Rl=gsl_matrix_submatrix(kRlNull,j*nP,l*nP,nP,nP);
@@ -557,7 +566,7 @@ int GlmTest::GeeScore(gsl_matrix *X1, glm *PtrNull, gsl_vector *teststat, double
 }
 
 // Wald Test used in both summary and anova (polymophism)
-int GlmTest::GeeWald(glm *Alt, gsl_matrix *LL, gsl_vector *teststat, double lambda)
+int GlmTest::GeeWald(glm *Alt, gsl_matrix *LL, gsl_vector *teststat)
 {
     gsl_set_error_handler_off();
 
@@ -612,8 +621,8 @@ int GlmTest::GeeWald(glm *Alt, gsl_matrix *LL, gsl_vector *teststat, double lamb
        gsl_matrix_memcpy(Rl2, LL);
        gsl_blas_dtrmm (CblasRight,CblasLower,CblasNoTrans,CblasNonUnit,1.0,XwX,Rl2); // L*(X'WX)^-1
        gsl_blas_dgemm (CblasNoTrans, CblasTrans, 1.0, Rl2, LL, 0.0, IinvN); // L*(X^T*W*X)^-1*L^T 
-       
-       if ( tm->corr==IDENTITY ) { 
+
+       if ( (tm->punit>0) || (tm->corr==IDENTITY) ) {
           // Unit test: statj=LBeta^T *(IinvN)^-1*LBeta
           if (calcDet(IinvN)<eps) {             
              dj=gsl_matrix_diagonal (IinvN);
@@ -630,8 +639,8 @@ int GlmTest::GeeWald(glm *Alt, gsl_matrix *LL, gsl_vector *teststat, double lamb
           gsl_vector_set(teststat, j+1, sqrt(result));
           sum = sum + result;
        }
-       else { 
-          GetR(Alt->Res,tm->corr,lambda,Rlambda);   
+
+       if (tm->corr!=IDENTITY) {
           // IinvRl=L*vSandRl*L^T 
           for (l=0; l<=j; l++) {
               Rl=gsl_matrix_submatrix(IinvRl,j*nDF,l*nDF,nDF,nDF);
@@ -643,9 +652,11 @@ int GlmTest::GeeWald(glm *Alt, gsl_matrix *LL, gsl_vector *teststat, double lamb
               gsl_blas_dgemm(CblasNoTrans,CblasTrans,1.0,Rl2,LL,0.0,&Rl.matrix);
           } // end l
        }  // end if (tm->corr) 
+
     } // end for j=1:nVars       
 
-    if ( tm->corr==IDENTITY ) gsl_vector_set(teststat, 0, sqrt(sum));
+    if ( tm->corr==IDENTITY ) 
+        gsl_vector_set(teststat, 0, sqrt(sum));
     else {
         // Multi test: stat = LBeta^T * inv(IinvRl) * LBeta
         if (calcDet(IinvRl)<eps) {

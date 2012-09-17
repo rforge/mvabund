@@ -429,8 +429,8 @@ class GlmTest
 	    int getBootID(void);
 
 //	    int geeCalc(glm *PtrAlt, glm *PtrNull, gsl_matrix *);
-	    int GeeWald(glm *, gsl_matrix *, gsl_vector *, double lambda);
-	    int GeeScore(gsl_matrix *, glm *, gsl_vector *, double lambda);
+	    int GeeWald(glm *, gsl_matrix *, gsl_vector *);
+	    int GeeScore(gsl_matrix *, glm *, gsl_vector *);
 	    int GeeLR(glm *PtrAlt, glm *PtrNull, gsl_vector *teststat);
 
 //            int resampSmryCase(glm *, gsl_matrix *, GrpMat *, GrpMat *, unsigned int i ); // summary
@@ -491,7 +491,7 @@ int GetMean(gsl_matrix *X, gsl_matrix *Y, gsl_matrix *Mu);
 int GetPdstbtion(double *p, unsigned int nVars, unsigned int *isH0var, unsigned int *cnt, unsigned int *cntfwe);
 //int GetCov (gsl_matrix *Mu, gsl_matrix *Y, unsigned int AR1MAT, gsl_matrix *Sigma);
 //int GetMeanCov(gsl_matrix *X, gsl_matrix *Y, mv_Method *mm, unsigned int AR1MAT, gsl_matrix *Mu, gsl_matrix *Sigma);
-int setMonteCarlo(glm *model, double lambda, gsl_matrix *XBeta, gsl_matrix *Sigma);
+int setMonteCarlo(glm *model, gsl_matrix *XBeta, gsl_matrix *Sigma);
 int McSample(glm *model, gsl_rng *rnd, gsl_matrix *XBeta, gsl_matrix *Sigma, gsl_matrix *bT);
 
 // rnd.c - functions to generate random numbers from multivariate (normal) distributions

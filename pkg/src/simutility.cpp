@@ -273,7 +273,7 @@ int GetH0var(gsl_matrix *Sigma, unsigned int *isH0var)
     return 0;
 }
 
-int setMonteCarlo(glm *model, double lambda, gsl_matrix *XBeta, gsl_matrix *Sigma)
+int setMonteCarlo(glm *model, gsl_matrix *XBeta, gsl_matrix *Sigma)
 {
    unsigned int j;
    unsigned int mtype=model->mmRef->model;
@@ -294,7 +294,6 @@ int setMonteCarlo(glm *model, double lambda, gsl_matrix *XBeta, gsl_matrix *Sigm
           scale = sqrt(1 + gsl_pow_2(k)*gsl_pow_2(sd));
           gsl_matrix_scale (XBeta, scale);
        }
-       GetR(model->Res, SHRINK, lambda, Sigma);
    }
    else if (model->mmRef->model == NB) {
        // Adjusting the intercept to account for random effects
@@ -321,7 +320,6 @@ int setMonteCarlo(glm *model, double lambda, gsl_matrix *XBeta, gsl_matrix *Sigm
            if (model->phi[j]==0) gsl_vector_set(&d.vector, j, 1.0);
 
        // Sigma = diag(var)*R*diag(var)
-       GetR(model->Res, SHRINK, lambda, Sigma);
        gsl_matrix_mul_elements(Sigma, Sd);
        // displaymatrix(Sigma, "log-normal Sigma");
 
