@@ -7,7 +7,7 @@ Fits for Abundance Data}
 generalized linear model fits.}
 \usage{
 \method{anova}{manyglm}(object, \dots, resamp="pit.trap", test="LR", 
-    p.uni="none", nBoot=1000, cor.type=object$cor.type, show.time=FALSE, rep.seed=FALSE, ld.perm=FALSE, bootID=NULL) 
+    p.uni="none", nBoot=1000, cor.type=object$cor.type, show.time=FALSE, rep.seed=FALSE, bootID=NULL) 
 \method{print}{anova.manyglm}(x, \dots) 
 }
 \arguments{
@@ -30,7 +30,6 @@ step-down resampling procedure.
 }
 \item{show.time}{logical. Whether to display timing information for the resampling procedure.}
 \item{rep.seed}{logical. Whether to fix random seed in resampling data. Useful for simulation or diagnostic purposes.}
-\item{ld.perm}{logical. Whether to load bootstrap id's from an external file. Default is \code{FALSE}, which will generate bootstrap id's on the fly.}
 \item{bootID}{an integer matrix where each row specifies bootstrap id's in each resampling run. When \code{bootID} is supplied, \code{nBoot} is set to the number of rows in \code{bootID}. Default is \code{NULL}.}
 \item{x}{an object of class "summary.manyglm", usually, a result of a call to
 \code{\link[mvabund:summary.manyglm]{summary.manyglm}}.}

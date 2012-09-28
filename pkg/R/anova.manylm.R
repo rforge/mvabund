@@ -4,7 +4,7 @@
 # 05-Jan-2010
 ###############################################################################
 
-anova.manylm <- function(object, ..., resamp="perm.resid", test="F", p.uni="none", nBoot=1000, cor.type=object$cor.type, shrink.param=object$shrink.param, studentize=TRUE, calc.rss = FALSE, tol=1.0e-10, rep.seed=FALSE, ld.perm=FALSE, bootID=NULL) 
+anova.manylm <- function(object, ..., resamp="perm.resid", test="F", p.uni="none", nBoot=1000, cor.type=object$cor.type, shrink.param=object$shrink.param, studentize=TRUE, calc.rss = FALSE, tol=1.0e-10, rep.seed=FALSE, bootID=NULL) 
 {
     if(!any(class(object)=="manylm"))
        stop("The function 'anova.manylm' can only be used for a manylm object.")
@@ -90,18 +90,15 @@ anova.manylm <- function(object, ..., resamp="perm.resid", test="F", p.uni="none
           stop("the absolute 'shrink.param' should be between 0 and 1")
    }
 
-    if (ld.perm && is.null(bootID)) {
-       warning("bootID not supplied. Calc bootID on the fly (default)...")
-       ld.perm <- FALSE
-    }
-    else if (is.integer(bootID)) {
-       ld.perm <- TRUE
-       nBoot <- dim(bootID)[2]
-    }
-    else {
-       warning("Invalid bootID. Calc bootID on the fly (default)...")
-       ld.perm <- FALSE
-       bootID <- NULL
+    if (!is.null(bootID)) {
+        nBoot<-dim(bootID)[2]
+	if (is.integer(bootID)) {
+	   cat(paste("Input bootID matrix being used for testing.","\n"))
+	}
+	else {
+	   bootID <- NULL
+	   cat(paste("Invalid bootID. Calculate bootID matrix on the fly.","\n"))
+	}
     }
 
     if (studentize) st <- 1

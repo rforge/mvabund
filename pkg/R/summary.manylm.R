@@ -81,19 +81,17 @@ summary.manylm <- function(object, nBoot=1000,resamp="residual", test=object$tes
    else if (cor.type == "R")
       shrink.param <- 0 
 
-    if (ld.perm && is.null(bootID)) {
-       warning("bootID not supplied. Calc bootID on the fly (default)...")
-       ld.perm <- FALSE
+    if (!is.null(bootID)) {
+       nBoot<-dim(bootID)[2]
+       if (is.integer(bootID)) {
+           cat(paste("Input bootID matrix being used for testing.","\n"))
+       }		         
+       else {
+           bootID <- NULL
+	   cat(paste("Invalid bootID. Calculate bootID matrix on the fly.","\n"))
+       }
     }
-    else if (is.integer(bootID)) {
-       ld.perm <- TRUE
-       nBoot <- dim(bootID)[2]
-    }
-    else {
-       warning("Invalid bootID. Calc bootID on the fly (default)...")
-       ld.perm <- FALSE
-       bootID <- NULL
-    }
+
 
     if (studentize) st <- 1
     else st <- 0

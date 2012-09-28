@@ -140,7 +140,8 @@ RcppExport SEXP RtoGlmAnova(SEXP mpar, SEXP tpar, SEXP Ysexp, SEXP Xsexp,
     unsigned int hours = floor((double)(dif/(double)3600));
     unsigned int min = floor((double)(dif%3600)/(double)60);
     unsigned int sec = dif%60;   
-    Rprintf("Time elapsed: %d hr %d min %d sec\n", hours, min, sec);
+    if (tm.showtime==TRUE)
+        Rprintf("Time elapsed: %d hr %d min %d sec\n", hours, min, sec);
 
     // Wrap the gsl objects with Rcpp 
     NumericVector Vec_df(myTest.dfDiff, myTest.dfDiff+nModels-1);

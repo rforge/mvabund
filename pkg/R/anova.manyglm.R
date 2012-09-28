@@ -4,7 +4,7 @@
 # 11-Nov-2011
 ###############################################################################
 
-anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.time=FALSE, rep.seed=FALSE, ld.perm=FALSE, bootID=NULL) 
+anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.time=FALSE, rep.seed=FALSE, bootID=NULL)
 {
     if (cor.type!="I" & test=="LR") {
         warning("The likelihood ratio test can only be used if correlation matrix of the abundances is is assumed to be the Identity matrix. The Wald Test will be used.")
@@ -16,11 +16,11 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
 
     if (any(class(object) == "manylm")) {
         if ( test == "LR" ) 
-	    return(anova.manylm(object, ..., resamp=resamp, test="LR", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, shrink.param=object$shrink.param, tol=tol, ld.perm=ld.perm, bootID=bootID))
+        return(anova.manylm(object, ..., resamp=resamp, test="LR", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, shrink.param=object$shrink.param, bootID=bootID))
         else {
-	    warning("For an manylm object, only the likelihood ratio test and F test are supported. So the test option is changed to `'F''. ")
-	    return(anova.manylm(object, resamp=resamp, test="F", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, tol=tol, ld.perm=ld.perm, bootID=bootID, ... ))
-	}
+        warning("For an manylm object, only the likelihood ratio test and F test are supported. So the test option is changed to `'F''. ")
+        return(anova.manylm(object, resamp=resamp, test="F", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, bootID=bootID, ... ))
+    }
     }   
     else if (!any(class(object)=="manyglm"))
         stop("The function 'anova.manyglm' can only be used for a manyglm or manylm object.")
@@ -53,7 +53,7 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
     if (is.null(Y)) {
     #      mu.eta <- object$family$mu.eta
         eta <- object$linear.predictor
-        Y <- object$fitted.values + object$Pearson.residuals * log(eta)	     
+        Y <- object$fitted.values + object$Pearson.residuals * log(eta)      
      }
 
     w <- object$weights
@@ -84,10 +84,15 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
     else stop("'resamp' not defined. Choose one of 'case', 'resid', 'score', 'perm.resid', 'montecarlo', 'pit.trap'")    
 
     # allows case and parametric bootstrap only for binomial regression
-    if ( (familynum==3)&&(resampnum!=5)&&(resampnum!=8) ) {     
-       warning("'montecarlo' or 'pit.trap' should be used for binomial regression. Setting option to 'pit.trap'.")
-       resamp <- "montecarlo"
-       resampnum <- 5       
+    if ( (familynum==3)&&(resampnum!=5)&&(resampnum!=8) ) { 
+    #    if (override==T)    
+    #       warning("'montecarlo' or 'pit.trap' should be used for binomial regression. Only proceeding because override=T, but I'd rather not...")
+    #    else
+    #    {
+        warning("'montecarlo' or 'pit.trap' should be used for binomial regression.")
+    #       resamp <- "pit.trap"
+    #       resampnum <- 8
+    #    }
     }
     
     if (substr(test,1,1) == "w") testnum <- 2 # wald
@@ -120,19 +125,15 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
     } else
        stop("'p.uni' not defined. Choose one of 'adjusted', 'unadjusted', 'none'.")
 
-#browser()
-    if (ld.perm && is.null(bootID)) {
-       warning("bootID not supplied. Calc bootID on the fly (default)...")
-       ld.perm <- FALSE
-    }
-    else if (is.integer(bootID)) {
-       ld.perm <- TRUE
-       nBoot <- dim(bootID)[2]
-    }
-    else {
-       warning("Invalid bootID. Calc bootID on the fly (default)...")
-       ld.perm <- FALSE
-       bootID <- NULL
+    if (!is.null(bootID)) {
+       nBoot<-dim(bootID)[2]
+       if (is.integer(bootID)) {
+	   cat(paste("Input bootID matrix being used for testing.","\n"))
+       }
+       else {
+           bootID <- NULL
+	   cat(paste("Invalid bootID. Calculate bootID matrix on the fly.","\n"))
+       }
     }
 
     # construct for param list     
@@ -143,24 +144,28 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
               resamp=resampnum, reprand=rep.seed, punit=pu, showtime=st)
 
     # ANOVA
-    if (nModels==1) {
+    if (nModels==1)
+    {
        # test the significance of each model terms
        X <- object$x
        varseq <- object$assign
        resdev <- resdf <- NULL
        tl <- attr(object$terms, "term.labels")
        # if intercept is included
-       if (attr(object$terms,"intercept")==0) {
+       if (attr(object$terms,"intercept")==0)
+       {
           minterm = 1
           nterms = max(1, varseq)
        }
-       else {
+       else
+       {
           minterm = 0
           nterms <- max(0, varseq)+1
           tl <- c("(Intercept)", tl)
        }
        XvarIn <- matrix(ncol=nParam, nrow=nterms, 1)
-       for ( i in 0:(nterms-2)) { # exclude object itself
+       for ( i in 0:(nterms-2))
+       { # exclude object itself
            XvarIn[nterms-i, varseq>i+minterm] <- 0 # in reversed order
            ncoef <- nParam-length(varseq[varseq>i+minterm])
            resdf <- c(resdf, nRows-ncoef)
@@ -174,20 +179,20 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
 #          shrink.param <- c(rep(NA, nterms))
           # use a single shrinkage parameter for all models
           if (object$cor.type == "shrink") {
-#       	      shrink.param[1] <- object$shrink.param
-       	      shrink.param <- rep(object$shrink.param,nterms)
+#                 shrink.param[1] <- object$shrink.param
+              shrink.param <- rep(object$shrink.param,nterms)
           }
-	  else  {
+      else  {
 #              shrink.param[1] <- ridgeParamEst(dat=object$Pearson.residuals, X=tX, 
-#	                     only.ridge=TRUE)$ridgeParam      
+#                        only.ridge=TRUE)$ridgeParam      
   
               lambda <- ridgeParamEst(dat=object$Pearson.residuals, X=tX, 
-	                     only.ridge=TRUE)$ridgeParam          
+                         only.ridge=TRUE)$ridgeParam          
               shrink.param <- rep(lambda, nterms)
           }
 #          for ( i in 0:(nterms-2)){ # exclude object itself
 #              fit <- .Call("RtoGlm", modelParam, Y, X[,varseq<=i+minterm,drop=FALSE], 
-#	              PACKAGE="mvabund")
+#                 PACKAGE="mvabund")
 #              shrink.param[nterms-i] <- ridgeParamEst(dat=fit$Pearson.residuals, 
 #                      X=tX, only.ridge=TRUE)$ridgeParam # in reversed order
 #           }
@@ -200,7 +205,7 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
        topnote <- paste("Model:", deparse(object$call))
     }   
     else {
-        targs <- match.call(call = sys.call(which = 1), expand.dots = FALSE)
+        targs <- match.call(call = sys.call(sys.parent()), expand.dots = FALSE)
         if (targs[[1]] == "example")
             modelnamelist <- paste("Model ", format(1:nModels))
         else    
@@ -216,14 +221,14 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
 
         # get the shrinkage estimates
         if (corrnum == 2 | resampnum == 5) { # shrinkage or parametric bootstrap
-	    shrink.param <- c(rep(NA,nModels))
-    	    tX <- matrix(1, nrow=nRows, ncol=1)
-	    for ( i in 1:nModels ) {
-	        if (objects[[i]]$cor.type == "shrink") 
+        shrink.param <- c(rep(NA,nModels))
+            tX <- matrix(1, nrow=nRows, ncol=1)
+        for ( i in 1:nModels ) {
+            if (objects[[i]]$cor.type == "shrink") 
                     shrink.param[i] <- objects[[i]]$shrink.param
-	        else shrink.param[i] <- ridgeParamEst(dat=objects[[i]]$Pearson.residuals, X=tX, only.ridge=TRUE)$ridgeParam 
-	    }
-	}
+            else shrink.param[i] <- ridgeParamEst(dat=objects[[i]]$Pearson.residuals, X=tX, only.ridge=TRUE)$ridgeParam 
+        }
+    }
         else if (corrnum == 0) shrink.param <- c(rep(1,nModels))
         else if (corrnum == 1) shrink.param <- c(rep(0,nModels))
 
@@ -260,13 +265,13 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
         Xnames <- lapply(objects, function(x) paste(deparse(formula(x), 
                          width.cutoff=500), collapse = "\n")) 
         topnote <- paste(modelnamelist, ": ", Xnames, sep = "", collapse = "\n")
-        tl <- modelnamelist	
+        tl <- modelnamelist 
         ord <- (nModels-1):1
     }
 
 # browser()
     ######## call resampTest Rcpp #########
-    val <- .Call("RtoGlmAnova", modelParam, testParams, Y, X, 
+    val <- .Call("RtoGlmAnova", modelParam, testParams, Y, XAlt, 
                  XvarIn, bootID, shrink.param, PACKAGE="mvabund")
 
     # prepare output summary

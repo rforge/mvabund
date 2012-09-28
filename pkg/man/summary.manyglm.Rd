@@ -30,8 +30,7 @@ symbolic form (see \code{\link{symnum}} ) rather than in numerical format.
 \item{show.time}{logical. Whether to display timing information for the resampling procedure.}
 \item{\dots}{for \code{summary.manyglm} method, these are additional arguments including: \cr
 \code{rep.seed} - logical. Whether to fix random seed in resampling data. Useful for simulation or diagnostic purposes.\cr
-\code{ld.perm} - logical. Whether to load bootstrap id's from an external file. Default is \code{FALSE}, which will generate bootstrap id's on the fly.\cr
-\code{bootID} - if \code{ld.perm} is \code{TRUE}, this matrix should be integer numbers where each row specifies bootstrap id's in each resampling run. When \code{bootID} is supplied, \code{nBoot} is set to the number of rows in \code{bootID}. Default is \code{NULL}.\cr
+\code{bootID} - this matrix should be integer numbers where each row specifies bootstrap id's in each resampling run. When \code{bootID} is supplied, \code{nBoot} is set to the number of rows in \code{bootID}. Default is \code{NULL}.\cr
 for \code{print.summary.manyglm} method, these are optional further arguments passed to or from other methods. See \code{\link{print.summary.glm}} for more details.}
 \item{x}{an object of class "summary.manyglm", usually, a result of a call to
 \code{summary.manyglm}.}

@@ -116,7 +116,8 @@ RcppExport SEXP RtoGlmSmry(SEXP mpar, SEXP tpar, SEXP Ysexp, SEXP Xsexp,
     unsigned int hours = floor((double)dif/(double)3600);
     unsigned int min = floor((double)(dif-hours*3600)/(double)60);
     unsigned int sec = dif - hours*3600 - min*60;
-    Rprintf("Time elapsed: %d hr %d min %d sec\n", hours, min, sec);
+    if (tm.showtime==TRUE)
+       Rprintf("Time elapsed: %d hr %d min %d sec\n", hours, min, sec);
 
     // Wrap gsl vectors with Rcpp 
     double multstat, Pmultstat;

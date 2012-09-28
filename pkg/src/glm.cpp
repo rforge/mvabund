@@ -17,7 +17,7 @@ glm::glm(const reg_Method *mm)
 { 
      n=mmRef->n;
      maxiter = 50;
-     eps = 1e-5;
+     eps = mmRef->tol;
      if (mmRef->model==BIN) maxtol=n-eps;
      else maxtol = 1/eps;
 }
@@ -164,9 +164,6 @@ void glm::initialGlm(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
        gsl_vector_set_all(&b0.vector, 1.0);
     }
 
-//   displaymatrix(Eta, "Eta");
-//   displaymatrix(Mu, "Mu");
-
    rdf = nRows - nParams;
 }
 
@@ -291,7 +288,7 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
    int status, isValid;
    unsigned int i, j, ngoodobs;
    unsigned int step, step1; 
-   double wij, zij, eij, mij, yij;   
+   double wij, zij, eij, mij, yij, bij;   
    double dev_old, dev_grad=1.0;
    unsigned int *good = new unsigned int [nRows];
    gsl_vector_view Xwi;
@@ -313,22 +310,18 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
            good[i]=TRUE;
            eij = gsl_matrix_get(Eta, i, id);
            mij = gsl_matrix_get(Mu, i, id);  
-           if ((mij<eps)|(mij>maxtol)) 
-	      good[i]=FALSE;
-  //         if ((mmRef->model==BIN)&(rcpLinkDash(mij)<eps*maxtol))
-  //            good[i]=FALSE;
-  //         if ((mmRef->model!=BIN)&(rcpLinkDash(mij)<eps))
+           if ((mij<eps)|(mij>maxtol)) good[i]=FALSE;
            if (rcpLinkDash(mij)<eps) good[i]=FALSE;
            if (good[i]==TRUE) ngoodobs++;
        }  
     
        if (ngoodobs==0) {
- //          printf("mij(rcpLinkDash)\n");
-//           for (i=0; i<nRows; i++) {
-//              mij = gsl_matrix_get(Mu, i, id);
- //             printf("%.8f(%.8f)\t", mij, rcpLinkDash(mij));
- //          }
- //          printf("\nError: ngoodobs=0\n");      
+//          printf("mij(rcpLinkDash)\n");
+//          for (i=0; i<nRows; i++) {
+//             mij = gsl_matrix_get(Mu, i, id);
+//              printf("%.8f(%.8f)\t", mij, rcpLinkDash(mij));
+//           }
+//           printf("\nError: ngoodobs=0\n");      
           for (i=0; i<nRows; i++) {
               good[i]=TRUE;
 	      if (rcpLinkDash(mij)<eps*0.1) good[i]=FALSE;
@@ -375,7 +368,6 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
        }
        gsl_blas_dgemv(CblasTrans,1.0,WX,z,0.0,Xwz);
        gsl_linalg_cholesky_solve (XwX, Xwz, &bj.vector);
-
        // Given bj, update eta, mu
        dev_old = dev[id];
        isValid=predict(bj, coef_old, id, phi);
@@ -386,7 +378,8 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
        // If divergent or increasing deviance, half step
        // (step>1) -> (step>0) gives weired results for NBin fit       
        // below works for boundary values, esp BIN fit but not NBin fit
-       while (((dev[id]>10)|(dev_grad>-0.25))&(step>1)){
+//       while (((dev[id]>10)|(dev_grad>-0.25))&(step>1)){
+       while (((dev[id]>10)|(dev_grad>0))&(step>1)){
             gsl_vector_add (&bj.vector, coef_old);
             gsl_vector_scale (&bj.vector, 0.5);
             dev_old=dev[id];
@@ -402,8 +395,11 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
        }
        gsl_vector_free(z);
        gsl_matrix_free(WX); 
-       if ((isValid==TRUE)) 
-          gsl_vector_memcpy (coef_old, &bj.vector); 
+       if (isValid==TRUE) {
+          gsl_vector_memcpy (coef_old, &bj.vector);
+//	  displayvector(coef_old, "coef_old");
+       }	 
+//       else printf("isValid= FALSE\n");	  
        step++;
        if (*tol<eps) break;
    } 
@@ -438,12 +434,15 @@ int PoissonGlm::update(gsl_vector *bj, unsigned int id)
        gsl_blas_ddot (&xi.vector, bj, &eij);
        if (Oref!=NULL) 
           eij = eij+gsl_matrix_get(Oref, i, id);
-       mij = invLink(eij);
-       if ((mij<eps)|(mij>maxtol)){
-          mij=(mij<eps)?eps:((mij>maxtol)?maxtol:mij);
-          eij=link(mij);
-          isValid = FALSE;
+       if (eij>link(maxtol)) { // to avoid nan;
+          eij = link(maxtol);
+	  isValid=FALSE;
        }
+       if (eij<link(eps)){
+          eij = link(eps);
+	  isValid=FALSE;
+       }
+       mij = invLink(eij);
        gsl_matrix_set(Eta, i, id, eij);
        gsl_matrix_set(Mu, i, id, mij);
    } 
@@ -453,13 +452,13 @@ int PoissonGlm::update(gsl_vector *bj, unsigned int id)
 
 int PoissonGlm::predict(gsl_vector_view bj, gsl_vector *coef_old, unsigned int id, double phi) 
 {
-    unsigned int step, i;
+    unsigned int i;
     double yij, mij;
-//    double bij, diff, delta;
     
     int isValid=update(&bj.vector, id);
 
-/*    step=0;
+/*    double bij, diff, delta;
+    unsigned int step=0;
     while ( isValid==FALSE ) {
          // Step too large, half step 
          gsl_vector_add (&bj.vector, coef_old);
@@ -482,7 +481,7 @@ int PoissonGlm::predict(gsl_vector_view bj, gsl_vector *coef_old, unsigned int i
              break;
          }
      }
-*/
+*/      
      // Given valid mj, estimate deviance
      dev[id]=0;
      for ( i=0; i<nRows; i++ ) {
@@ -776,9 +775,9 @@ void glm::display(void)
 //    for ( j=0; j<nVars; j++ ) printf("%.2f ", aic[j]);	
 //    printf("\n");
 //    printf("# of convergence\n");    
-//    for ( j=0; j<nVars; j++ )
-//        printf("%d ", iterconv[j]); 
-//    printf("\n");	       
+    for ( j=0; j<nVars; j++ )
+        printf("%d ", iterconv[j]); 
+    printf("\n");	       
 //   printf("Residual deviance=\n " );
 //    for ( j=0; j<nVars; j++ ) printf("%.2f ", dev[j]);
 //    printf("\n");	       
@@ -791,9 +790,9 @@ void glm::display(void)
 //       displaymatrix(Oref, "O");
 //    displaymatrix(Xref, "X");
 //    displaymatrix(Eta, "Eta");
-//    displaymatrix(Beta, "Beta");
+    displaymatrix(Beta, "Beta");
 //    displaymatrix(varBeta, "varBeta");
-//    displaymatrix(Mu, "Mu");
+    displaymatrix(Mu, "Mu");
 //    displaymatrix(Var, "Var");    
 //    displaymatrix(PitRes, "PitRes");    
 //    displaymatrix(sqrt1_Hii, "sqrt1_Hii");    

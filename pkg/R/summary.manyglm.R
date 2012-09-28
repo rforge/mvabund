@@ -11,8 +11,6 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
     dots <- allargs$...
     if ("rep.seed" %in% names(dots)) rep.seed <- dots$rep.seed
     else rep.seed <- FALSE
-    if ("ld.perm" %in% names(dots)) ld.perm <- dots$ld.perm
-    else ld.perm <- FALSE
     if ("bootID" %in% names(dots)) bootID <- dots$bootID
     else bootID <- NULL
 
@@ -25,10 +23,10 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
     }
     if (any(class(object)=="manylm")) {
         if ( test == "LR" ) 
-           return(summary.manylm(object, resamp=resamp, test="LR", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, show.cor=show.cor, show.est=show.est, show.residuals=show.residuals, symbolic.cor=symbolic.cor, tol=tol, ld.perm=ld.perm, bootID=bootID, ... ))
+           return(summary.manylm(object, resamp=resamp, test="LR", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, show.cor=show.cor, show.est=show.est, show.residuals=show.residuals, symbolic.cor=symbolic.cor, tol=tol, bootID=bootID, ... ))
 	else {   
 	   warning("For an manylm object, only the likelihood ratio test and F test are supported. So the test option is changed to `'F''. ")
-           return(summary.manylm(object, resamp=resamp, test="F", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, show.cor=show.cor, show.est=show.est, show.residuals=show.residuals, symbolic.cor=symbolic.cor, tol=tol, ld.perm=ld.perm, bootID=bootID, ... ))
+           return(summary.manylm(object, resamp=resamp, test="F", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, show.cor=show.cor, show.est=show.est, show.residuals=show.residuals, symbolic.cor=symbolic.cor, tol=tol, bootID=bootID, ... ))
 	}   
     }
     else if (!any(class(object)=="manyglm"))
@@ -98,21 +96,18 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
     } else
        stop("'p.uni' not defined. Choose one of 'single', 'adjusted', 'unadjusted', 'none'.")
 
-    if (ld.perm && is.null(bootID)) {
-       warning("bootID not supplied. Calc bootID on the fly (default)...")
-       ld.perm <- FALSE
-    }
-    else if (is.integer(bootID)) {
-       ld.perm <- TRUE
-       nBoot <- dim(bootID)[2]
-    }
-    else {
-       warning("Invalid bootID. Calc bootID on the fly (default)...")
-       ld.perm <- FALSE
-       bootID <- NULL
-    }
+ if (!is.null(bootID)) {
+     nBoot<-dim(bootID)[2]
+     if (is.integer(bootID)) {
+        cat(paste("Input bootID matrix being used for testing.","\n"))       
+     }
+     else {
+        bootID <- NULL
+	cat(paste("Invalid bootID. Calculate bootID matrix on the fly.","\n"))
+     }
+ } 
 
-    if (corrnum == 2 | resampnum==5 ) {
+  if (corrnum == 2 | resampnum==5 ) {
        # get the shrinkage estimates
        shrink.param <- c(rep(NA,nParam+2))
        tX <- matrix(1, nRows, 1)
