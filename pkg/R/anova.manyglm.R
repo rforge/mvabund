@@ -271,7 +271,7 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
 
 # browser()
     ######## call resampTest Rcpp #########
-    val <- .Call("RtoGlmAnova", modelParam, testParams, Y, XAlt, 
+    val <- .Call("RtoGlmAnova", modelParam, testParams, Y, X, 
                  XvarIn, bootID, shrink.param, PACKAGE="mvabund")
 
     # prepare output summary
