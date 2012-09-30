@@ -128,11 +128,11 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
     if (!is.null(bootID)) {
        nBoot<-dim(bootID)[2]
        if (is.integer(bootID)) {
-	   cat(paste("Input bootID matrix being used for testing.","\n"))
+       cat(paste("Input bootID matrix being used for testing.","\n"))
        }
        else {
            bootID <- NULL
-	   cat(paste("Invalid bootID. Calculate bootID matrix on the fly.","\n"))
+       cat(paste("Invalid bootID. Calculate bootID matrix on the fly.","\n"))
        }
     }
 
@@ -205,7 +205,7 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
        topnote <- paste("Model:", deparse(object$call))
     }   
     else {
-        targs <- match.call(call = sys.call(sys.parent()), expand.dots = FALSE)
+        targs <- match.call(expand.dots = FALSE)
         if (targs[[1]] == "example")
             modelnamelist <- paste("Model ", format(1:nModels))
         else    
