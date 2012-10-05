@@ -347,10 +347,9 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
            GeeWald(PtrAlt[mtype], L1, &teststat.vector);
         }
         else {              
-//           BetaO = gsl_matrix_alloc(nP1, nVars);
-//           addXrow2(PtrNull[mtype]->Beta, &ref1.vector, BetaO); 
-//           PtrAlt[mtype]->regression(fit->Yref, X1, NULL, BetaO);
-           PtrAlt[mtype]->regression(fit->Yref, X1, NULL, NULL);
+           BetaO = gsl_matrix_alloc(nP1, nVars);
+           addXrow2(PtrNull[mtype]->Beta, &ref1.vector, BetaO); 
+           PtrAlt[mtype]->regression(fit->Yref, X1, NULL, BetaO);
 //	   PtrNull[mtype]->display();
 //	   PtrAlt[mtype]->display();
            GeeLR(PtrAlt[mtype], PtrNull[mtype], &teststat.vector); 
@@ -399,11 +398,11 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
                 GeeScore(X1, bNull[mtype], bStat);
             }
             else {
-//                bNull[mtype]->regression(bY,X0,bO,NULL); 
-                bNull[mtype]->EstIRLS(bY,X0,bO,NULL,PtrNull[mtype]->phi); 
-//                addXrow2(bNull[mtype]->Beta, &ref1.vector, BetaO); 
-//                bAlt[mtype]->regression(bY,X1,bO,BetaO); 
-                bAlt[mtype]->EstIRLS(bY,X1,bO,NULL,PtrAlt[mtype]->phi); 
+                bNull[mtype]->regression(bY,X0,bO,NULL); 
+//                bNull[mtype]->EstIRLS(bY,X0,bO,NULL,PtrNull[mtype]->phi); 
+                addXrow2(bNull[mtype]->Beta, &ref1.vector, BetaO); 
+                bAlt[mtype]->regression(bY,X1,bO,BetaO); 
+//                bAlt[mtype]->EstIRLS(bY,X1,bO,BetaO,PtrAlt[mtype]->phi); 
                 GeeLR(bAlt[mtype], bNull[mtype], bStat);    
             }
             // ----- get multivariate counts ------- //   

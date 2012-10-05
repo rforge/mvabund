@@ -128,16 +128,16 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
     if (!is.null(bootID)) {
        nBoot<-dim(bootID)[2]
        if (is.integer(bootID)) {
-       cat(paste("Input bootID matrix being used for testing.","\n"))
+	   cat(paste("Input bootID matrix being used for testing.","\n"))
        }
        else {
            bootID <- NULL
-       cat(paste("Invalid bootID. Calculate bootID matrix on the fly.","\n"))
+	   cat(paste("Invalid bootID. Calculate bootID matrix on the fly.","\n"))
        }
     }
 
     # construct for param list     
-    modelParam <- list(tol=tol, regression=familynum, 
+    modelParam <- list(tol=tol, regression=familynum, maxiter=object$maxiter,
                        estimation=methodnum, stablizer=0, n=object$K)
     # note that nboot excludes the original data set
     testParams <- list(tol=tol, nboot=nBoot-1, cor_type=corrnum, test_type=testnum, 
@@ -205,7 +205,7 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
        topnote <- paste("Model:", deparse(object$call))
     }   
     else {
-        targs <- match.call(expand.dots = FALSE)
+        targs <- match.call(call = sys.call(sys.parent()), expand.dots = FALSE)
         if (targs[[1]] == "example")
             modelnamelist <- paste("Model ", format(1:nModels))
         else    

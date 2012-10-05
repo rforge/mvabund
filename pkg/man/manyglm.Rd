@@ -8,7 +8,7 @@
 manyglm(formula, family="negative.binomial", K=1, data=NULL, subset=NULL, 
     na.action=options("na.action"), phi.method = "ML", model = FALSE,
     x = TRUE, y = TRUE, qr = TRUE, cor.type= "I", shrink.param=NULL, 
-    tol=1.0e-6, show.coef=FALSE, show.fitted=FALSE, 
+    tol=1.0e-6, maxiter=25, show.coef=FALSE, show.fitted=FALSE, 
     show.residuals=FALSE, \dots )
 }
 \arguments{
@@ -75,6 +75,7 @@ manyglm(formula, family="negative.binomial", K=1, data=NULL, subset=NULL,
   used in subsequent functions for inference.
   }
   \item{tol}{the tolerance used in estimations.}
+  \item{maxiter}{maximum allowed iterations in the weighted least square estimation of beta. The default value is 25.}
   \item{show.coef, show.fitted, show.residuals}{logical. Whether to show model coefficients, fitted values, or standardized pearson residuals.}
   \item{\dots}{further arguments passed to or from other methods.}
 }

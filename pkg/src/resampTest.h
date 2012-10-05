@@ -162,6 +162,7 @@ typedef struct RegressionMethod{
     unsigned int varStab;
     unsigned int estiMethod;
     double tol;
+    unsigned int maxiter;
     unsigned int n; // used in binomial regression
 } reg_Method;
 
@@ -268,7 +269,7 @@ class glm
 	   double *phi, *ll, *dev, *aic;
 	   unsigned int *iterconv;  
            unsigned int maxiter;
-	   double eps, maxtol;
+	   double eps, mintol, maxtol;
            unsigned int nRows, nVars, nParams;
 //   private: 
   	   // abstract 	
@@ -297,7 +298,7 @@ class PoissonGlm : public glm
 	   int betaEst( unsigned int id, unsigned int iter, double *tol, double a );
 	   double getDisper( unsigned int id ) const;
            int update(gsl_vector *bj, unsigned int id);
-           int predict(gsl_vector_view bj, gsl_vector *coef_old, unsigned int id, double a);
+           int predict(gsl_vector_view bj, unsigned int id, double a);
 
 
 //    private: 
