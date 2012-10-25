@@ -166,12 +166,13 @@ void glm::initialGlm(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
        gsl_matrix_memcpy(Mu, Yref);
        gsl_matrix_add_constant(Mu, LinAdjust);
        gsl_matrix_scale(Mu, ScaleAdjust);
+//       gsl_matrix_set_zero (Eta); // intercept
        for (i=0; i<nRows; i++)
        for (j=0; j<nVars; j++)
           gsl_matrix_set(Eta, i, j, link(gsl_matrix_get(Mu, i, j)));
        gsl_matrix_set_zero (Beta); // intercept
-       gsl_vector_view b0=gsl_matrix_column(Beta, 0);
-       gsl_vector_set_all(&b0.vector, 1.0);
+//       gsl_vector_view b0=gsl_matrix_column(Beta, 0);
+//       gsl_vector_set_all(&b0.vector, 1.0);
    //    printf("LinAdjust=%.2f, ScaleAdjust=%.2f\n", LinAdjust, ScaleAdjust);
     }
 
@@ -356,7 +357,8 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
        // If divergent or increasing deviance, half step
        // (step>1) -> (step>0) gives weired results for NBin fit       
        // below works for boundary values, esp BIN fit but not NBin fit
-       while (((dev[id]>10)|(dev_grad>eps))&(step>1)){
+       while (((dev[id]>100)|(dev_grad>eps))&(step>1)){
+//       while ((dev_grad>eps)&(step>1)){
             gsl_vector_add (&bj.vector, coef_old);
             gsl_vector_scale (&bj.vector, 0.5);
             dev_old=dev[id];
@@ -371,6 +373,7 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
             }
        }
        if (isValid==TRUE) gsl_vector_memcpy (coef_old, &bj.vector);
+      
        step++;
        if (*tol<eps) break;
    } 
