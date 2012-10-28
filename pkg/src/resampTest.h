@@ -33,9 +33,9 @@
 #include <string.h>
 #include <math.h>
 #include <sys/time.h>
-#include <gsl/gsl_math.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
+#include <gsl/gsl_math.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_linalg.h> 
 #include <gsl/gsl_statistics_double.h>

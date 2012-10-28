@@ -357,7 +357,7 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
        // If divergent or increasing deviance, half step
        // (step>1) -> (step>0) gives weired results for NBin fit       
        // below works for boundary values, esp BIN fit but not NBin fit
-       while (((dev[id]>100)|(dev_grad>eps))&(step>1)){
+       while (((dev[id]>5000)|(dev_grad>eps))&(step>1)){
 //       while ((dev_grad>eps)&(step>1)){
             gsl_vector_add (&bj.vector, coef_old);
             gsl_vector_scale (&bj.vector, 0.5);
