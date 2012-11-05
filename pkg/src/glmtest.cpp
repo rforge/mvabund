@@ -99,7 +99,14 @@ int GlmTest::summary(glm *fit)
        GrpXs[k].matrix = gsl_matrix_alloc(nRows, nParam-1);
        subX2(fit->Xref, k-2, GrpXs[k].matrix);
     }
-
+/*    GrpMat *GrpBs = (GrpMat *)malloc((nParam+2)*sizeof(GrpMat));
+    GrpBs[0].matrix = gsl_matrix_alloc(nParam, nVars);
+    gsl_matrix_memcpy(GrpBs[0].matrix, fit->Beta);
+    GrpBs[1].matrix = gsl_matrix_alloc(1, nVars);
+    for (k=2; k<nParam+2; k++) {
+       GrpBs[k].matrix = gsl_matrix_alloc(nParam-1, nVars);
+    }
+*/
     // Calc test statistics
     if ( tm->test == WALD ) {
         // the overall test compares to mean 
@@ -128,7 +135,8 @@ int GlmTest::summary(glm *fit)
         for (k=1; k<nParam+2; k++) {
             teststat=gsl_matrix_row(smryStat, k-1);
             PtrNull[mtype]->regression(fit->Yref,GrpXs[k].matrix,NULL,NULL); 
-   //            gsl_vector_set_all (ref, 1.0);
+            //gsl_matrix_memcpy(GrpBs[k].matrix, PtrNull[mtype]->Beta);
+   //         gsl_matrix_set_zero(GrpBs[k].matrix);
    //            gsl_vector_set(ref, k-2, 0.0);
    //         addXrow2(PtrNull[mtype]->Beta, ref, BetaO);
    //         PtrAlt[mtype]->regression(fit->Yref,GrpXs[0].matrix,NULL,BetaO);
@@ -196,15 +204,14 @@ int GlmTest::summary(glm *fit)
         }
         else {  // use single bAlt estimate works better
             PtrAlt[mtype]->regression(bY,GrpXs[0].matrix,bO,NULL);
-//            PtrAlt[mtype]->EstIRLS(bY,GrpXs[0].matrix,bO,NULL,fit->phi);
+           // PtrAlt[mtype]->regression(bY,GrpXs[0].matrix,bO,fit->Beta);
             for (k=1; k<nParam+2; k++) {
                teststat=gsl_matrix_row(bStat, k-1);
                PtrNull[mtype]->regression(bY,GrpXs[k].matrix,bO,NULL); 
-//               PtrNull[mtype]->EstIRLS(bY,GrpXs[k].matrix,bO,NULL,fit->phi); 
+            //   PtrNull[mtype]->regression(bY,GrpXs[k].matrix,bO,GrpBs[k].matrix);
 //               gsl_vector_set_all (ref, 1.0);
 //               gsl_vector_set(ref, k-2, 0.0);
 //               addXrow2(PtrNull[mtype]->Beta, ref, BetaO);    
-//               PtrAlt[mtype]->regression(bY,GrpXs[0].matrix,bO,BetaO);
                GeeLR(PtrAlt[mtype], PtrNull[mtype], &teststat.vector);
             }
         }
@@ -252,8 +259,15 @@ int GlmTest::summary(glm *fit)
        if (sortid[k]!=NULL) gsl_permutation_free(sortid[k]);
     free(sortid);
 
+/*    if ( GrpBs != NULL ) {
+       for ( unsigned int k=0; k<nParam+2; k++ ) 
+           if ( GrpBs[k].matrix != NULL )
+              gsl_matrix_free (GrpBs[k].matrix);
+       free(GrpBs);
+    }
+*/
     if ( GrpXs != NULL ) {
-       for ( unsigned int k=0; k<nParam+2; k++ )
+       for ( unsigned int k=0; k<nParam+2; k++ ) 
            if ( GrpXs[k].matrix != NULL )
               gsl_matrix_free (GrpXs[k].matrix);
        free(GrpXs);
@@ -347,9 +361,11 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
            GeeWald(PtrAlt[mtype], L1, &teststat.vector);
         }
         else {              
-           BetaO = gsl_matrix_alloc(nP1, nVars);
-           addXrow2(PtrNull[mtype]->Beta, &ref1.vector, BetaO); 
-           PtrAlt[mtype]->regression(fit->Yref, X1, NULL, BetaO);
+//           BetaO = gsl_matrix_alloc(nP1, nVars);
+//           addXrow2(PtrNull[mtype]->Beta, &ref1.vector, BetaO); 
+//	   displaymatrix(BetaO, "BetaO");
+//           PtrAlt[mtype]->regression(fit->Yref, X1, NULL, BetaO);
+           PtrAlt[mtype]->regression(fit->Yref, X1, NULL, NULL);
 //	   PtrNull[mtype]->display();
 //	   PtrAlt[mtype]->display();
            GeeLR(PtrAlt[mtype], PtrNull[mtype], &teststat.vector); 
@@ -400,8 +416,9 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
             else {
                 bNull[mtype]->regression(bY,X0,bO,NULL); 
 //                bNull[mtype]->EstIRLS(bY,X0,bO,NULL,PtrNull[mtype]->phi); 
-                addXrow2(bNull[mtype]->Beta, &ref1.vector, BetaO); 
-                bAlt[mtype]->regression(bY,X1,bO,BetaO); 
+//                addXrow2(bNull[mtype]->Beta, &ref1.vector, BetaO); 
+//                bAlt[mtype]->regression(bY,X1,bO,BetaO); 
+                bAlt[mtype]->regression(bY,X1,bO,NULL); 
 //                bAlt[mtype]->EstIRLS(bY,X1,bO,BetaO,PtrAlt[mtype]->phi); 
                 GeeLR(bAlt[mtype], bNull[mtype], bStat);    
             }

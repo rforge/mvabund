@@ -140,6 +140,7 @@ void glm::initialGlm(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
 //  Use binomial$initialize: MuStart = (Y+0.5)/2 
 //  It seems to work for poisson and negative.binomial as well
     double LinAdjust, ScaleAdjust;
+    double eij;
     if (mmRef->model==BIN) {
         LinAdjust=0.5;
 	ScaleAdjust=0.5;
@@ -152,24 +153,41 @@ void glm::initialGlm(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
        gsl_matrix_memcpy(Beta, B);
        gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0,X,Beta,0.0,Eta);
        for (i=0; i<nRows; i++)
-       for (j=0; j<nVars; j++)
-           gsl_matrix_set(Mu, i, j, invLink(gsl_matrix_get(Eta, i, j)));
-    }  
+       for (j=0; j<nVars; j++) {
+           eij = gsl_matrix_get(Eta, i, j);
+	   // to avoid nan
+           if (eij>link(maxtol)) eij = link(maxtol);
+	   if (eij<link(mintol)) eij = link(mintol);
+	   gsl_matrix_set(Eta, i, j, eij);
+           gsl_matrix_set(Mu, i, j, invLink(eij));
+       }  
+    }
     else if (O!=NULL) {
+       gsl_matrix_set_zero(Beta); 
        gsl_matrix_memcpy(Eta, O);
        for (i=0; i<nRows; i++)
-       for (j=0; j<nVars; j++)
-           gsl_matrix_set(Mu, i, j, invLink(gsl_matrix_get(Eta, i, j)));
-       gsl_matrix_set_zero(Beta); 
-    }    
+       for (j=0; j<nVars; j++) {
+           eij = gsl_matrix_get(Eta, i, j);
+	   // to avoid nan
+           if (eij>link(maxtol)) eij = link(maxtol);
+	   if (eij<link(mintol)) eij = link(mintol);
+	   gsl_matrix_set(Eta, i, j, eij);
+           gsl_matrix_set(Mu, i, j, invLink(eij));
+       }   
+    } 
     else { 
        gsl_matrix_memcpy(Mu, Yref);
        gsl_matrix_add_constant(Mu, LinAdjust);
        gsl_matrix_scale(Mu, ScaleAdjust);
 //       gsl_matrix_set_zero (Eta); // intercept
        for (i=0; i<nRows; i++)
-       for (j=0; j<nVars; j++)
-          gsl_matrix_set(Eta, i, j, link(gsl_matrix_get(Mu, i, j)));
+       for (j=0; j<nVars; j++) {
+          eij = link(gsl_matrix_get(Mu, i, j));
+          if (eij>link(maxtol)) eij = link(maxtol);
+	  if (eij<link(mintol)) eij = link(mintol);
+          gsl_matrix_set(Eta, i, j, eij);
+	  gsl_matrix_set(Mu, i, j, invLink(eij));
+       }	  
        gsl_matrix_set_zero (Beta); // intercept
 //       gsl_vector_view b0=gsl_matrix_column(Beta, 0);
 //       gsl_vector_set_all(&b0.vector, 1.0);
@@ -318,8 +336,10 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
    while ( step<iter ) {
        for (i=0; i<nRows; i++) { // (y-m)/g'
            yij = gsl_matrix_get(Yref, i, id);
-           mij = gsl_matrix_get(Mu, i, id);
            eij = gsl_matrix_get(Eta, i, id);
+           mij = gsl_matrix_get(Mu, i, id);
+        //   if (mij<mintol) mij=mintol;
+        //   if (mij>maxtol) mij=maxtol;
            zij = eij + (yij-mij)/rcpLinkDash(mij);
            if (Oref!=NULL) 
               zij = zij - gsl_matrix_get(Oref, i, id);
@@ -347,6 +367,22 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
        }
        gsl_blas_dgemv(CblasTrans,1.0,WX,z,0.0,Xwz);
        gsl_linalg_cholesky_solve (XwX, Xwz, &bj.vector);
+
+   // Debug for nan
+/*   if (gsl_vector_get(&bj.vector, 1)!=gsl_vector_get(&bj.vector, 1)) {
+       displayvector(&bj.vector, "bj");
+       displayvector(z, "z");
+       gsl_vector_view mj=gsl_matrix_column(Mu, id);
+       displayvector(&mj.vector, "mj");
+       printf("weight\n");
+       for (i=0; i<nRows; i++){
+           printf("%.4f ", sqrt(weifunc(mij, phi)));
+       }
+       printf("\n");
+       displaymatrix(XwX, "XwX");
+       exit(-1);
+   }   
+*/
        // Given bj, update eta, mu
        dev_old = dev[id];
        isValid=predict(bj, id, phi);
@@ -357,8 +393,8 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
        // If divergent or increasing deviance, half step
        // (step>1) -> (step>0) gives weired results for NBin fit       
        // below works for boundary values, esp BIN fit but not NBin fit
-       while (((dev[id]>5000)|(dev_grad>eps))&(step>1)){
-//       while ((dev_grad>eps)&(step>1)){
+//       while (((dev[id]>1000)|(dev_grad>eps))&(step>1)){
+       while ((dev_grad>eps)&(step>1)){
             gsl_vector_add (&bj.vector, coef_old);
             gsl_vector_scale (&bj.vector, 0.5);
             dev_old=dev[id];
@@ -408,7 +444,6 @@ int PoissonGlm::update(gsl_vector *bj, unsigned int id)
 	  isValid=FALSE;
        }
        mij = invLink(eij);
-
        gsl_matrix_set(Eta, i, id, eij);
        gsl_matrix_set(Mu, i, id, mij);
    } 
@@ -731,9 +766,9 @@ void glm::display(void)
 //       displaymatrix(Oref, "O");
 //    displaymatrix(Xref, "X");
 //    displaymatrix(Eta, "Eta");
-    displaymatrix(Beta, "Beta");
+//    displaymatrix(Beta, "Beta");
 //    displaymatrix(varBeta, "varBeta");
-    displaymatrix(Mu, "Mu");
+//    displaymatrix(Mu, "Mu");
 //    displaymatrix(Var, "Var");    
 //    displaymatrix(PitRes, "PitRes");    
 //    displaymatrix(sqrt1_Hii, "sqrt1_Hii");    
