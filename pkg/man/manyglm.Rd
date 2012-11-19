@@ -8,7 +8,7 @@
 manyglm(formula, family="negative.binomial", K=1, data=NULL, subset=NULL, 
     na.action=options("na.action"), phi.method = "ML", model = FALSE,
     x = TRUE, y = TRUE, qr = TRUE, cor.type= "I", shrink.param=NULL, 
-    tol=sqrt(.Machine$double.eps), maxiter=25, show.coef=FALSE, show.fitted=FALSE, 
+    tol=1e-7, maxiter=25, show.coef=FALSE, show.fitted=FALSE, 
     show.residuals=FALSE, \dots )
 }
 \arguments{
