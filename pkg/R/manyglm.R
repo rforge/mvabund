@@ -3,7 +3,7 @@
 # the (default) methods coef, residuals, fitted values can be used             
 ###############################################################################
 
-manyglm <- function (formula, family="negative.binomial", K=1, data=NULL, subset=NULL, na.action=options("na.action"), phi.method = "ML", model = FALSE, x = TRUE, y = TRUE, qr = TRUE, cor.type= "I", shrink.param=NULL, tol=1e-7, maxiter=25, show.coef=FALSE, show.fitted=FALSE, show.residuals=FALSE, ... ) {
+manyglm <- function (formula, family="negative.binomial", K=1, data=NULL, subset=NULL, na.action=options("na.action"), theta.method = "ML", model = FALSE, x = TRUE, y = TRUE, qr = TRUE, cor.type= "I", shrink.param=NULL, tol=sqrt(.Machine$double.eps), maxiter=25, show.coef=FALSE, show.fitted=FALSE, show.residuals=FALSE, ... ) {
 
 # tasmX <- as.matrix(tasmX, "numeric")  
 
@@ -111,8 +111,8 @@ else {
     rank <- qrx$rank
 
 # the following values need to be converted to integer types 
-    if (phi.method == "ML") methodnum <- 0
-    else if (phi.method == "Chi2") methodnum <- 1 
+    if (theta.method == "ML") methodnum <- 0
+    else if (theta.method == "Chi2") methodnum <- 1 
     else stop("Check the param estimation method name.")  
 
     ######### call Glm Fit Rcpp #########
@@ -150,7 +150,7 @@ else {
     dimnames(z$sqrt.1_Hii) <- list(labObs, labAbund)
     dimnames(z$var.estimator) <- list(labObs, labAbund)
     dimnames(z$sqrt.weight) <- list(labObs, labAbund)
-    names(z$phi) <- labAbund
+    names(z$theta) <- labAbund
     names(z$two.loglike) <- labAbund
     names(z$deviance) <- labAbund
     names(z$aic) <- labAbund
@@ -164,7 +164,7 @@ else {
     z$AICsum <- sum(z$aic)
     z$family    <- familyname
     z$K         <- K
-    z$phi.method<- phi.method
+    z$theta.method<- theta.method
     z$cor.type  <- cor.type
     z$shrink.param  <- shrink.param
     z$call      <- cl

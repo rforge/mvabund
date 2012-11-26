@@ -306,7 +306,7 @@ int setMonteCarlo(glm *model, gsl_matrix *XBeta, gsl_matrix *Sigma)
        for ( j=0; j<model->nVars; j++) {
            mj=gsl_matrix_column (XBeta, j);
            // adjust E(mj) = X*beta for the random effects
-           vij = log(1+model->phi[j]);
+           vij = log(1+model->theta[j])-log(model->theta[j]);
            gsl_vector_add_constant(&mj.vector, -0.5*vij);
            gsl_vector_set(s, j, sqrt(vij));
        }
@@ -317,7 +317,7 @@ int setMonteCarlo(glm *model, gsl_matrix *XBeta, gsl_matrix *Sigma)
        // So it has zero impact / correlation on other variables 
        d = gsl_matrix_diagonal(Sd);
        for (j=0; j<model->nVars; j++) 
-           if (model->phi[j]==0) gsl_vector_set(&d.vector, j, 1.0);
+           if (model->theta[j]>100) gsl_vector_set(&d.vector, j, 1.0);
 
        // Sigma = diag(var)*R*diag(var)
        gsl_matrix_mul_elements(Sigma, Sd);
@@ -348,7 +348,7 @@ int McSample(glm *model, gsl_rng *rnd, gsl_matrix *XBeta, gsl_matrix *Sigma, gsl
           for (k=0; k<nVars; k++) {
               eij=gsl_matrix_get (XBeta, j, k);
               // m_j = X_j * Beta_j + random_effect
-              if ( model->phi[k]>0 ) { // add random effect
+              if ( model->theta[k]>100 ) { // add random effect
                  eij = eij + gsl_vector_get(&yj.vector, k);
               }
               // Sample from Poisson-Log-Normal dist
@@ -365,7 +365,7 @@ int McSample(glm *model, gsl_rng *rnd, gsl_matrix *XBeta, gsl_matrix *Sigma, gsl
                 eij = gsl_matrix_get (XBeta, j, k); // logit(m)
                 eij = eij + gsl_vector_get(&yj.vector, k);
                 mij = model->invLink(eij);
-                yij = model->genRandist(mij, model->phi[k]);
+                yij = model->genRandist(mij, model->theta[k]);
                 gsl_matrix_set(bY, j, k, yij);
             }
        }
@@ -375,7 +375,7 @@ int McSample(glm *model, gsl_rng *rnd, gsl_matrix *XBeta, gsl_matrix *Sigma, gsl
        for (j=0; j<nRows; j++)
        for (k=0; k<nVars; k++) {
             mij = gsl_matrix_get(model->Mu, j, k);
-            yij = model->genRandist(mij, model->phi[k]);
+            yij = model->genRandist(mij, model->theta[k]);
             gsl_matrix_set(bY, j, k, yij);
        }
    }

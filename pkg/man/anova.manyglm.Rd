@@ -118,23 +118,23 @@ data(Tasmania)
 tasm.cop <- mvabund(Tasmania$copepods)
 treatment <- Tasmania$treatment
 block <- Tasmania$block
-plot(tasm.cop ~ treatment, col=as.numeric(block))
+#plot(tasm.cop ~ treatment, col=as.numeric(block))
 
 ## Fitting predictive models using a negative binomial model for counts:
 tasm.cop.nb <- manyglm(tasm.cop ~ block*treatment, family="negative.binomial")
 
 ## Testing hypotheses about the treatment effect and treatment-by-block interactions, 
 ## using the default settings of parametric resampling and deviance as test statistics: 
-anova(tasm.cop.nb)
+#anova(tasm.cop.nb, nBoot=100)
 
 ## Checking model assumptions
-plot(tasm.cop.nb)
+#plot(tasm.cop.nb)
 
 ## Accounting for correlation between variables (with shrinkage):
 tasm.cop.nb2 <- manyglm(tasm.cop ~ block*treatment, family="negative.binomial", cor.type="shrink")
 
 ## Repeat ANOVA test with P-values adjusted for multiple testing, using parametric bootstrap and wald statistics:
-anova(tasm.cop.nb2, p.uni="adjusted", nBoot=500, test="wald")
+#anova(tasm.cop.nb2, p.uni="adjusted", nBoot=100, test="wald")
 
 }
 \keyword{models}

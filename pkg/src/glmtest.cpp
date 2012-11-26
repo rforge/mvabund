@@ -352,6 +352,7 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
         }
         else if (tm->test==WALD) {
            PtrAlt[mtype]->regression(fit->Yref, X1, NULL, NULL);
+//	   PtrAlt[mtype]->display();
            L1 = gsl_matrix_alloc (nP1-nP0, nP1);
            tmp1 = gsl_matrix_alloc (nParam, nP1);
            subX(L, &ref1.vector, tmp1);
@@ -891,7 +892,7 @@ int GlmTest::resampNonCase(glm *model, gsl_matrix *bT, unsigned int i)
            for (k=0; k<nVars; k++) {
                bt = gsl_matrix_get(model->PitRes, id, k); 
                mij = gsl_matrix_get(model->Mu, j, k);                
-               yij = model->cdfinv(bt, mij, model->phi[k]); 
+               yij = model->cdfinv(bt, mij, model->theta[k]); 
                gsl_matrix_set(bT, j, k, yij);
            }
        }

@@ -98,12 +98,8 @@ if applicable}
 \item{cor.type}{the supplied argument.}
 \item{method}{the method used in \code{manyglm}. Either \code{"glm.fit"} or
 \code{"manyglm.fit"}}
-\item{one.phi}{
-logical. Where applicable: whether one common nuisance parameter for all abundance 
-variables should be estimated, or a separate parameter for each variable.
-}
-\item{phi.method}{the method used for the estimation of the nuisance parameter
-phi=1/theta.}
+\item{theta.method}{the method used for the estimation of the nuisance parameter
+theta.}
 \item{manyglm.args}{a list of control parameters from \code{manyglm}.}
 \item{rankX}{the rank of the design matrix.}
 \item{covstat}{the supplied argument.}
@@ -198,10 +194,10 @@ glm.spid <- manyglm(spiddat[,1:3]~X, family="negative.binomial")
 ## Estimate the statistical significance of different multivariate terms in
 ## the model, using the default settings of LR test, parametric resampling and
 ## 100 bootstrap resamples
-summary(glm.spid)
+#summary(glm.spid, nBoot=100)
 
 ## Repeat summary with residual resampling and wald statistics
-summary(glm.spid, resamp="residual", test="wald", nBoot=500)
+#summary(glm.spid, resamp="residual", test="wald", nBoot=100)
 
 }
 \keyword{models}

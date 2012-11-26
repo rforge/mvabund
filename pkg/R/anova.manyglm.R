@@ -69,8 +69,8 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
     else if (substr(object$family,1,1)=="b") familynum <- 3
   
 
-    if (object$phi.method == "ML") methodnum <- 0
-    else if (object$phi.method == "Chi2") methodnum <- 1 
+    if (object$theta.method == "ML") methodnum <- 0
+    else if (object$theta.method == "Chi2") methodnum <- 1 
 
     if (substr(resamp,1,1)=="c") resampnum <- 0  #case
     # To exclude case resampling

@@ -24,10 +24,10 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
     if (any(class(object)=="manylm")) {
         if ( test == "LR" ) 
            return(summary.manylm(object, resamp=resamp, test="LR", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, show.cor=show.cor, show.est=show.est, show.residuals=show.residuals, symbolic.cor=symbolic.cor, tol=tol, bootID=bootID, ... ))
-    else {   
-       warning("For an manylm object, only the likelihood ratio test and F test are supported. So the test option is changed to `'F''. ")
+	else {   
+	   warning("For an manylm object, only the likelihood ratio test and F test are supported. So the test option is changed to `'F''. ")
            return(summary.manylm(object, resamp=resamp, test="F", p.uni=p.uni, nBoot=nBoot, cor.type=cor.type, show.cor=show.cor, show.est=show.est, show.residuals=show.residuals, symbolic.cor=symbolic.cor, tol=tol, bootID=bootID, ... ))
-    }   
+	}   
     }
     else if (!any(class(object)=="manyglm"))
        stop("The function 'summary.manyglm' can only be used for a manyglm or manylm object.")
@@ -50,8 +50,8 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
     else if (object$family == "binomial") familynum <- 3 
     else stop("'family' not defined. Choose one of 'poisson', 'negative.binomial', 'binomial' for an manyglm object") 
 
-    if (object$phi.method == "ML") methodnum <- 0
-    else if (object$phi.method == "Chi2") methodnum <- 1 
+    if (object$theta.method == "ML") methodnum <- 0
+    else if (object$theta.method == "Chi2") methodnum <- 1 
     else stop("'method' not defined. Choose one of 'ML', 'Chi2' for an manyglm object") 
     if (substr(resamp,1,1)=="c") resampnum <- 0  #case
     # To exclude case resampling
@@ -67,8 +67,8 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
     # allows case and parametric bootstrap only for binomial regression
     if (familynum == 3 && ( (resampnum !=5) && (resampnum!=8) ) ) {
        warning("'montecarlo' or 'pit.trap' should be used for binomial regression..")
-#       resamp <- "pit.trap"
-#       resampnum <- 8 
+      # resamp <- "pit.trap"
+      # resampnum <- 8 
     }
   
     if (substr(test,1,1) == "w") testnum <- 2 # wald
@@ -103,7 +103,7 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
      }
      else {
         bootID <- NULL
-    cat(paste("Invalid bootID. Calculate bootID matrix on the fly.","\n"))
+	cat(paste("Invalid bootID. Calculate bootID matrix on the fly.","\n"))
      }
  } 
 

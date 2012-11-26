@@ -80,7 +80,7 @@ RcppExport SEXP RtoGlm(SEXP params, SEXP Ysexp, SEXP Xsexp)
 //    Rprintf("Time elapsed: %d hr %d min %d sec (%d seconds)\n", hours, min, sec, dif);
 
     // Wrap the glm object with Rcpp 
-    NumericVector phi(glmPtr[mtype]->phi, glmPtr[mtype]->phi+nVars);
+    NumericVector theta(glmPtr[mtype]->theta, glmPtr[mtype]->theta+nVars);
     NumericVector ll(glmPtr[mtype]->ll, glmPtr[mtype]->ll+nVars);
     NumericVector aic(glmPtr[mtype]->aic, glmPtr[mtype]->aic+nVars);
     NumericVector dev(glmPtr[mtype]->dev, glmPtr[mtype]->dev+nVars);
@@ -132,7 +132,7 @@ RcppExport SEXP RtoGlm(SEXP params, SEXP Ysexp, SEXP Xsexp)
 	 _["sqrt.1_Hii"] = sqrt1_Hii,
          _["var.estimator"] = Vars,
 	 _["sqrt.weight"] = wHalf,
-	 _["phi"] = phi,
+	 _["theta"] = theta,
 	 _["two.loglike"] = ll,
 	 _["deviance"] = dev,
 	 _["aic"] = aic,
