@@ -700,6 +700,7 @@ double NBinGlm::thetaML(double t0, unsigned int id, unsigned int limit)
         if (th<0) th = 0;
         if (th!=th) printf("yij=%.2f, mij=%.4f, t0=%.4f, score=%.4f, info=%.4f, del=%.4f, theta=%.4f", yij, mij, t0, score, info, del, th);
   	if (th>maxth) break;
+	if (th<0.01) break;
     }
 
     return th;

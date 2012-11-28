@@ -41,7 +41,6 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
        objects <- objects[which]
     }
 
-    tol = object$tol
     nModels = length(objects)
     nRows <- nrow(object$y)
     nVars <- ncol(object$y)
@@ -137,6 +136,7 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
     }
 
     # construct for param list     
+    tol = 1e-4
     modelParam <- list(tol=tol, regression=familynum, maxiter=object$maxiter,
                        estimation=methodnum, stablizer=0, n=object$K)
     # note that nboot excludes the original data set

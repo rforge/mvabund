@@ -6,9 +6,9 @@
 
 summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.cor = FALSE, show.est=FALSE, show.residuals=FALSE, symbolic.cor = FALSE, show.time=FALSE, ... ) 
 {
-    tol = object$tol
     allargs <- match.call(expand.dots = FALSE)
     dots <- allargs$...
+    tol = 1e-4
     if ("rep.seed" %in% names(dots)) rep.seed <- dots$rep.seed
     else rep.seed <- FALSE
     if ("bootID" %in% names(dots)) bootID <- dots$bootID

@@ -194,10 +194,10 @@ glm.spid <- manyglm(spiddat[,1:3]~X, family="negative.binomial")
 ## Estimate the statistical significance of different multivariate terms in
 ## the model, using the default settings of LR test, parametric resampling and
 ## 100 bootstrap resamples
-#summary(glm.spid, nBoot=100)
+summary(glm.spid, show.time=TRUE)
 
 ## Repeat summary with residual resampling and wald statistics
-#summary(glm.spid, resamp="residual", test="wald", nBoot=100)
+summary(glm.spid, resamp="residual", test="wald", nBoot=500)
 
 }
 \keyword{models}
