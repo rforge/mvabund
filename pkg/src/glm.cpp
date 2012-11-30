@@ -18,6 +18,7 @@ glm::glm(const reg_Method *mm)
      maxth = 100;
      n=mmRef->n;
      maxiter = mmRef->maxiter;
+     maxiter2 = mmRef->maxiter2;
      // Error terms
      eps = mmRef->tol;   
      // Valid data range of mu or y
@@ -79,13 +80,13 @@ void glm::releaseGlm(void)
         gsl_matrix_free(PitRes);
     if (theta!=NULL)
         delete[] theta;
-    if (ll!=NULL)	
+    if (ll!=NULL)   
         delete[] ll;
-    if (dev!=NULL)	
+    if (dev!=NULL)  
         delete[] dev;
-    if (iterconv!=NULL)	
+    if (iterconv!=NULL) 
         delete[] iterconv;
-    if (aic!=NULL)	
+    if (aic!=NULL)  
         delete[] aic;
 }
 
@@ -146,11 +147,11 @@ void glm::initialGlm(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
     double eij;
     if (mmRef->model==BIN) {
         LinAdjust=0.5;
-	ScaleAdjust=0.5;
+    ScaleAdjust=0.5;
     }
     else {
         LinAdjust=0.1;
-	ScaleAdjust=1;
+    ScaleAdjust=1;
     }
     if (B!=NULL) {
        gsl_matrix_memcpy(Beta, B);
@@ -158,10 +159,10 @@ void glm::initialGlm(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
        for (i=0; i<nRows; i++)
        for (j=0; j<nVars; j++) {
            eij = gsl_matrix_get(Eta, i, j);
-	   // to avoid nan
+       // to avoid nan
            if (eij>link(maxtol)) eij = link(maxtol);
-	   if (eij<link(mintol)) eij = link(mintol);
-	   gsl_matrix_set(Eta, i, j, eij);
+       if (eij<link(mintol)) eij = link(mintol);
+       gsl_matrix_set(Eta, i, j, eij);
            gsl_matrix_set(Mu, i, j, invLink(eij));
        }  
     }
@@ -171,10 +172,10 @@ void glm::initialGlm(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
        for (i=0; i<nRows; i++)
        for (j=0; j<nVars; j++) {
            eij = gsl_matrix_get(Eta, i, j);
-	   // to avoid nan
+       // to avoid nan
            if (eij>link(maxtol)) eij = link(maxtol);
-	   if (eij<link(mintol)) eij = link(mintol);
-	   gsl_matrix_set(Eta, i, j, eij);
+       if (eij<link(mintol)) eij = link(mintol);
+       gsl_matrix_set(Eta, i, j, eij);
            gsl_matrix_set(Mu, i, j, invLink(eij));
        }   
     } 
@@ -187,10 +188,10 @@ void glm::initialGlm(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
        for (j=0; j<nVars; j++) {
           eij = link(gsl_matrix_get(Mu, i, j));
           if (eij>link(maxtol)) eij = link(maxtol);
-	  if (eij<link(mintol)) eij = link(mintol);
+      if (eij<link(mintol)) eij = link(mintol);
           gsl_matrix_set(Eta, i, j, eij);
-	  gsl_matrix_set(Mu, i, j, invLink(eij));
-       }	  
+      gsl_matrix_set(Mu, i, j, invLink(eij));
+       }      
        gsl_matrix_set_zero (Beta); // intercept
        gsl_vector_view b0=gsl_matrix_column(Beta, 0);
        gsl_vector_set_all(&b0.vector, 1.0);
@@ -217,11 +218,11 @@ int glm::copyGlm(glm *src)
     gsl_matrix_memcpy(PitRes, src->PitRes);
     
     for (unsigned int i=0; i<nVars; i++) {
-        theta[i] = src->theta[i];	
+        theta[i] = src->theta[i];   
         ll[i] = src->ll[i];
         dev[i] = src->dev[i];
         iterconv[i] = src->iterconv[i];
-	aic[i] = src->aic[i];
+    aic[i] = src->aic[i];
     }
     
     return SUCCESS;    
@@ -265,7 +266,7 @@ int PoissonGlm::EstIRLS(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix 
             uij = wei*cdf(yij, mij, theta[j]);
             if (yij>0) uij=uij+(1-wei)*cdf((yij-1),mij,theta[j]);
             gsl_matrix_set(PitRes, i, j, uij);
-            // get elementry log-likelihood	   
+            // get elementry log-likelihood    
             ll[j] = ll[j] + llfunc( yij, mij, theta[j]);
             // W^1/2 X
             Xwi = gsl_matrix_row (WX, i);
@@ -276,7 +277,7 @@ int PoissonGlm::EstIRLS(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix 
        // X^T * W * X
        gsl_matrix_set_zero(XwX);
        gsl_blas_dsyrk (CblasLower, CblasTrans, 1.0, WX, 0.0, XwX);
-       if (calcDet(XwX)<eps) {  // XwX+eps*I
+       if (calcDet(XwX)<1e-4) {  // XwX+eps*I
           dj=gsl_matrix_diagonal(XwX);
           gsl_vector_add_constant(&dj.vector, eps);
        } 
@@ -361,15 +362,15 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
        // So back to solving X'WXb=X'Wz
        gsl_matrix_set_zero (XwX);
        gsl_blas_dsyrk (CblasLower,CblasTrans,1.0,WX,0.0,XwX); 
-       if (calcDet(XwX)<eps){ // test if singular or nan
+       if (calcDet(XwX)<1e-4){ // test if singular or nan
           gsl_vector_view dj=gsl_matrix_diagonal(XwX);
-	  gsl_vector_add_constant(&dj.vector, eps);
+      gsl_vector_add_constant(&dj.vector, eps);
        }   
        status=gsl_linalg_cholesky_decomp(XwX);
        if (status) {
           printf("Singular XwX in betaEst\n");
-	  printf("theta=%.4f, calcDet(XwX)=%.4f\n", th, calcDet(XwX));
-	  displaymatrix(XwX, "XwX"); 
+      printf("theta=%.4f, calcDet(XwX)=%.4f\n", th, calcDet(XwX));
+      displaymatrix(XwX, "XwX"); 
        }
        gsl_blas_dgemv(CblasTrans,1.0,WX,z,0.0,Xwz);
        gsl_linalg_cholesky_solve (XwX, Xwz, &bj.vector);
@@ -402,7 +403,7 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
        while ((dev_grad>eps)&(step>1)){
             gsl_vector_add (&bj.vector, coef_old);
             gsl_vector_scale (&bj.vector, 0.5);
-            dev_old=dev[id];
+       //     dev_old=dev[id];
             isValid=predict(bj, id, th);
             dev_grad=(dev[id]-dev_old)/(ABS(dev[id])+0.1); 
             *tol=ABS(dev_grad);
@@ -442,11 +443,11 @@ int PoissonGlm::update(gsl_vector *bj, unsigned int id)
           eij = eij+gsl_matrix_get(Oref, i, id);
        if (eij>link(maxtol)) { // to avoid nan;
           eij = link(maxtol);
-	  isValid=FALSE;
+      isValid=FALSE;
        }
        if (eij<link(mintol)){
           eij = link(mintol);
-	  isValid=FALSE;
+      isValid=FALSE;
        }
        mij = invLink(eij);
        gsl_matrix_set(Eta, i, id, eij);
@@ -484,8 +485,7 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
     gsl_rng *rnd=gsl_rng_alloc(gsl_rng_mt19937);
     unsigned int i, j, isConv;
     double yij, mij, vij, hii, uij, wij, wei;
-    double th, th0, tol, d1, lm0, lm;
-//    double tol_grad, tol_old;
+    double th, tol, d1, lm0, lm, dev_th_b_old;
     int status;
     gsl_vector_view b0j, m0j, e0j, v0j;
     gsl_matrix *WX = gsl_matrix_alloc(nRows, nParams);   
@@ -497,51 +497,79 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
     PoissonGlm fit0( mmRef );
     fit0.initialGlm( Y, X, O, B);    
 
+    d1 = sqrt(2*MAX(1, rdf));
     for (j=0; j<nVars; j++) {  
         // Get initial beta estimates from Poisson
         fit0.betaEst(j, maxiter, &tol, 0);
-	b0j = gsl_matrix_column(fit0.Beta, j);
-	gsl_matrix_set_col(Beta, j, &b0j.vector);
+        b0j = gsl_matrix_column(fit0.Beta, j);
+        gsl_matrix_set_col(Beta, j, &b0j.vector);
         m0j = gsl_matrix_column(fit0.Mu, j);
-	gsl_matrix_set_col(Mu, j, &m0j.vector);
+        gsl_matrix_set_col(Mu, j, &m0j.vector);
         e0j = gsl_matrix_column(fit0.Eta, j);
-	gsl_matrix_set_col(Eta, j, &e0j.vector);
+        gsl_matrix_set_col(Eta, j, &e0j.vector);
         v0j = gsl_matrix_column(fit0.varBeta, j);
-	gsl_matrix_set_col(varBeta, j, &v0j.vector);
+        gsl_matrix_set_col(varBeta, j, &v0j.vector);
         dev[j] = fit0.dev[j];
-
+/*
+	lm = 2*d1;
+	for (i=0; i<nRows; i++) {
+            yij = gsl_matrix_get(Y, i, j);
+	    mij = gsl_matrix_get(Mu, i, j);
+	    lm = lm + llfunc(yij, mij, maxth+1); // i.e.phi=0, poisson
+	}
+*/
         // Get initial theta estimates
-	tol = 1;
-        iterconv[j]=0;	
+        iterconv[j]=0;  
         if (mmRef->estiMethod==CHI2) {
            th = getDisper(j, 0); 
-	   while ( (tol>eps)&(iterconv[j]<maxiter) ) {
+           while ( iterconv[j]<maxiter ) {
                iterconv[j]++;
-	       betaEst(j, 1, &tol, th);  // 1-step beta
-	       th = th*getDisper(j, th); // 1-step theta 
-           }
-        }   
+               dev_th_b_old = dev[j];
+               betaEst(j, 1, &tol, th);  // 1-step beta
+               th = th*getDisper(j, th); // 1-step theta 
+               tol = ABS((dev[j]-dev_th_b_old)/(ABS(dev[j])+0.1));
+               if (tol<eps) break;
+         }  }
         else if (mmRef->estiMethod==NEWTON) {
-	   while ( (tol>eps)&(iterconv[j]<maxiter) ) {
+	    th = 0;
+            while ( iterconv[j]<maxiter ) {
                iterconv[j]++;
-          //     th0 = th;
-	       th = thetaML(0, j, 10);
-               betaEst(j, 10, &tol, th);	
-           //    lm0 = lm;
-	   //    lm = 0;
-	   //    for (i=0; i<nRows; i++) {
-	   //        yij = gsl_matrix_get(Y, i, j);
-	   //        mij = gsl_matrix_get(Mu, i, j);
-           //        lm = lm+llfunc(yij, mij, th);
-	   //     }		
-           //    tol = ABS(lm-lm0)/sqrt(2*MAX(1,rdf))+ABS(th0-th);
-           //    tol = tol + ABS(th0-th);	       
+               dev_th_b_old = dev[j];
+               th = thetaML(th, j, maxiter2);
+               betaEst(j, maxiter2, &tol, th);  
+	     /*  lm0 = lm;
+	       lm = 0;
+	       for (i=0; i<nRows; i++) {
+                   yij = gsl_matrix_get(Y, i, j);
+		   mij = gsl_matrix_get(Mu, i, j);
+		   lm = lm + llfunc(yij, mij, th);
+	       } */  
+               tol=ABS((dev[j]-dev_th_b_old)/(ABS(dev[j])+0.1));
+               // tol = ABS(lm-lm0)/d1;
+               if (tol<eps) break;
+        }  } 
+       else if (mmRef->estiMethod==PHI) {
+           th = 0;
+           while ( iterconv[j]<maxiter ) {
+               iterconv[j]++;
+               dev_th_b_old = dev[j];
+               th = getfAfAdash(th, j, maxiter2);
+               betaEst(j, maxiter2, &tol, th);  
+	     /*  lm0 = lm;
+	       lm = 0;
+	       for (i=0; i<nRows; i++) {
+                   yij = gsl_matrix_get(Y, i, j);
+		   mij = gsl_matrix_get(Mu, i, j);
+		   lm = lm + llfunc(yij, mij, th);
+	       } */ 
+               tol=ABS((dev[j]-dev_th_b_old)/(ABS(dev[j])+0.1));
+	     //  tol = ABS(lm-lm0)/d1;
+               if (tol<eps) break;
            }
        }       
-     //  if (iterconv[j]==maxiter) {
+     //  if (iterconv[j]==maxiter) 
      //      printf("iter[%d]=%d, theta[%d]=%.4f, tol=%.4f, dev[%d]=%.4f\n", j, iterconv[j], j, th, tol, j, dev[j]);
 
-     //  }	   
        // other properties based on mu and phi
        theta[j] = th;
        gsl_matrix_memcpy(WX, Xref);        
@@ -568,7 +596,7 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
        // X^T * W * X
        gsl_matrix_set_zero (XwX);
        gsl_blas_dsyrk (CblasLower, CblasTrans, 1.0, WX, 0.0, XwX);
-       if (calcDet(XwX)<eps) {
+       if (calcDet(XwX)<1e-4) {
           dj=gsl_matrix_diagonal(XwX);
           gsl_vector_add_constant(&dj.vector, eps);
        }       
@@ -619,9 +647,9 @@ double PoissonGlm::getDisper( unsigned int id, double th )const
     for (i=0; i<nRows; i++) {
         yij = gsl_vector_get (&yj.vector, i);
         mij = gsl_vector_get (&mj.vector, i);
-	ss2 = (yij-mij)*(yij-mij); // ss = (y-mu)^2
-	if ( mij < mintol ) mij = 1;
-	else  nNonZero++;	   
+    ss2 = (yij-mij)*(yij-mij); // ss = (y-mu)^2
+    if ( mij < mintol ) mij = 1;
+    else  nNonZero++;      
         if ( varfunc(mij, th)>eps )
             chi2 = chi2 + ss2/varfunc(mij, th); // dist dependant
     }
@@ -653,85 +681,103 @@ double NBinGlm::llfunc ( double yi, double mui, double th  )const
 }
 
 
-double NBinGlm::thetaML(double t0, unsigned int id, unsigned int limit)
+double NBinGlm::thetaML(double k0, unsigned int id, unsigned int limit)
 {
     // equivalent to theta.ml() in MASS
     // Note that theta here is the dispersion parameter
     // So phi = 1/theta;
     unsigned int i, it=0;
-    double del=1, sum=1, num=0, th;
-    double score, info, yij, mij, dl, ddl;
-    if (t0==0) {
+    double del=1, sum=1, num=0, k;
+    double y, m, dl, ddl, tol;
+    if (k0==0) {
        for (i=0; i<nRows; i++) {
-           yij = gsl_matrix_get(Yref, i, id);
-	   mij = gsl_matrix_get(Mu, i, id);
-	   if (mij>0) {
-	      sum = sum+(yij/mij-1)*(yij/mij-1);
-	      num = num+1;
-	   }
+           y = gsl_matrix_get(Yref, i, id);
+           m = gsl_matrix_get(Mu, i, id);
+           if (m>0) {
+              sum = sum+(y/m-1)*(y/m-1);
+              num = num+1;
+           }
        }
-       t0 = num/sum;
+       k = MAX(num/sum, mintol);
     }
-    th = t0;
-    while ( (it<limit)&(ABS(del)>eps) ) {
+    else k=k0;
+    
+    while ( it<limit ) {
         it++;
-        score=0;
-	info=0;
+        dl=nRows*(1+log(k)-gsl_sf_psi(k));
+        ddl=nRows*(gsl_sf_psi_1(k)-1/k);
         for ( i=0; i<nRows; i++ ) {
-           yij = gsl_matrix_get(Yref, i, id);
-	   mij = gsl_matrix_get(Mu, i, id);
-           if (th==0) {
-//	      printf("Warning: th==0\n");
-              dl  = gsl_sf_psi(MAX(eps,yij))+1-log(mij)-yij/mij-gsl_sf_psi(eps)+log(eps); 
-	      ddl = -gsl_sf_psi_1(MAX(eps,yij))+2/(mij)-yij/mij*mij+gsl_sf_psi_1(eps)-1/eps; 
-	      
-	   }
-	   else {
-              dl  = gsl_sf_psi(yij+th)-gsl_sf_psi(th)+log(th)+1-log(mij+th)-(yij+th)/(mij+th); 
-	      ddl = -gsl_sf_psi_1(yij+th)+gsl_sf_psi_1(th)-1/th+2/(mij+th)-(yij+th)/((mij+th)*(mij+th)); // dl^2/d^2a
-	   }
-	   score = score + dl;
-	   info = info + ddl;
-	}   
-//	del = score/(GSL_SIGN(info)*MAX(ABS(info), mintol));
-        if (ABS(info) < mintol) info = GSL_SIGN(info)*mintol;
-	del = score/info;
-        th = th + del; // Normal Newton use - instead of + for -ddl
-        if (th<0) th = 0;
-        if (th!=th) printf("yij=%.2f, mij=%.4f, t0=%.4f, score=%.4f, info=%.4f, del=%.4f, theta=%.4f", yij, mij, t0, score, info, del, th);
-  	if (th>maxth) break;
-	if (th<0.01) break;
+           y = gsl_matrix_get(Yref, i, id);
+           m = gsl_matrix_get(Mu, i, id);
+           dl  = dl + gsl_sf_psi(y+k)-log(m+k)-(y+k)/(m+k); 
+           ddl = ddl - gsl_sf_psi_1(y+k)+2/(m+k)-(y+k)/((m+k)*(m+k)); 
+        }   
+       if (ABS(ddl) < mintol) ddl = GSL_SIGN(ddl)*mintol;
+       del = dl/ddl;
+       // tol = ABS(del);
+       tol = ABS(del*dl);
+    // if (ABS(del)<eps) break;
+
+       if (tol<eps) break;
+       else k = k+del; // Normal Newton use - instead of + for -ddl
+       if (k>maxth) break;
+       if (k<0) { k = 0; break; }  
     }
 
-    return th;
+    return k;
+
+}    
     
-}
-
-
-int NBinGlm::getfAfAdash(double a, unsigned int id, double *fAPtr, double *fAdashPtr )
+double NBinGlm::getfAfAdash(double k0, unsigned int id, unsigned int limit)
 {
-   // fA and fAdsh are equivalent to score and info in theta.ml(), MASS
-    unsigned int i;
-    double yij, mij, dl, ddl, th=1/a;
-    *fAPtr = 0;
-    *fAdashPtr = 0;
-    for ( i=0; i<nRows; i++ ) {
-        yij = gsl_matrix_get(Yref, i, id);
-	mij = gsl_matrix_get(Mu, i, id);
-    //    dl=gsl_sf_psi(yij+k)-gsl_sf_psi(k)-log(mij+k)+log(k)-(yij-mij)/(mij+k); // dl/da
-        dl=gsl_sf_psi(yij+th)-gsl_sf_psi(th)+log(th)+1-log(mij+th)-(yij+th)/(mij+th); // dl/da
-	*fAPtr = *fAPtr + dl;  // sum
-//	ddl=gsl_sf_psi_1(yij+k)-gsl_sf_psi_1(k)+a*mij/(mij+k)+(yij-mij)/(mij+k)/(mij+k); // dl^2/d^2a
-	ddl=gsl_sf_psi_1(yij+th)-gsl_sf_psi_1(th)+a-2/(mij+th)+(yij+th)/((mij+th)*(mij+th)); // dl^2/d^2a
-	*fAdashPtr = *fAdashPtr + ddl;	//sum
+    unsigned int i, it=0;
+    double del=1, sum=1, num=0, k;
+    double y, m, dl, ddl, tol;
+    double phi, dl_dphi, d2l_dphi2, del_phi;
+    if (k0==0) {
+       for (i=0; i<nRows; i++) {
+           y = gsl_matrix_get(Yref, i, id);
+           m = gsl_matrix_get(Mu, i, id);
+           if (m>0) {
+              sum = sum+(y/m-1)*(y/m-1);
+              num = num+1;
+           }
+       }
+       k = MAX(num/sum, mintol);
+    }
+    else k=k0; 
+    
+    phi = 1/k;
+    while ( it<limit ) {
+        it++;
+        dl=nRows*(1+log(k)-gsl_sf_psi(k));
+        ddl=nRows*(gsl_sf_psi_1(k)-1/k);
+        for ( i=0; i<nRows; i++ ) {
+           y = gsl_matrix_get(Yref, i, id);
+           m = gsl_matrix_get(Mu, i, id);
+           dl  = dl + gsl_sf_psi(y+k)-log(m+k)-(y+k)/(m+k); 
+           ddl = ddl - gsl_sf_psi_1(y+k)+2/(m+k)-(y+k)/((m+k)*(m+k)); 
+        }   
+       dl_dphi = - exp(2*log(k))*dl;
+       d2l_dphi2 = 2*exp(3*log(k))*dl + exp(4*log(k))*ddl;
+
+       if (ABS(ddl) < mintol) ddl = GSL_SIGN(ddl)*mintol;
+       del_phi = dl_dphi/ABS(d2l_dphi2);
+       tol = ABS(del_phi*dl_dphi);
+
+       if (tol<eps) break;
+       else{
+          phi = phi + del_phi; // Normal Newton use - instead of + for -ddl
+          k = 1/MAX(phi, mintol);
+       }
+       if (k>maxth) break;
+       if (k<0) { k = 0; break; }  
     }
 
-//    *fAPtr = - k*k*(*fAPtr);
-//    *fAdashPtr = exp(4*log(k))*(*fAdashPtr);
-
-    return SUCCESS;
+    return k;
     
 }
+
 
 void glm::display(void)
 {   
@@ -746,17 +792,17 @@ void glm::display(void)
        else printf("Binomial regression:\n");
     }
     else if ( mmRef->model == NB ) {
-       printf("Negative Binomial regression ");	
+       printf("Negative Binomial regression "); 
        switch (mmRef->estiMethod) {
           case NEWTON:
               printf("(Newton-ML):\n");
-	      break;
-	  case CHI2:
-	      printf("(Chi2):\n");
-	      break;
+          break;
+      case CHI2:
+          printf("(Chi2):\n");
+          break;
           case FISHER:
               printf("(Fisher Scoring):\n");
-	      break;
+          break;
           default: 
               printf("phi estimation method not available");
        }
@@ -766,23 +812,23 @@ void glm::display(void)
     }
 */
     printf("Two-log-like=\n " );
-    for ( j=0; j<nVars; j++ ) printf("%.2f ", ll[j]);	
+    for ( j=0; j<nVars; j++ ) printf("%.2f ", ll[j]);   
     printf("\n");
 //    printf("AIC=\n " );
-//    for ( j=0; j<nVars; j++ ) printf("%.2f ", aic[j]);	
+//    for ( j=0; j<nVars; j++ ) printf("%.2f ", aic[j]);    
 //    printf("\n");
 //    printf("# of convergence\n");    
     for ( j=0; j<nVars; j++ )
         printf("%d ", iterconv[j]); 
-    printf("\n");	       
+    printf("\n");          
 //   printf("Residual deviance=\n " );
 //    for ( j=0; j<nVars; j++ ) printf("%.2f ", dev[j]);
-//    printf("\n");	       
+//    printf("\n");        
 //    if ( mmRef->model == NB ) {
 //        printf("\nphi=\n ");
 //        for (j=0; j<nVars; j++ ) printf("%.2f ", phi[j]);
 //    }
-//    printf("\n");	       
+//    printf("\n");        
 //    if (Oref != NULL)
 //       displaymatrix(Oref, "O");
 //    displaymatrix(Xref, "X");

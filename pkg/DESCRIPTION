@@ -1,6 +1,6 @@
 Package: mvabund
 Title: statistical methods for analysing multivariate abundance data
-Version: 3.6.3
+Version: 3.6.6
 Date: 27-11-2012
 Author: Yi Wang, Ulrike Naumann, Stephen Wright and David Warton
 Maintainer: Yi Wang <alice.yi.wang@gmail.com>
@@ -15,7 +15,7 @@ LinkingTo: stats, Rcpp (>= 0.8.6)
 SystemRequirements: GNU GSL (>= 1.10)
 License: LGPL (>= 2.1)
 Repository: R-Forge
-Packaged: 2012-11-25 14:53:06 UTC; ywang
+Packaged: 2012-11-29 10:45:34 UTC; ywang
 Repository/R-Forge/Project: mvabund
 Repository/R-Forge/Revision: 13
 Repository/R-Forge/DateTimeStamp: 2012-09-27 02:30:57

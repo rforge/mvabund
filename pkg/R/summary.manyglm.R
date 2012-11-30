@@ -52,7 +52,8 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
 
     if (object$theta.method == "ML") methodnum <- 0
     else if (object$theta.method == "Chi2") methodnum <- 1 
-    else stop("'method' not defined. Choose one of 'ML', 'Chi2' for an manyglm object") 
+    else if (object$theta.method == "PHI") methodnum <- 2
+    else stop("'method' not defined. Choose one of 'ML', 'Chi2', 'PHI' for an manyglm object") 
     if (substr(resamp,1,1)=="c") resampnum <- 0  #case
     # To exclude case resampling
     #if (resamp=="case") stop("Sorry, case resampling is not yet available.")
@@ -125,7 +126,7 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
     else if (corrnum == 0) shrink.param <- c(rep(1,nParam+2))
     else if (corrnum == 1) shrink.param <- c(rep(0,nParam+2))
     
-    modelParam <- list(tol=tol, regression=familynum, estimation=methodnum, stablizer=0, n=object$K, maxiter=object$maxiter)
+    modelParam <- list(tol=tol, regression=familynum, estimation=methodnum, stablizer=0, n=object$K, maxiter=object$maxiter, maxiter2=object$maxiter2)
     # note that nboot excludes the original dataset
     testParams <- list(tol=tol, nboot=nBoot-1, cor_type=corrnum, test_type=testnum, resamp=resampnum, reprand=rep.seed, punit=pu, showtime=st)
 

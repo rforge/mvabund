@@ -77,7 +77,7 @@
 // estiMethod
 #define NEWTON 0
 #define CHI2 1
-#define FISHER 2
+#define PHI 2
 // infoMatrix
 #define OIM 0
 #define EIM 1
@@ -162,7 +162,7 @@ typedef struct RegressionMethod{
     unsigned int varStab;
     unsigned int estiMethod;
     double tol;
-    unsigned int maxiter;
+    unsigned int maxiter, maxiter2;
     unsigned int n; // used in binomial regression
 } reg_Method;
 
@@ -268,7 +268,7 @@ class glm
            unsigned int rdf;
 	   double *theta, *ll, *dev, *aic;
 	   unsigned int *iterconv;  
-           unsigned int maxiter;
+           unsigned int maxiter, maxiter2;
 	   double eps, mintol, maxtol, maxth;
            unsigned int nRows, nVars, nParams;
 //   private: 
@@ -410,7 +410,7 @@ class NBinGlm : public PoissonGlm // Y~NB(n, p)
 		  // for NB with mean mu and var=mu+mu^2/theta
                   else return Rf_rnbinom(th, th/(mui+th)); }
 
-	   int getfAfAdash (double th, unsigned int id, double *fA, double *fAdash);
+	   double getfAfAdash (double th, unsigned int id, unsigned int limit);
 	   double thetaML(double th0, unsigned int id, unsigned int limit);
 };
 

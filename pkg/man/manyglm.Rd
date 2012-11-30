@@ -8,7 +8,7 @@
 manyglm(formula, family="negative.binomial", K=1, data=NULL, subset=NULL, 
     na.action=options("na.action"), theta.method = "ML", model = FALSE,
     x = TRUE, y = TRUE, qr = TRUE, cor.type= "I", shrink.param=NULL, 
-    tol=sqrt(.Machine$double.eps), maxiter=25, show.coef=FALSE, show.fitted=FALSE, 
+    tol=sqrt(.Machine$double.eps), maxiter=25, maxiter=10, show.coef=FALSE, show.fitted=FALSE, 
     show.residuals=FALSE, \dots )
 }
 \arguments{
@@ -76,6 +76,7 @@ manyglm(formula, family="negative.binomial", K=1, data=NULL, subset=NULL,
   }
   \item{tol}{the tolerance used in estimations.}
   \item{maxiter}{maximum allowed iterations in the weighted least square estimation of beta. The default value is 25.}
+  \item{maxiter2}{maximum allowed iterations in the internal ML estimations of negative binomial regression. The default value is 10.}
   \item{show.coef, show.fitted, show.residuals}{logical. Whether to show model coefficients, fitted values, or standardized pearson residuals.}
   \item{\dots}{further arguments passed to or from other methods.}
 }

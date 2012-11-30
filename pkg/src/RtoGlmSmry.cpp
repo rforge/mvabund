@@ -23,6 +23,7 @@ RcppExport SEXP RtoGlmSmry(SEXP mpar, SEXP tpar, SEXP Ysexp, SEXP Xsexp,
     mm.varStab = as<unsigned int>(sparam["stablizer"]);
     mm.n = as<unsigned int>(sparam["n"]);
     mm.maxiter = as<unsigned int>(sparam["maxiter"]);
+    mm.maxiter2 = as<unsigned int>(sparam["maxiter2"]);
 
     List rparam(tpar);
     // pass parameters
