@@ -362,11 +362,11 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
            GeeWald(PtrAlt[mtype], L1, &teststat.vector);
         }
         else {              
-//           BetaO = gsl_matrix_alloc(nP1, nVars);
-//           addXrow2(PtrNull[mtype]->Beta, &ref1.vector, BetaO); 
+           BetaO = gsl_matrix_alloc(nP1, nVars);
+           addXrow2(PtrNull[mtype]->Beta, &ref1.vector, BetaO); 
 //	   displaymatrix(BetaO, "BetaO");
-//           PtrAlt[mtype]->regression(fit->Yref, X1, NULL, BetaO);
-           PtrAlt[mtype]->regression(fit->Yref, X1, NULL, NULL);
+           PtrAlt[mtype]->regression(fit->Yref, X1, NULL, BetaO);
+//           PtrAlt[mtype]->regression(fit->Yref, X1, NULL, NULL);
 //	   PtrNull[mtype]->display();
 //	   PtrAlt[mtype]->display();
            GeeLR(PtrAlt[mtype], PtrNull[mtype], &teststat.vector); 
@@ -417,9 +417,9 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
             else {
                 bNull[mtype]->regression(bY,X0,bO,NULL); 
 //                bNull[mtype]->EstIRLS(bY,X0,bO,NULL,PtrNull[mtype]->phi); 
-//                addXrow2(bNull[mtype]->Beta, &ref1.vector, BetaO); 
-//                bAlt[mtype]->regression(bY,X1,bO,BetaO); 
-                bAlt[mtype]->regression(bY,X1,bO,NULL); 
+                addXrow2(bNull[mtype]->Beta, &ref1.vector, BetaO); 
+                bAlt[mtype]->regression(bY,X1,bO,BetaO); 
+//                bAlt[mtype]->regression(bY,X1,bO,NULL); 
 //                bAlt[mtype]->EstIRLS(bY,X1,bO,BetaO,PtrAlt[mtype]->phi); 
                 GeeLR(bAlt[mtype], bNull[mtype], bStat);    
             }
@@ -483,10 +483,10 @@ int GlmTest::GeeLR(glm *PtrAlt, glm *PtrNull, gsl_vector *teststat)
     double val, result=0;
     for ( unsigned int j=0; j<nVars; j++ ) { // univariates
         val = PtrAlt->ll[j] - PtrNull->ll[j];
-        if ( val<0 ) {
-//           printf("Warning: Alt ll=%.4f < Null ll=%.4f\n", PtrAlt->ll[j], PtrNull->ll[j]);
+        if ( val<-0.1 ) {
            val=0;
-//           exit(-1);
+        //   if (tm->showtime==TRUE) 
+        //       printf("Warning: Alt ll=%.4f < Null ll=%.4f\n", PtrAlt->ll[j], PtrNull->ll[j]);
         } 
 //        printf("%.2f ", val);
         gsl_vector_set(teststat, j+1, val);

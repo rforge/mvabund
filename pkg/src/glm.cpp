@@ -161,8 +161,8 @@ void glm::initialGlm(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
            eij = gsl_matrix_get(Eta, i, j);
        // to avoid nan
            if (eij>link(maxtol)) eij = link(maxtol);
-       if (eij<link(mintol)) eij = link(mintol);
-       gsl_matrix_set(Eta, i, j, eij);
+           if (eij<link(mintol)) eij = link(mintol);
+           gsl_matrix_set(Eta, i, j, eij);
            gsl_matrix_set(Mu, i, j, invLink(eij));
        }  
     }
@@ -174,8 +174,8 @@ void glm::initialGlm(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
            eij = gsl_matrix_get(Eta, i, j);
        // to avoid nan
            if (eij>link(maxtol)) eij = link(maxtol);
-       if (eij<link(mintol)) eij = link(mintol);
-       gsl_matrix_set(Eta, i, j, eij);
+           if (eij<link(mintol)) eij = link(mintol);
+           gsl_matrix_set(Eta, i, j, eij);
            gsl_matrix_set(Mu, i, j, invLink(eij));
        }   
     } 
@@ -364,13 +364,13 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
        gsl_blas_dsyrk (CblasLower,CblasTrans,1.0,WX,0.0,XwX); 
        if (calcDet(XwX)<1e-4){ // test if singular or nan
           gsl_vector_view dj=gsl_matrix_diagonal(XwX);
-      gsl_vector_add_constant(&dj.vector, eps);
+          gsl_vector_add_constant(&dj.vector, eps);
        }   
        status=gsl_linalg_cholesky_decomp(XwX);
        if (status) {
           printf("Singular XwX in betaEst\n");
-      printf("theta=%.4f, calcDet(XwX)=%.4f\n", th, calcDet(XwX));
-      displaymatrix(XwX, "XwX"); 
+          printf("theta=%.4f, calcDet(XwX)=%.4f\n", th, calcDet(XwX));
+          displaymatrix(XwX, "XwX"); 
        }
        gsl_blas_dgemv(CblasTrans,1.0,WX,z,0.0,Xwz);
        gsl_linalg_cholesky_solve (XwX, Xwz, &bj.vector);
@@ -493,31 +493,11 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
     gsl_matrix *XwX = gsl_matrix_alloc(nParams, nParams);   
     gsl_vector_view Xwi, Xi, vj, dj, hj;
 
-    // Get initial estimates from Poisson    
-    PoissonGlm fit0( mmRef );
-    fit0.initialGlm( Y, X, O, B);    
-
     d1 = sqrt(2*MAX(1, rdf));
     for (j=0; j<nVars; j++) {  
-        // Get initial beta estimates from Poisson
-        fit0.betaEst(j, maxiter, &tol, 0);
-        b0j = gsl_matrix_column(fit0.Beta, j);
-        gsl_matrix_set_col(Beta, j, &b0j.vector);
-        m0j = gsl_matrix_column(fit0.Mu, j);
-        gsl_matrix_set_col(Mu, j, &m0j.vector);
-        e0j = gsl_matrix_column(fit0.Eta, j);
-        gsl_matrix_set_col(Eta, j, &e0j.vector);
-        v0j = gsl_matrix_column(fit0.varBeta, j);
-        gsl_matrix_set_col(varBeta, j, &v0j.vector);
-        dev[j] = fit0.dev[j];
-/*
-	lm = 2*d1;
-	for (i=0; i<nRows; i++) {
-            yij = gsl_matrix_get(Y, i, j);
-	    mij = gsl_matrix_get(Mu, i, j);
-	    lm = lm + llfunc(yij, mij, maxth+1); // i.e.phi=0, poisson
-	}
-*/
+        th = maxtol; // use poisson
+        betaEst(j, maxiter, &tol, th);
+	th = 0;
         // Get initial theta estimates
         iterconv[j]=0;  
         if (mmRef->estiMethod==CHI2) {
@@ -531,39 +511,22 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
                if (tol<eps) break;
          }  }
         else if (mmRef->estiMethod==NEWTON) {
-	    th = 0;
             while ( iterconv[j]<maxiter ) {
                iterconv[j]++;
                dev_th_b_old = dev[j];
                th = thetaML(th, j, maxiter2);
                betaEst(j, maxiter2, &tol, th);  
-	     /*  lm0 = lm;
-	       lm = 0;
-	       for (i=0; i<nRows; i++) {
-                   yij = gsl_matrix_get(Y, i, j);
-		   mij = gsl_matrix_get(Mu, i, j);
-		   lm = lm + llfunc(yij, mij, th);
-	       } */  
                tol=ABS((dev[j]-dev_th_b_old)/(ABS(dev[j])+0.1));
-               // tol = ABS(lm-lm0)/d1;
                if (tol<eps) break;
         }  } 
        else if (mmRef->estiMethod==PHI) {
-           th = 0;
+           th = thetaML(th, j, maxiter2);
            while ( iterconv[j]<maxiter ) {
                iterconv[j]++;
                dev_th_b_old = dev[j];
                th = getfAfAdash(th, j, maxiter2);
                betaEst(j, maxiter2, &tol, th);  
-	     /*  lm0 = lm;
-	       lm = 0;
-	       for (i=0; i<nRows; i++) {
-                   yij = gsl_matrix_get(Y, i, j);
-		   mij = gsl_matrix_get(Mu, i, j);
-		   lm = lm + llfunc(yij, mij, th);
-	       } */ 
                tol=ABS((dev[j]-dev_th_b_old)/(ABS(dev[j])+0.1));
-	     //  tol = ABS(lm-lm0)/d1;
                if (tol<eps) break;
            }
        }       
@@ -601,11 +564,6 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
           gsl_vector_add_constant(&dj.vector, eps);
        }       
        status=gsl_linalg_cholesky_decomp (XwX);
-       if (status) {
-          displaymatrix(XwX, "XwX");
-          printf("Singular info mat in NBinFit - calcDet(XwX)=%.4f\n", calcDet(XwX)); 
-//          exit(-1);
-       }
        gsl_linalg_cholesky_invert (XwX); // (X'WX)^-1
 
        // Calc varBeta
@@ -627,7 +585,6 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
    gsl_matrix_div_elements (Res, sqrt1_Hii);
    subtractMean(Res);
 
-   fit0.releaseGlm();  
    gsl_matrix_free(XwX);
    gsl_matrix_free(WX);
    gsl_matrix_free(TMP);
@@ -713,7 +670,7 @@ double NBinGlm::thetaML(double k0, unsigned int id, unsigned int limit)
            ddl = ddl - gsl_sf_psi_1(y+k)+2/(m+k)-(y+k)/((m+k)*(m+k)); 
         }   
        if (ABS(ddl) < mintol) ddl = GSL_SIGN(ddl)*mintol;
-       del = dl/ddl;
+       del = dl/ABS(ddl);
        // tol = ABS(del);
        tol = ABS(del*dl);
     // if (ABS(del)<eps) break;
