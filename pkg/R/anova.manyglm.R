@@ -137,12 +137,9 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
     }
 
     # construct for param list     
-    tol = 1e-4
-    modelParam <- list(tol=tol, regression=familynum, maxiter=object$maxiter, maxiter2=object$maxiter2,
-                       estimation=methodnum, stablizer=0, n=object$K)
+    modelParam <- list(tol=object$tol, regression=familynum, maxiter=object$maxiter, maxiter2=object$maxiter2, estimation=methodnum, stablizer=0, n=object$K)
     # note that nboot excludes the original data set
-    testParams <- list(tol=tol, nboot=nBoot-1, cor_type=corrnum, test_type=testnum, 
-              resamp=resampnum, reprand=rep.seed, punit=pu, showtime=st)
+    testParams <- list(tol=object$tol, nboot=nBoot-1, cor_type=corrnum, test_type=testnum, resamp=resampnum, reprand=rep.seed, punit=pu, showtime=st)
 
     # ANOVA
     if (nModels==1)

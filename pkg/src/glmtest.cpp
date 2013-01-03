@@ -7,7 +7,8 @@
 
 GlmTest::GlmTest(const mv_Method *tm):tm(tm)
 {  
-    eps = tm->tol;
+    eps = tm->mintol;
+//    eps = 1e-6;
 
     smryStat = NULL;
     Psmry = NULL;
@@ -531,13 +532,16 @@ int GlmTest::GeeScore(gsl_matrix *X1, glm *PtrNull, gsl_vector *teststat)
            gsl_matrix_set_zero(XwX);
            gsl_blas_dsyrk(CblasLower, CblasTrans, 1, Z[j].matrix, 0, XwX);
            // univariate test = U^T*(XwX)^-1*U
-           if (calcDet(XwX)<eps) { // XwX + eps*
+         /*  if (calcDet(XwX)<eps) { // XwX + eps*
               gsl_matrix_set_identity(XwX);
               gsl_blas_dsyrk(CblasLower, CblasTrans, 1, Z[j].matrix, eps, XwX);
-           }
+           } */
            status=gsl_linalg_cholesky_decomp(XwX); 
-           if (status) {
-              printf("Singular info mat in GeeScore, gsl_errno=%d\n", status);           
+           if (status==GSL_EDOM) {
+              printf("Warning: singular info mat in GeeScore\n");
+              gsl_matrix_set_zero(XwX);
+              gsl_blas_dsyrk(CblasLower,CblasTrans,1,Z[j].matrix,eps,XwX);
+              gsl_linalg_cholesky_decomp(XwX); 
 //              exit(-1);
            }
            tmp2=gsl_vector_subvector(tmp, 0, nP);
@@ -559,13 +563,13 @@ int GlmTest::GeeScore(gsl_matrix *X1, glm *PtrNull, gsl_vector *teststat)
     // multivariate test stat   
     if ( tm->corr==IDENTITY ) gsl_vector_set(teststat, 0, sum);
     else {    
-        if (calcDet(kRlNull)<eps) {
+    /*    if (calcDet(kRlNull)<eps) {
            dj=gsl_matrix_diagonal (kRlNull);
            gsl_vector_add_constant (&dj.vector, eps);
-        }
+        } */
         status=gsl_linalg_cholesky_decomp (kRlNull);
-        if (status) {
-           printf("Singular kRlNull in GeeWald, gsl_errno=%d\n", status);
+        if (status==GSL_EDOM) {
+           printf("Warning:singular kRlNull in GeeWald\n");
 //           exit(-1);
         }
         gsl_linalg_cholesky_solve (kRlNull, U, tmp);
@@ -626,13 +630,16 @@ int GlmTest::GeeWald(glm *Alt, gsl_matrix *LL, gsl_vector *teststat)
        // Z = (X^T W X)^-1 * X^T W^1/2. 
        gsl_matrix_set_zero (XwX);
        gsl_blas_dsyrk (CblasLower, CblasTrans, 1.0, w1jX1, 0.0, XwX);
-       if (calcDet(XwX)<eps) {
+    /*   if (calcDet(XwX)<eps) {
           gsl_matrix_set_identity(XwX);
           gsl_blas_dsyrk (CblasLower, CblasTrans, 1.0, w1jX1, eps, XwX);
-       }
+       } */
        status=gsl_linalg_cholesky_decomp (XwX);
-       if (status) {
-          printf("Singular info mat in wald test, gsl_errno=%d\n", status);
+       if (status==GSL_EDOM) {
+          printf("Warning:singular info mat in wald test\n");
+          gsl_matrix_set_identity(XwX);
+          gsl_blas_dsyrk (CblasLower, CblasTrans, 1.0, w1jX1, eps, XwX);
+          gsl_linalg_cholesky_decomp (XwX);
 //          exit(-1);
        }
        gsl_linalg_cholesky_invert (XwX);
@@ -644,13 +651,13 @@ int GlmTest::GeeWald(glm *Alt, gsl_matrix *LL, gsl_vector *teststat)
 
        if ( (tm->punit!=NONE) || (tm->corr==IDENTITY) ) {
           // Unit test: statj=LBeta^T *(IinvN)^-1*LBeta
-          if (calcDet(IinvN)<eps) {             
+        /*  if (calcDet(IinvN)<eps) {             
              dj=gsl_matrix_diagonal (IinvN);
              gsl_vector_add_constant (&dj.vector, eps); 
-          }
+          } */
           status=gsl_linalg_cholesky_decomp (IinvN);
-          if (status) {
-             printf("Singular IinvN in univariate Wald test, calcDet(IinvN)=%.4f\n", calcDet(IinvN));
+          if (status==GSL_EDOM) {
+             printf("Warning:singular IinvN in univariate Wald test, calcDet(IinvN)=%.4f\n", calcDet(IinvN));
 //             exit(-1);
           }
           tmp2=gsl_vector_subvector(tmp, 0, nDF);
@@ -679,13 +686,13 @@ int GlmTest::GeeWald(glm *Alt, gsl_matrix *LL, gsl_vector *teststat)
         gsl_vector_set(teststat, 0, sqrt(sum));
     else {
         // Multi test: stat = LBeta^T * inv(IinvRl) * LBeta
-        if (calcDet(IinvRl)<eps) {
+       /* if (calcDet(IinvRl)<eps) {
            dj=gsl_matrix_diagonal (IinvRl);
            gsl_vector_add_constant (&dj.vector, eps);
-        }
+        } */
         status=gsl_linalg_cholesky_decomp (IinvRl);
-        if (status) {
-           printf("Singular IinvRl in multivariate Wald test, gsl_errno=%d\n", status);
+        if (status==GSL_EDOM) {
+           printf("Warning:singular IinvRl in multivariate Wald test, gsl_errno=%d\n", status);
 //           exit(-1);
         }
         gsl_linalg_cholesky_solve (IinvRl, LBeta, tmp);
@@ -735,7 +742,7 @@ int GlmTest::resampSmryCase(glm *model, gsl_matrix *bT, GrpMat *GrpXs, gsl_matri
            if (tm->reprand!=TRUE) PutRNGstate();
            gsl_matrix_set_zero(tXX);
            gsl_blas_dsyrk (CblasLower,CblasTrans,1.0,GrpXs[0].matrix,0.0,tXX);
-           if ( calcDet(tXX) > eps ) isSingular=FALSE; 
+           if ( calcDet(tXX) > eps ) break; 
        }
        for (k=2; k<nParam+2; k++) 
            subX2(GrpXs[0].matrix, k-2, GrpXs[k].matrix);
@@ -789,7 +796,7 @@ int GlmTest::resampAnovaCase(glm *model, gsl_matrix *bT, gsl_matrix *bX, gsl_mat
              }
              if (tm->reprand!=TRUE) PutRNGstate();
              gsl_blas_dsyrk (CblasLower, CblasTrans, 1.0, bX, 0.0, txX);
-             if (calcDet(txX)>eps) isSingular=FALSE;
+             if (calcDet(txX)>eps) break;
        } 
    }   		    	
    else {
