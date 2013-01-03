@@ -3,7 +3,7 @@
 # the (default) methods coef, residuals, fitted values can be used             
 ###############################################################################
 
-manyglm <- function (formula, family="negative.binomial", K=1, data=NULL, subset=NULL, na.action=options("na.action"), theta.method = "PHI", model = FALSE, x = TRUE, y = TRUE, qr = TRUE, cor.type= "I", shrink.param=NULL, tol=sqrt(.Machine$double.eps), maxiter=25, maxiter2=10, show.coef=FALSE, show.fitted=FALSE, show.residuals=FALSE, ... ) {
+manyglm <- function (formula, family="negative.binomial", K=1, data=NULL, subset=NULL, na.action=options("na.action"), theta.method = "PHI", model = FALSE, x = TRUE, y = TRUE, qr = TRUE, cor.type= "I", shrink.param=NULL, tol=sqrt(.Machine$double.eps), maxiter=50, maxiter2=1, show.coef=FALSE, show.fitted=FALSE, show.residuals=FALSE, ... ) {
 
 # tasmX <- as.matrix(tasmX, "numeric")  
 
