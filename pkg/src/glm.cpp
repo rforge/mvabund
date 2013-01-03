@@ -324,9 +324,9 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
 {
    gsl_set_error_handler_off();
    int status, isValid;
-   unsigned int j, ngoodobs;
+  // unsigned int j, ngoodobs;
    unsigned int i, step, step1; 
-   double wij, zij, eij, mij, yij, bij;   
+   double wij, zij, eij, mij, yij; //, bij;   
    double dev_old, dev_grad=1.0;
    gsl_vector_view Xwi;
    gsl_matrix *WX, *XwX;
@@ -489,11 +489,11 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
     initialGlm(Y, X, O, B);
 
     gsl_rng *rnd=gsl_rng_alloc(gsl_rng_mt19937);
-    unsigned int i, j, isConv;
+    unsigned int i, j; //, isConv;
     double yij, mij, vij, hii, uij, wij, wei;
-    double th, tol, d1, lm0, lm, dev_th_b_old;
+    double d1, th, tol, dev_th_b_old;
     int status;
-    gsl_vector_view b0j, m0j, e0j, v0j;
+ //   gsl_vector_view b0j, m0j, e0j, v0j;
     gsl_matrix *WX = gsl_matrix_alloc(nRows, nParams);   
     gsl_matrix *TMP = gsl_matrix_alloc(nRows, nParams);   
     gsl_matrix *XwX = gsl_matrix_alloc(nParams, nParams);   
@@ -632,7 +632,7 @@ double PoissonGlm::getDisper( unsigned int id, double th )const
 
 double NBinGlm::llfunc ( double yi, double mui, double th  )const 
 {
-    double l=0, p=0;
+    double l=0; //, p=0;
 
     if (th==0) {
        l = gsl_sf_lngamma(mintol)+log(MAX(yi,mintol)); 
@@ -698,7 +698,7 @@ double NBinGlm::thetaML(double k0, unsigned int id, unsigned int limit)
 double NBinGlm::getfAfAdash(double k0, unsigned int id, unsigned int limit)
 {
     unsigned int i, it=0;
-    double del=1, sum=1, num=0, k;
+    double sum=1, num=0, k;
     double y, m, dl, ddl, tol;
     double phi, dl_dphi, d2l_dphi2, del_phi;
     if (k0==0) {

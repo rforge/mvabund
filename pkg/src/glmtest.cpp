@@ -7,7 +7,7 @@
 
 GlmTest::GlmTest(const mv_Method *tm):tm(tm)
 {  
-    eps = tm->mintol;
+    eps = tm->tol;
 //    eps = 1e-6;
 
     smryStat = NULL;
@@ -512,7 +512,7 @@ int GlmTest::GeeScore(gsl_matrix *X1, glm *PtrNull, gsl_vector *teststat)
     gsl_matrix_set_zero (kRlNull);
     gsl_matrix *XwX = gsl_matrix_alloc(nP, nP);
     gsl_vector *tmp=gsl_vector_alloc(nVars*nP);
-    gsl_vector_view wj, uj, rj, tmp2, dj;
+    gsl_vector_view wj, uj, rj, tmp2; //, dj;
     gsl_matrix_view Rl;
 
     GrpMat *Z = (GrpMat*)malloc(nVars*sizeof(GrpMat));
@@ -609,7 +609,7 @@ int GlmTest::GeeWald(glm *Alt, gsl_matrix *LL, gsl_vector *teststat)
     gsl_matrix *IinvN = gsl_matrix_alloc(nDF, nDF);
     gsl_matrix *IinvRl = gsl_matrix_alloc(nVars*nDF, nVars*nDF);
     gsl_vector *tmp = gsl_vector_alloc(nVars*nDF);
-    gsl_vector_view tmp2, wj, LBj, bj, dj; 
+    gsl_vector_view tmp2, wj, LBj, bj; //, dj; 
     gsl_matrix_view Rl;
 
     gsl_matrix_set_zero(IinvRl);
