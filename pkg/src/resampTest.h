@@ -132,6 +132,7 @@ typedef struct MethodStruc {
     unsigned int nVars;
     unsigned int nParam;
     unsigned int showtime;
+    unsigned int warning;
 
     // numeric
     double shrink_param;
@@ -164,6 +165,7 @@ typedef struct RegressionMethod{
     double tol;
     unsigned int maxiter, maxiter2;
     unsigned int n; // used in binomial regression
+    unsigned int warning;
 } reg_Method;
 
 // ManyLM related
@@ -381,9 +383,14 @@ class NBinGlm : public PoissonGlm // Y~NB(n, p)
 	   // size = th (dispersion)
 	   // prob = size/(size+mu)
 	   double weifunc(double mui, double th) const
-	        { return MAX(mui*th, eps)/MAX(mui+th, eps); }
+	        { if (th==0) return 0;
+                  else if (th>maxth) return mui; // poisson
+                  else return MAX(mintol, mui*th/MAX(mui+th, mintol)); }
 	   double varfunc(double mui, double th) const
-	        { return mui+mui*mui/MAX(th, eps); }
+	        { 
+                  if (th==0) return 0;
+                  else if (th>maxth) return mui;
+                  else return mui+mui*mui/MAX(th, mintol); }
 	   double llfunc(double yi, double mui, double th) const;
 	   double devfunc(double yi, double mui, double th) const
 	        { if (th==0) return 0; 

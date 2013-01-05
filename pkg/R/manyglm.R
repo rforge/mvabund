@@ -3,7 +3,7 @@
 # the (default) methods coef, residuals, fitted values can be used             
 ###############################################################################
 
-manyglm <- function (formula, family="negative.binomial", K=1, data=NULL, subset=NULL, na.action=options("na.action"), theta.method = "PHI", model = FALSE, x = TRUE, y = TRUE, qr = TRUE, cor.type= "I", shrink.param=NULL, tol=sqrt(.Machine$double.eps), maxiter=50, maxiter2=1, show.coef=FALSE, show.fitted=FALSE, show.residuals=FALSE, ... ) {
+manyglm <- function (formula, family="negative.binomial", K=1, data=NULL, subset=NULL, na.action=options("na.action"), theta.method = "PHI", model = FALSE, x = TRUE, y = TRUE, qr = TRUE, cor.type= "I", shrink.param=NULL, tol=sqrt(.Machine$double.eps), maxiter=50, maxiter2=5, show.coef=FALSE, show.fitted=FALSE, show.residuals=FALSE, show.warning=FALSE,... ) {
 
 # tasmX <- as.matrix(tasmX, "numeric")  
 
@@ -116,8 +116,11 @@ else {
     else if (theta.method == "PHI") methodnum <- 2 
     else stop("Check the param estimation method name.")  
 
+    if (show.warning==TRUE) warn <- 1
+    else warn <- 0
+
     ######### call Glm Fit Rcpp #########
-    modelParam <- list(tol=tol, regression=familynum, estimation=methodnum, stablizer=FALSE, n=K, maxiter=maxiter, maxiter2=maxiter2)
+    modelParam <- list(tol=tol, regression=familynum, estimation=methodnum, stablizer=FALSE, n=K, maxiter=maxiter, maxiter2=maxiter2, warning=warn)
     z <- .Call("RtoGlm", modelParam, Y, X, PACKAGE="mvabund")
 
 # New codes added for estimating ridge parameter 

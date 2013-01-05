@@ -4,7 +4,7 @@
 # 05-Jan-2010
 ###############################################################################
 
-summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.cor = FALSE, show.est=FALSE, show.residuals=FALSE, symbolic.cor = FALSE, show.time=FALSE, ... ) 
+summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none", nBoot=1000, cor.type=object$cor.type, show.cor = FALSE, show.est=FALSE, show.residuals=FALSE, symbolic.cor = FALSE, show.time="total", show.warning=FALSE,... ) 
 {
     allargs <- match.call(expand.dots = FALSE)
     dots <- allargs$...
@@ -15,7 +15,11 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
     else bootID <- NULL
 
     if (show.time==FALSE) st=0
-    else st=1
+    else if (show.time==TRUE) st=1
+    else st=2
+
+    if (show.warning==TRUE) warn=1
+    else warn=0
 
     if (cor.type!="I" & test=="LR") {
        warning("The likelihood ratio test can only be used if correlation matrix of the abundances is is assumed to be the Identity matrix. The Wald Test will be used.")
@@ -126,9 +130,9 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
     else if (corrnum == 0) shrink.param <- c(rep(1,nParam+2))
     else if (corrnum == 1) shrink.param <- c(rep(0,nParam+2))
     
-    modelParam <- list(tol=tol, regression=familynum, estimation=methodnum, stablizer=0, n=object$K, maxiter=object$maxiter, maxiter2=object$maxiter2)
+    modelParam <- list(tol=tol, regression=familynum, estimation=methodnum, stablizer=0, n=object$K, maxiter=object$maxiter, maxiter2=object$maxiter2, warning=warn)
     # note that nboot excludes the original dataset
-    testParams <- list(tol=tol, nboot=nBoot-1, cor_type=corrnum, test_type=testnum, resamp=resampnum, reprand=rep.seed, punit=pu, showtime=st)
+    testParams <- list(tol=tol, nboot=nBoot-1, cor_type=corrnum, test_type=testnum, resamp=resampnum, reprand=rep.seed, punit=pu, showtime=st, warning=warn)
 
     ######## Call Summary Rcpp #########
     val <- .Call("RtoGlmSmry", modelParam, testParams, Y, X, bootID, shrink.param, PACKAGE="mvabund")

@@ -8,7 +8,7 @@
 manyglm(formula, family="negative.binomial", K=1, data=NULL, subset=NULL, 
     na.action=options("na.action"), theta.method = "PHI", model = FALSE,
     x = TRUE, y = TRUE, qr = TRUE, cor.type= "I", shrink.param=NULL, 
-    tol=sqrt(.Machine$double.eps), maxiter=50, maxiter2=1, show.coef=FALSE, show.fitted=FALSE, show.residuals=FALSE, \dots )
+    tol=sqrt(.Machine$double.eps), maxiter=50, maxiter2=5, show.coef=FALSE, show.fitted=FALSE, show.residuals=FALSE, show.warning=FALSE,\dots )
 }
 \arguments{
   \item{formula}{an object of class \code{"\link{formula}"} (or one that
@@ -74,9 +74,9 @@ manyglm(formula, family="negative.binomial", K=1, data=NULL, subset=NULL,
   used in subsequent functions for inference.
   }
   \item{tol}{the tolerance used in estimations.}
-  \item{maxiter}{maximum allowed iterations in the weighted least square estimation of beta. The default value is 25.}
-  \item{maxiter2}{maximum allowed iterations in the internal ML estimations of negative binomial regression. The default value is 10.}
-  \item{show.coef, show.fitted, show.residuals}{logical. Whether to show model coefficients, fitted values, or standardized pearson residuals.}
+  \item{maxiter}{maximum allowed iterations in the weighted least square estimation of beta. The default value is 100.}
+  \item{maxiter2}{maximum allowed iterations in the internal ML estimations of negative binomial regression. The default value is 5.}
+  \item{show.coef, show.fitted, show.residuals, show.warning}{logical. Whether to show model coefficients, fitted values, standardized pearson residuals, or operation warnings.}
   \item{\dots}{further arguments passed to or from other methods.}
 }
 \details{

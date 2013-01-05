@@ -248,8 +248,8 @@ int PoissonGlm::EstIRLS(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix 
        if ( a!=NULL ) theta[j]=a[j]; 
        // estimate mu and beta   
        iterconv[j] = betaEst(j, maxiter, &tol, theta[j]); 
-       if (iterconv[j]>maxiter) 
-           printf("Warning: EstIRLS reached max iterations\n");
+       if ((mmRef->warning==TRUE)&(iterconv[j]==maxiter)) 
+           printf("Warning: EstIRLS reached max iterations, may not converge in the %d-th variable (dev=%.4f, err=%.4f)!\n", j, dev[j], tol);
        gsl_matrix_memcpy (WX, X);
        for (i=0; i<nRows; i++) {
             mij = gsl_matrix_get(Mu, i, j);
@@ -276,17 +276,14 @@ int PoissonGlm::EstIRLS(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix 
        aic[j]=-ll[j]+2*(nParams);
 
        // X^T * W * X
-       gsl_matrix_set_zero(XwX);
+       gsl_matrix_set_identity(XwX);
        gsl_blas_dsyrk (CblasLower, CblasTrans, 1.0, WX, 0.0, XwX);
-/*       if (calcDet(XwX)<eps) {  // XwX+eps*I
-          dj=gsl_matrix_diagonal(XwX);
-          gsl_vector_add_constant(&dj.vector, eps);
-       } */ 
        status=gsl_linalg_cholesky_decomp (XwX);
        if (status==GSL_EDOM) {
-          printf("Warning: singular info matrix in EstIRLS pit-residuals.\n");
-          gsl_matrix_set_zero(XwX);
-          gsl_blas_dsyrk (CblasLower, CblasTrans, 1.0, WX, eps, XwX);
+          if (mmRef->warning==TRUE)
+             printf("Warning: singular matrix in calculating pit-residuals. An eps*I is added to the singular matrix.\n");
+          gsl_matrix_set_identity(XwX);
+          gsl_blas_dsyrk (CblasLower, CblasTrans, 1.0, WX, mintol, XwX);
           gsl_linalg_cholesky_decomp (XwX);
        }
        gsl_linalg_cholesky_invert (XwX);
@@ -327,7 +324,7 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
   // unsigned int j, ngoodobs;
    unsigned int i, step, step1; 
    double wij, zij, eij, mij, yij; //, bij;   
-   double dev_old, dev_grad=1.0;
+   double det, dev_old, dev_grad=1.0;
    gsl_vector_view Xwi;
    gsl_matrix *WX, *XwX;
    gsl_vector *z, *Xwz;
@@ -364,19 +361,33 @@ int PoissonGlm::betaEst( unsigned int id, unsigned int iter, double *tol, double
        }
        // in glm2, solve WXb=Wz, David suggested not good 
        // So back to solving X'WXb=X'Wz
-       gsl_matrix_set_zero (XwX);
+       gsl_matrix_set_identity (XwX);
        gsl_blas_dsyrk (CblasLower,CblasTrans,1.0,WX,0.0,XwX); 
-    /*  if (calcDet(XwX)<mintol){ // test if singular or nan
-          gsl_vector_view dj=gsl_matrix_diagonal(XwX);
-          gsl_vector_add_constant(&dj.vector, eps);
-       } */   
        status=gsl_linalg_cholesky_decomp(XwX);
        if (status==GSL_EDOM) {
-          printf("Warning: singular XwX in betaEst\n");
-          printf("theta=%.4f\n", th);
-          gsl_matrix_set_zero (XwX);
-          gsl_blas_dsyrk (CblasLower,CblasTrans,1.0,WX,eps,XwX); 
+          if (mmRef->warning==TRUE) {
+             printf("Warning: singular matrix in betaEst: ");
+             gsl_matrix_set_identity (XwX); 
+             gsl_blas_dsyrk (CblasLower,CblasTrans,1.0,Xref,0.0,XwX);
+          //  displaymatrix(Xref, "Xref");
+	  // displaymatrix(XwX, "XX^T");
+          //   printf("calc(XX')=%.8f\n", calcDet(XwX)); 
+             status=gsl_linalg_cholesky_decomp(XwX);
+             if (status==GSL_EDOM)  
+                printf("X^TX is singular - check case resampling or input design matrix!\n");
+             else {
+                for (i=0; i<nRows; i++) {
+                   mij = gsl_matrix_get(Mu, i, id);
+                   wij = sqrt(weifunc(mij, th));
+                   if (wij<mintol) printf("weight[%d, %d]=%.4f is too close to zero\n", i, id, wij);
+                }
+             } 
+             printf("An eps*I is added to the singular matrix.\n");
+          }
+          gsl_matrix_set_identity (XwX);
+          gsl_blas_dsyrk (CblasLower,CblasTrans,1.0,WX,mintol,XwX); 
           gsl_linalg_cholesky_decomp(XwX);
+//	  exit(-1);
        }
        gsl_blas_dgemv(CblasTrans,1.0,WX,z,0.0,Xwz);
        gsl_linalg_cholesky_solve (XwX, Xwz, &bj.vector);
@@ -536,8 +547,8 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
                if (tol<eps) break;
            }
        }       
-     //  if (iterconv[j]==maxiter) 
-     //      printf("iter[%d]=%d, theta[%d]=%.4f, tol=%.4f, dev[%d]=%.4f\n", j, iterconv[j], j, th, tol, j, dev[j]);
+       if ((iterconv[j]==maxiter)&(mmRef->warning==TRUE)) 
+           printf("Warning: reached maximum itrations - negative binomial may NOT converge in the %d-th variable (dev=%.4f, err=%.4f, theta=%.4f)!\n", j, dev[j], tol, th);
 
        // other properties based on mu and phi
        theta[j] = th;
@@ -563,17 +574,14 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
        aic[j]=-ll[j]+2*(nParams+1);
 
        // X^T * W * X
-       gsl_matrix_set_zero (XwX);
+       gsl_matrix_set_identity (XwX);
        gsl_blas_dsyrk (CblasLower, CblasTrans, 1.0, WX, 0.0, XwX);
-    /*   if (calcDet(XwX)<eps) {
-          dj=gsl_matrix_diagonal(XwX);
-          gsl_vector_add_constant(&dj.vector, eps);
-       } */       
        status=gsl_linalg_cholesky_decomp (XwX);
        if (status==GSL_EDOM) {
-          printf("Warning: singular matrix in nbinfit pit-residuals\n.");
-          gsl_matrix_set_zero (XwX);
-          gsl_blas_dsyrk (CblasLower, CblasTrans, 1.0, WX, eps, XwX);
+          if (mmRef->warning==TRUE)
+             printf("Warning: singular matrix in calculating pit-residuals. An eps*I is added to the singular matrix.\n");
+          gsl_matrix_set_identity (XwX);
+          gsl_blas_dsyrk (CblasLower, CblasTrans, 1.0, WX, mintol, XwX);
           gsl_linalg_cholesky_decomp (XwX);
        }
        gsl_linalg_cholesky_invert (XwX); // (X'WX)^-1
@@ -667,10 +675,11 @@ double NBinGlm::thetaML(double k0, unsigned int id, unsigned int limit)
               num = num+1;
            }
        }
-       k = MAX(num/sum, mintol);
+       k = num/sum;
     }
     else k=k0;
-    
+
+    k = MAX(k, mintol);
     while ( it<limit ) {
         it++;
         dl=nRows*(1+log(k)-gsl_sf_psi(k));
@@ -711,10 +720,11 @@ double NBinGlm::getfAfAdash(double k0, unsigned int id, unsigned int limit)
            }
        }
        k = num/sum;
+       if (num==0) printf("num=0\n");
     }
     else k=k0; 
-    
-    phi = 1/MAX(k, mintol);
+    k = MAX(k, mintol);
+    phi = 1/k;
     while ( it<limit ) {
         it++;
         dl=nRows*(1+log(k)-gsl_sf_psi(k));
@@ -735,10 +745,10 @@ double NBinGlm::getfAfAdash(double k0, unsigned int id, unsigned int limit)
        if (tol<eps) break;
        else{
           phi = phi + del_phi; // Normal Newton use - instead of + for -ddl
+          if (phi<0) {k=maxth+1; break;}
           k = 1/MAX(phi, mintol);
+          if (k>maxth) break;
        }
-       if (k>maxth) break;
-       if (k<0) { k = 0; break; }  
     }
 
     return k;
