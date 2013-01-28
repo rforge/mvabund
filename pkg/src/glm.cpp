@@ -502,7 +502,7 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
     gsl_rng *rnd=gsl_rng_alloc(gsl_rng_mt19937);
     unsigned int i, j; //, isConv;
     double yij, mij, vij, hii, uij, wij, wei;
-    double d1, th, tol, dev_th_b_old;
+    double lm, lm0, d1, th, tol, dev_th_b_old;
     int status;
  //   gsl_vector_view b0j, m0j, e0j, v0j;
     gsl_matrix *WX = gsl_matrix_alloc(nRows, nParams);   
@@ -512,9 +512,7 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
 
     d1 = sqrt(2*MAX(1, rdf));
     for (j=0; j<nVars; j++) {  
-        th = maxtol; // use poisson
-        betaEst(j, maxiter, &tol, th);
-	th = 0;
+        betaEst(j, maxiter, &tol, maxtol); //poisson
         // Get initial theta estimates
         iterconv[j]=0;  
         if (mmRef->estiMethod==CHI2) {
@@ -528,6 +526,7 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
                if (tol<eps) break;
          }  }
         else if (mmRef->estiMethod==NEWTON) {
+            th = thetaML(0, j, maxiter);
             while ( iterconv[j]<maxiter ) {
                iterconv[j]++;
                dev_th_b_old = dev[j];
@@ -537,13 +536,27 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
                if (tol<eps) break;
         }  } 
        else if (mmRef->estiMethod==PHI) {
-           th = thetaML(th, j, maxiter2);
+           th = getfAfAdash(0, j, maxiter);
+/*           lm=0;
+           for (i=0; i<nRows; i++) {
+               yij = gsl_matrix_get(Y, i, j);
+               mij = gsl_matrix_get(Mu, i, j);
+               lm = lm + llfunc( yij, mij, th);
+           } */
            while ( iterconv[j]<maxiter ) {
                iterconv[j]++;
                dev_th_b_old = dev[j];
-               th = getfAfAdash(th, j, maxiter2);
                betaEst(j, maxiter2, &tol, th);  
+               th = getfAfAdash(th, j, 1);
                tol=ABS((dev[j]-dev_th_b_old)/(ABS(dev[j])+0.1));
+/*               lm0 = lm;
+               lm=0;
+               for (i=0; i<nRows; i++) {
+                   yij = gsl_matrix_get(Y, i, j);
+                   mij = gsl_matrix_get(Mu, i, j);
+                   lm = lm + llfunc( yij, mij, th);
+               }
+               tol = ABS(lm0-lm)/d1; */
                if (tol<eps) break;
            }
        }       
@@ -552,7 +565,8 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
 
        // other properties based on mu and phi
        theta[j] = th;
-       gsl_matrix_memcpy(WX, Xref);        
+       gsl_matrix_memcpy(WX, Xref);  
+       ll[j]=0;
        for (i=0; i<nRows; i++) {
            yij = gsl_matrix_get(Y, i, j);
            mij = gsl_matrix_get(Mu, i, j);
@@ -680,8 +694,9 @@ double NBinGlm::thetaML(double k0, unsigned int id, unsigned int limit)
     else k=k0;
 
     k = MAX(k, mintol);
-    while ( it<limit ) {
+    while ( it<=limit ) {
         it++;
+        k = ABS(k);
         dl=nRows*(1+log(k)-gsl_sf_psi(k));
         ddl=nRows*(gsl_sf_psi_1(k)-1/k);
         for ( i=0; i<nRows; i++ ) {
@@ -693,12 +708,12 @@ double NBinGlm::thetaML(double k0, unsigned int id, unsigned int limit)
        if (ABS(ddl) < mintol) ddl = GSL_SIGN(ddl)*mintol;
        del = dl/ABS(ddl);
        tol = ABS(del*dl);
-
        if (tol<eps) break;
-       else k = k+del; // Normal Newton use - instead of + for -ddl
+       k = k+del; // Normal Newton use - instead of + for -ddl
        if (k>maxth) break;
        if (k<0) { k = 0; break; }  
     }
+   // if (k<0) k=0;
 
     return k;
 
@@ -743,12 +758,11 @@ double NBinGlm::getfAfAdash(double k0, unsigned int id, unsigned int limit)
        tol = ABS(del_phi*dl_dphi);
 
        if (tol<eps) break;
-       else{
-          phi = phi + del_phi; // Normal Newton use - instead of + for -ddl
-          if (phi<0) {k=maxth+1; break;}
-          k = 1/MAX(phi, mintol);
-          if (k>maxth) break;
-       }
+
+       phi = phi + del_phi;
+       if (phi<0) {k=0; break;}
+       k = 1/MAX(ABS(phi),mintol);
+       if (k>maxth) break;
     }
 
     return k;

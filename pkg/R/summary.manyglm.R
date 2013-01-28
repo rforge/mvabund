@@ -14,8 +14,8 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
     if ("bootID" %in% names(dots)) bootID <- dots$bootID
     else bootID <- NULL
 
-    if (show.time==FALSE) st=0
-    else if (show.time==TRUE) st=1
+    if (show.time=="none") st=0
+    else if (show.time=="all") st=1
     else st=2
 
     if (show.warning==TRUE) warn=1
