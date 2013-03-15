@@ -15,7 +15,7 @@ LinkingTo: stats, Rcpp (>= 0.8.6)
 SystemRequirements: GNU GSL (>= 1.10)
 License: LGPL (>= 2.1)
 Repository: R-Forge
-Packaged: 2012-11-25 14:53:06 UTC; ywang
+Packaged: 2013-03-08 12:20:04 UTC; alice
 Repository/R-Forge/Project: mvabund
 Repository/R-Forge/Revision: 13
 Repository/R-Forge/DateTimeStamp: 2012-09-27 02:30:57
