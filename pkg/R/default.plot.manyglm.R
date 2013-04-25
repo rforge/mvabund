@@ -129,8 +129,8 @@ default.plot.manyglm  <- function(x, which = 1, res.type="pit.norm", caption = c
     if (missing(var.subset) | is.null(var.subset) | !is.numeric(var.subset)) {
        # Plot the n.var variables with highest abundances
        if ( p < n.vars ) {
-          warning("You have passed an invalid number of variables 'n.vars' to be included in the plot. All variables will be included instead.")        
-          n.var <- p
+   #       warning("You have passed an invalid number of variables 'n.vars' to be included in the plot. All variables will be included instead.")        
+          n.vars <- p
        }      
        y <- as.matrix(x$y)
        if(any(na.action.type == "pass") | is.null(na.action.type)) {

@@ -235,35 +235,35 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
         else if (corrnum == 1) shrink.param <- c(rep(0,nModels))
 
         # Test if models are nested, construct the full matrix and XvarIn 
-        XNull <- as.matrix(objects[[1]]$x, "numeric")
-        ind <- matrix(ncol=1, nrow=nModels)
-        for ( i in 2:nModels ) {
-            XAlt  <- as.matrix(objects[[i]]$x, "numeric")
-            Xarg  <- cbind(XAlt, XNull)
-            tmp <- qr(Xarg)
-            Xplus <- qr(XAlt)
-            if ( tmp$rank == Xplus$rank ) {
-               Beta <- qr.coef(Xplus, XNull)  # equivalent to (XAlt\XNull) in matlab 
-               # The following gets the left null space of beta, ie.LT=null(t(beta));
-               # note that LT is an orthogonal complement of Beta, and [Beta, LT] together forms the orthogonal basis that span the column space of XAlt
-               # For some reason, it must be null(beta) instead of null(t(beta)) in R to get the same answer in matlab.
-               tmp <- qr(Beta)
-               set <- if(tmp$rank == 0) 1:ncol(Beta) else  - (1:tmp$rank)
-               LT <- qr.Q(tmp, complete = TRUE)[, set, drop = FALSE]
-               # to get the dimension of Xnull
-               ind[nModels+2-i, 1] <- dim(XNull)[2]
-               XNull <- cbind(XNull, XAlt%*%LT)
-            } 
-            else
-              stop(paste(modelnamelist[i-1], "is note nested in Model", modelnamelist[i]))
-        }
-        # the full matrix template X, note that Xnull and Xalt are reconstructed from X and XvarIn in the resampling process
-        X <- XNull
-        nParam <- ind[1, 1] <- dim(X)[2] 
+#        XNull <- as.matrix(objects[[1]]$x, "numeric")
+#        ind <- matrix(ncol=1, nrow=nModels)
+#        for ( i in 2:nModels ) {
+#            XAlt  <- as.matrix(objects[[i]]$x, "numeric")
+#            Xarg  <- cbind(XAlt, XNull)
+#            tmp <- qr(Xarg)
+#            Xplus <- qr(XAlt)
+#            if ( tmp$rank == Xplus$rank ) {
+#               Beta <- qr.coef(Xplus, XNull)  # equivalent to (XAlt\XNull) in matlab 
+#               # The following gets the left null space of beta, ie.LT=null(t(beta));
+#               # note that LT is an orthogonal complement of Beta, and [Beta, LT] together forms the orthogonal basis that span the column space of XAlt
+#               # For some reason, it must be null(beta) instead of null(t(beta)) in R to get the same answer in matlab.
+#               tmp <- qr(Beta)
+#               set <- if(tmp$rank == 0) 1:ncol(Beta) else  - (1:tmp$rank)
+#               LT <- qr.Q(tmp, complete = TRUE)[, set, drop = FALSE]
+#               # to get the dimension of Xnull
+#               ind[nModels+2-i, 1] <- dim(XNull)[2]
+#               XNull <- cbind(XNull, XAlt%*%LT)
+#            } 
+#        X <- XNull
+        X <- as.matrix(objects[[nModels]]$x, "numeric") # XAlt
+        nParam <- dim(X)[2] 
         XvarIn <- matrix(ncol=nParam, nrow=nModels, as.integer(0))  
         Xnames <- list()   # formula of each model
-        for ( i in 1:nModels ) XvarIn[i, 1:ind[i, 1]] <- as.integer(1) 
-
+        for ( i in 1:nModels ) {
+            nx = dim(as.matrix(objects[[i]]$x, "numeric"))[2]
+            XvarIn[nModels+1-i, 1:nx] <- as.integer(1) 
+        }
+#browser()
         Xnames <- lapply(objects, function(x) paste(deparse(formula(x), 
                          width.cutoff=500), collapse = "\n")) 
         topnote <- paste(modelnamelist, ": ", Xnames, sep = "", collapse = "\n")
