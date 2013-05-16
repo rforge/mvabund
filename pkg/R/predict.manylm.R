@@ -21,12 +21,13 @@ function (object, newdata, se.fit = FALSE, scale = NULL, df = Inf,
     } else {
         n <- NROW(newdata) 
         Terms <- delete.response(tt)
-#        m <- model.frame(Terms, newdata, na.action = na.action, 
-#            xlev = object$xlevels)
-#        if (!is.null(cl <- attr(Terms, "dataClasses"))) 
-#            .checkMFClasses(cl, m)
-#        X <- model.matrix(Terms, m, contrasts.arg = object$contrasts)
-        X <- model.matrix(object)[1:n,]
+#	newdata=data.frame(newdata)
+        m <- model.frame(Terms, newdata, na.action = na.action, 
+            xlev = object$xlevels)
+        if (!is.null(cl <- attr(Terms, "dataClasses"))) 
+            .checkMFClasses(cl, m)
+        X <- model.matrix(Terms, m, contrasts.arg = object$contrasts)
+#        X <- model.matrix(object)[1:n,] #this line is completely wrong!!!
         offset <- if (!is.null(off.num <- attr(tt, "offset"))) 
                        eval(attr(tt, "variables")[[off.num + 1]], newdata)
                   else if (!is.null(object$offset)) 

@@ -19,7 +19,7 @@ function (object, newdata = NULL, type = c("link", "response",
                 pred <- napredict(na.act, pred)
         }
         else {
-            pred <- predict.manylm(object, newdata=newdata, se.fit, scale = 1, 
+            pred <- predict.manylm(object, newdata, se.fit, scale = 1, 
                 type = ifelse(type == "link", "response", type), 
                 terms = terms, na.action = na.action)
             switch(type, response = {
