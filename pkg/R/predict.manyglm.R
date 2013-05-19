@@ -9,6 +9,7 @@ function (object, newdata = NULL, type = c("link", "response",
     type    <- match.arg(type)
     na.act  <- object$na.action
     object$na.action <- NULL
+
 #    newdata <- data.frame(newdata)
 
     if (!se.fit) {
