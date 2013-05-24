@@ -67,7 +67,7 @@ X <- spider$x[1:20,]
 
 glm.spid.poiss <- manyglm(spiddat[1:20,]~X, family="poisson")
 
-newdata <- spiddat[21:28,]
+newdata <- data.frame(spiddat[21:28,])
 predict(glm.spid.poiss, newdata)
 pred.w.plim <- predict(glm.spid.poiss, newdata, interval="prediction")
 pred.w.clim <- predict(glm.spid.poiss, newdata, interval="confidence")

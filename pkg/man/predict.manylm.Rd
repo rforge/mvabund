@@ -117,7 +117,7 @@ predict(manylm.fit)
 
 predict(manylm.fit, se.fit = TRUE)
 
-new <- mvabund(matrix(ceiling(runif(180, 0,10)), ncol=6, nrow=15))
+new <- data.frame(matrix(ceiling(runif(180, 0,10)), ncol=6, nrow=15))
 predict(manylm.fit, new, se.fit = TRUE)
 
 }
