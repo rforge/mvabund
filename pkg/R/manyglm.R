@@ -92,7 +92,9 @@ else {
     X <- model.matrix(mt, mf)
     assign <- attr(X, "assign")
     tX <- t(X)
-    tX <- t(tX[!duplicated(tX),])  # remove duplicated col    
+    dup <- duplicated(tX)
+    assign <- assign[!dup]
+    tX <- t(tX[!dup, ])  # remove duplicated col    
     if ( nrow(tX) == nrow(X) ) X <- tX
     else X <- t(tX) # for a single-column matrix 
 
