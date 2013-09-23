@@ -15,7 +15,7 @@
 \method{plot}{manylm}(
   x, res.type="pearson", which=1:4, caption=c("Residuals vs Fitted", "Normal Q-Q", 
   "Scale-Location", "Cook's distance"), overlay=TRUE, 
-  n.vars=12, var.subset=NULL, sub.caption=NULL, studentized= TRUE, ...)
+  n.vars=Inf, var.subset=NULL, sub.caption=NULL, studentized= TRUE, ...)
 
 \method{plot}{manyglm}(
   x, res.type="pit.norm", which=1, caption=c("Residuals vs Fitted", "Normal Q-Q", 

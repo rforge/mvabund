@@ -144,7 +144,8 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
     modelParam <- list(tol=object$tol, regression=familynum, maxiter=object$maxiter, maxiter2=object$maxiter2, warning=warn, estimation=methodnum, stablizer=0, n=object$K)
     # note that nboot excludes the original data set
     testParams <- list(tol=object$tol, nboot=nBoot-1, cor_type=corrnum, test_type=testnum, resamp=resampnum, reprand=rep.seed, punit=pu, showtime=st, warning=warn)
-
+    if(is.null(object$offset)) O <- matrix(0, nrow=nRows, ncol=nVars)
+    else O <- as.matrix(object$offset)
     # ANOVA
     if (nModels==1)
     {
@@ -165,6 +166,9 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
           nterms <- max(0, varseq)+1
           tl <- c("(Intercept)", tl)
        }
+       if ( nParam==1 )
+           stop("An intercept model is comparing to itself. Stopped")
+
        XvarIn <- matrix(ncol=nParam, nrow=nterms, 1)
        for ( i in 0:(nterms-2))
        { # exclude object itself
@@ -268,12 +272,16 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
                          width.cutoff=500), collapse = "\n")) 
         topnote <- paste(modelnamelist, ": ", Xnames, sep = "", collapse = "\n")
         tl <- modelnamelist 
+        if (tl[1]==tl[2]) {
+	    warning(paste("Two identical models. Second model's name changed to ", tl[2], "_2", sep=""))
+	    tl[2] <- paste(tl[2], "_2", sep="")
+	}
         ord <- (nModels-1):1
     }
 
 # browser()
-    ######## call resampTest Rcpp #########
-    val <- .Call("RtoGlmAnova", modelParam, testParams, Y, X, 
+    ######## call resampTest Rcpp #########   
+    val <- .Call("RtoGlmAnova", modelParam, testParams, Y, X, O,
                  XvarIn, bootID, shrink.param, PACKAGE="mvabund")
 
     # prepare output summary

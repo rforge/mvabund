@@ -7,7 +7,8 @@ Fits for Abundance Data}
 generalized linear model fits.}
 \usage{
 \method{anova}{manyglm}(object, \dots, resamp="pit.trap", test="LR", 
-    p.uni="none", nBoot=1000, cor.type=object$cor.type, show.time="total", show.warning=FALSE, rep.seed=FALSE, bootID=NULL) 
+        p.uni="none", nBoot=1000, cor.type=object$cor.type, 
+	show.time="total", show.warning=FALSE, rep.seed=FALSE, bootID=NULL) 
 \method{print}{anova.manyglm}(x, \dots) 
 }
 \arguments{
@@ -127,15 +128,6 @@ tasm.cop.nb <- manyglm(tasm.cop ~ block*treatment, family="negative.binomial")
 ## Testing hypotheses about the treatment effect and treatment-by-block interactions, 
 ## using the default settings of parametric resampling and deviance as test statistics: 
 anova(tasm.cop.nb, nBoot=400, test="wald")
-
-## Checking model assumptions
-#plot(tasm.cop.nb)
-
-## Accounting for correlation between variables (with shrinkage):
-#tasm.cop.nb2 <- manyglm(tasm.cop ~ block*treatment, family="negative.binomial", cor.type="shrink")
-
-## Repeat ANOVA test with P-values adjusted for multiple testing, using parametric bootstrap and wald statistics:
-#anova(tasm.cop.nb2, p.uni="adjusted", nBoot=500, test="wald", show.time=TRUE)
 
 }
 \keyword{models}
