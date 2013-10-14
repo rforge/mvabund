@@ -130,9 +130,11 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
        stop("'p.uni' not defined. Choose one of 'adjusted', 'unadjusted', 'none'.")
 
     if (!is.null(bootID)) {
-       nBoot<-dim(bootID)[2]
+       nBoot<-dim(bootID)[1]
        if (is.integer(bootID)) {
-       cat(paste("Input bootID matrix being used for testing.","\n"))
+           cat(paste("Using bootID matrix from input.","\n"))
+           if (max(bootID)==nRows)
+               bootID <- matrix(as.integer(bootID-1), nrow=nBoot, ncol=nRows)
        }
        else {
            bootID <- NULL

@@ -108,7 +108,10 @@ summary.manyglm <- function(object, resamp="pit.trap", test="wald", p.uni="none"
     }
     else if (is.integer(bootID)) {
        ld.perm <- TRUE
-       nBoot <- dim(bootID)[2]
+       nBoot <- dim(bootID)[1]
+       cat(paste("Using bootID matrix from input.","\n"))
+           if (max(bootID)==nRows)
+               bootID <- matrix(as.integer(bootID-1), nrow=nBoot, ncol=nRows)       
     }
     else if (ld.perm && !is.integer(bootID)){
        warning("Invalid bootID. Calc bootID on the fly (default)...")

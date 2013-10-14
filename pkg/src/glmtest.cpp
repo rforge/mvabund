@@ -72,7 +72,7 @@ void GlmTest::releaseTest(void)
 int GlmTest::summary(glm *fit)
 {
     double lambda;
-    unsigned int i, j, k, l;
+    unsigned int i, k;
     unsigned int nRows=tm->nRows, nVars=tm->nVars, nParam=tm->nParam;
     unsigned int mtype = fit->mmRef->model-1;
     PoissonGlm pNull(fit->mmRef), pAlt(fit->mmRef);
@@ -169,14 +169,9 @@ int GlmTest::summary(glm *fit)
     gsl_matrix_set_zero (bStat);
     gsl_matrix *bY = gsl_matrix_alloc(nRows, nVars);
  //   gsl_matrix *bO = NULL;
-    double val, diff, timelast=0;
+    double diff, timelast=0;
     gsl_matrix *bO = gsl_matrix_alloc(nRows, nVars);
     gsl_matrix_memcpy(bO, fit->Eta);
-/*    for (j=0; j<nRows; j++)
-    for (l=0; l<nVars; l++) {
-         val = fit->LinkDash(gsl_matrix_get(fit->Mu, j, l));  
-         gsl_matrix_set(bO, j, l, val*gsl_matrix_get(fit->Yref, j, l)); 
-    } */
     clock_t clk_start=clock();
     for ( i=0; i<tm->nboot; i++) {        
         if ( tm->resamp==CASEBOOT ) 
@@ -905,8 +900,10 @@ int GlmTest::resampNonCase(glm *model, gsl_matrix *bT, unsigned int i)
     case PITSBOOT:
        if (tm->reprand!=TRUE) GetRNGstate();
        for (j=0; j<nRows; j++) {
-           if (bootID!=NULL) 
+           if (bootID!=NULL) { 
                id = (unsigned int) gsl_matrix_get(bootID, i, j);
+    //           printf("%d ", id);
+           }
            else if (tm->reprand==TRUE) 
                id = (unsigned int) gsl_rng_uniform_int(rnd, nRows);
            else id = (unsigned int) nRows * Rf_runif(0, 1);
@@ -917,6 +914,7 @@ int GlmTest::resampNonCase(glm *model, gsl_matrix *bT, unsigned int i)
                gsl_matrix_set(bT, j, k, yij);
            }
        }
+     //  printf("\n");
        if (tm->reprand!=TRUE) PutRNGstate();
        break;
     default: GSL_ERROR("The resampling method is not supported", GSL_ERANGE); break;
