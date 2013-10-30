@@ -20,7 +20,7 @@
 \method{plot}{manyglm}(
   x, res.type="pit.norm", which=1, caption=c("Residuals vs Fitted", "Normal Q-Q", 
   "Scale-Location", "Cook's distance"), overlay=TRUE, 
-  n.vars=12, var.subset=NULL, sub.caption=NULL, ...)
+  n.vars=Inf, var.subset=NULL, sub.caption=NULL, ...)
 
 }
 \arguments{
