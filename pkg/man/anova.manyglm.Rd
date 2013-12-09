@@ -44,7 +44,7 @@ P-values are calculated by resampling rows of the data using a method
 determined by the argument \code{resamp}. \code{resamp}. Two of the three 
 available resampling methods (residual permutation and parametric bootstrap) 
 are described in more detail in Davison and Hinkley (1997, chapter 6), 
-whereas the default (the "PIT-trap") is a new method (in review) which 
+whereas the default (the ``PIT-trap") is a new method (in review) which 
 bootstraps probability integral transform residuals, and which we have found 
 to give the most reliable Type I error rates. All methods involve resampling 
 under the resampling under the null hypothesis. These methods ensure 

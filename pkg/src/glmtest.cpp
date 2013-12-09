@@ -312,7 +312,8 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
     gsl_vector_view teststat, unitstat,ref1, ref0; 
     gsl_matrix *X0=NULL, *X1=NULL, *L1=NULL, *tmp1=NULL, *BetaO=NULL;
     gsl_matrix *bO=NULL, *bY=gsl_matrix_alloc(nRows, nVars);
-    if (tm->resamp==CASEBOOT) bO = gsl_matrix_alloc(nRows, nVars);
+    bO = gsl_matrix_alloc(nRows, nVars);
+
     gsl_permutation *sortid=NULL;
     if (tm->punit==FREESTEP) sortid = gsl_permutation_alloc(nVars);
 
@@ -324,6 +325,8 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
         rdf[i] = nRows-nP;
     }
 //    PtrAlt[mtype]->copyGlm(fit);
+
+//    displaymatrix(fit->Oref, "fit->Oref");
 
     for (i=1; i<nModels; i++) {       
         // ======= Fit the Null model =========//
@@ -393,6 +396,9 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
         clock_t clk_start=clock();
         if (tm->showtime==TRUE)
            printf("Resampling begins for test %d.\n", i);
+//    displaymatrix(bO, "bO");
+//    displaymatrix(PtrNull[mtype]->Mu, "M0->Mu");
+//    displaymatrix(PtrNull[mtype]->PitRes, "M0->PitRes");
         for (j=0; j<tm->nboot; j++) {	
 //            printf("simu %d :", j);
 	    gsl_vector_set_zero (bStat);
@@ -400,8 +406,11 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
                 resampAnovaCase(PtrAlt[mtype],bY,X1,bO,j);
                 subX(X1, &ref0.vector, X0);
             } 
-            else resampNonCase(PtrNull[mtype], bY, j);
-//           displaymatrix(bY, "bY");
+            else {
+                resampNonCase(PtrNull[mtype], bY, j);
+                 //displaymatrix(bY, "bY");
+                gsl_matrix_memcpy(bO, fit->Oref);
+            }
 
             if ( tm->test == WALD ) {
                 bAlt[mtype]->regression(bY,X1,bO,NULL); 
@@ -422,13 +431,16 @@ int GlmTest::anova(glm *fit, gsl_matrix *isXvarIn)
                 bAlt[mtype]->regression(bY,X1,bO,BetaO); 
 //                bAlt[mtype]->regression(bY,X1,bO,NULL); 
 //                bAlt[mtype]->EstIRLS(bY,X1,bO,BetaO,PtrAlt[mtype]->phi); 
-                GeeLR(bAlt[mtype], bNull[mtype], bStat);    
+            //    bNull[mtype]->display();
+            //    bAlt[mtype]->display();
+                GeeLR(bAlt[mtype], bNull[mtype], bStat);                    
+//                displayvector(bStat, "bStat");
             }
             // ----- get multivariate counts ------- //   
            buj = gsl_vector_ptr (bStat,0);
            suj = gsl_matrix_ptr (anovaStat, i-1, 0);
            puj = gsl_matrix_ptr (Panova, i-1, 0);
-           if ( *(buj) >= *(suj) ) *puj=*puj+1;
+           if ( *(buj) > (*(suj)-1e-8) ) *puj=*puj+1;
            // ------ get univariate counts ---------//            
            calcAdjustP(tm->punit,nVars,buj+1,suj+1,puj+1,sortid);
 	   nSamp++;
@@ -891,13 +903,15 @@ int GlmTest::resampNonCase(glm *model, gsl_matrix *bT, unsigned int i)
                id = (unsigned int) gsl_matrix_get(bootID, i, j);
            else if (tm->reprand==TRUE) 
                id = (unsigned int) gsl_rng_uniform_int(rnd, nRows);
-           else id = (unsigned int) nRows * Rf_runif(0, 1);
+           else id = (unsigned int) Rf_runif(0, nRows);
            for (k=0; k<nVars; k++) {
                bt = gsl_matrix_get(model->PitRes, id, k); 
                mij = gsl_matrix_get(model->Mu, j, k);                
+//               printf("%.2f ", bt);
                yij = model->cdfinv(bt, mij, model->theta[k]); 
                gsl_matrix_set(bT, j, k, yij);
            }
+//           printf("\n");
        }
        if (tm->reprand!=TRUE) PutRNGstate();
        break;
