@@ -34,6 +34,7 @@ export(RcppVersion,
        plot.manyany,
        plot.mvformula,
        ridgeParamEst,
+       residuals.manyany, 
        residuals.manyglm, 
        summary.manylm,
        summary.manyglm,
@@ -45,7 +46,7 @@ exportClasses(mvabund, mvformula)
 
 exportMethods(meanvar.plot)
 
-import(Rcpp, MASS, graphics, methods)
+import(Rcpp, MASS, graphics, methods,tweedie,statmod)
 importFrom(stats,dpois, ppois, qpois, rpois)
 importFrom(stats,dbinom, pbinom, qbinom, rbinom)
 importFrom(stats,dnbinom, pnbinom, qnbinom, rnbinom)
@@ -53,3 +54,4 @@ importFrom(stats,dnbinom, pnbinom, qnbinom, rnbinom)
 S3method(extractAIC, manyglm)
 S3method(logLik, manyglm)
 S3method(logLik, manylm)
+S3method(logLik, manyany)
