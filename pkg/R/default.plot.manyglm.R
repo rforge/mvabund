@@ -493,7 +493,6 @@ default.plot.manyglm  <- function(x, which = 1, res.type="pit.norm", caption = c
 	     legend(legend.pos, legend=leg, col=color, pch=1, ncol=ncoll, cex=cexl-0.1,inset=-0.35,xpd=NA, x.intersp=0.5, lwd=2, lty=0)  
 	 }
       }
-
       # The scale vs. location plot
       if (show[3]) {
           sqrtabsr <- c(sqrt(abs(rs)))
