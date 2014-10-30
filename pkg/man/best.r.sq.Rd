@@ -8,7 +8,7 @@ Finds the subset of explanatory variables in a formula that best explain the var
 }
 \usage{
 best.r.sq(formula, data = parent.frame(), subset, var.subset,
-  n.xvars= min(3, length(xn)), R2="h", show.R2=FALSE, \dots)
+  n.xvars= min(3, length(xn)), R2="h", \dots)
 }
 \arguments{
 \item{formula}{a mvformula, a multivariate formula.}
@@ -29,8 +29,6 @@ R^2 that should be found.
  "n" = none
 Note that for a univariate response, all of these are equivalent to the ordinary 
 product-moment correlation coefficient. }
-\item{show.R2}{If \code{show.R2=TRUE} then the R^2 values are returned in output
-as well as the indices of the model terms maximising R^2.}
 \item{\dots}{further arguments that are passed on to lm.} }
 
 \details{ 
@@ -45,11 +43,8 @@ as a tool for formal model selection. % add an option 'method' that allows to
 choose 'all possible subsets' % instead of 'forward selection' (which is used at 
 the moment) } 
 
-\value{If \code{show.R2=FALSE} (default) then this function returns a vector giving
-the indices of the independent variables with the greatest explanatory power.
-
-If \code{show.R2=TRUE} then this function returns a list consisting of:
-\arguments{
+\value{This function returns a list consisting of:
+\describe{
 \item{xs}{a vector of indices of independent variables with the greatest
 explanatory power, as previously.}
 \item{r2Step}{a vector of total R^2 from sequential model fits including each of

@@ -136,7 +136,7 @@ best.r.sq <- function (formula, data = parent.frame(), subset, var.subset,
 
   }
   step.names =  xn[xn.no[order.r.sq]] #naming r.sq.steps by the term that is entered
-  names(r.sq.step) = paste(c("","+","+"),step.names,sep="") 
+  names(r.sq.step) = paste(c("",rep("+",length(step.names)-1)),step.names,sep="") 
    
  
   res = list(xs=xn.no[order.r.sq], r2Step =r.sq.step, r2Matrix = r.sq.mat)  
