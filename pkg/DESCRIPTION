@@ -1,7 +1,7 @@
 Package: mvabund
 Title: statistical methods for analysing multivariate abundance data
 Version: 3.9.3
-Date: 24-10-2014
+Date: 30-10-2014
 Author: Yi Wang, Ulrike Naumann, Stephen Wright and David Warton
 Maintainer: Yi Wang <alice.yi.wang@gmail.com>
 Description: A set of tools for displaying, modeling and analysing
@@ -10,8 +10,9 @@ Description: A set of tools for displaying, modeling and analysing
         The package is implemented with the Gnu Scientific Library
         (http://www.gnu.org/software/gsl/) and Rcpp
         (http://dirk.eddelbuettel.com/code/rcpp.html) R / C++ classes.
-Depends: R (>= 2.11.1)
-Imports: Rcpp, MASS, methods, stats, tweedie, statmod
+Depends: R (>= 2.11.1), Rcpp (>= 0.11)
+LinkingTo: Rcpp (>= 0.11)
+Imports: MASS, methods, stats, tweedie, statmod
 SystemRequirements: GNU GSL (>= 1.10)
 License: LGPL (>= 2.1)
 Repository: CRAN
