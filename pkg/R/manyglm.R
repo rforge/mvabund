@@ -209,7 +209,6 @@ else {
     z$show.fitted <- show.fitted
     z$show.residuals <- show.residuals
     z$offset <- O 
- 
     class(z) <- c("manyglm", "mglm")
     return(z)
   }

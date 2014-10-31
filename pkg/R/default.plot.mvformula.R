@@ -263,30 +263,34 @@ main<- main[var.subset]
 mvabund.formulaUni <- formulaUnimva( mvabund.formula, var.subset=var.subset, split.x=TRUE, intercept=0 )
 
 ######### BEGIN edit xvar.subset, n.xvars etc #########
-if(xvar.select & pExpl>1) {
-	if(is.list(pch)) {
+if(xvar.select & pExpl>1)
+{
+	if(is.list(pch))
+  {
 		pch2 <- list()
 		
-		for(i in 1:length(xvar.subset)){
+		for(i in 1:length(xvar.subset))
+    {
 			pch2[[xvar.subset[i] ]] <- pch[[i]]
 		}
 		pch <- pch2
 	}
 	
-	if(is.list(col)) {
+	if(is.list(col))
+  {
 		col2 <- list()
 	
-		for(i in 1:length(xvar.subset)) {
+		for(i in 1:length(xvar.subset))
+    {
 			col2[[xvar.subset[i]]] <- pch[[i]]
 		}
 		col<- col2
 	}
 
-  #DW changes, 30/10/14
+	#DW changes, 30/10/14
   #only define default n.xvars here, once is.interaction has been defined 
 	if(is.na(n.xvars))
      n.xvars=if(any(is.na(xvar.subset))) min(3, sum(!is.interaction)) else length(xvar.subset)
-
   if(miss.xvarsubset)
   {
 	   # Find the n.xvars independent variables with the highest average R^2.
@@ -303,18 +307,20 @@ if(xvar.select & pExpl>1) {
     	warning("xvar.subset could not be found")
 	  }
   }
-	else if (length(xlab)==length(xvar.subset))
+  else if (length(xlab)==length(xvar.subset))
   {
-	  lab <- xlab
+    warning("The values of 'xlab' are taken to be corresponding to 'xvar.subset'")
+    lab <- xlab
   	xlab <-  rep("",times=pExpl)
 	 	xlab[xvar.subset] <- lab
 		# It is required that xlab has a name for every column of x,
 		# if xvar.subset is passed, xlab of the same length is accepted.
 	}
   else xvar.subset <- 1:pExpl
+}
+else xvar.subset <- 1:pExpl
 
 pExpl <- length(xvar.subset)
-}
 ######### END edit xvar.subset, n.xvars etc #########
 
 ########### factor plot #################

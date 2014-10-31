@@ -35,5 +35,3 @@ plot.mvformula <- function(	x,
 ####### END DEFINITION OF FUNCTION ########
 setMethod("plot", "mvformula", plot.mvformula)
 setMethod("plot", signature("formula","logical"), plot.mvformula)
-
-
