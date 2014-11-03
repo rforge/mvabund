@@ -64,7 +64,7 @@ anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$bl
   qfn = rep(NA,n.vars)
   for(i.var in 1:n.vars)
   {
-    if(object1$family[[i.var]]$family=="negbinomial")
+    if(grepl("egative",object1$family[[i.var]]$family) || object1$family[[i.var]]$family == "negbinomial")
       qfn[i.var] = "qnbinom"
     if(object1$family[[i.var]]$family=="poisson")
       qfn[i.var] = "qpois"

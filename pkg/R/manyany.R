@@ -1,4 +1,4 @@
-manyany = function(fn, yMat, formula, data, family="negative.binomial", composition = FALSE, var.power=NA, ...)
+manyany = function(fn, yMat, formula, data, family="negative.binomial", composition = FALSE, block = NULL, var.power=NA, ...)
 {
   #MANYANY - applies a function of your choice to each column of YMAT and computes logLik by taxon.
   # FN is a character vector giving the name of the function to be applied to each taxon.  e.g. "glm"
@@ -43,7 +43,7 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
   if(composition==FALSE)
   {
     formula = formula(paste("y~",formula[3],sep=""))
-    block = NULL
+#    block = NULL
   }
   else
   {
@@ -60,7 +60,10 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
     yMat    = as.matrix(yVec)
     if(class(family)!="family" & length(family)>1)
       stop("when using composition=TRUE, family argument must have length one.")
-    block = ref #to make sure resampling is by row of original data, not of vectorised data.
+    if(is.null(block))  #to make sure resampling is by row of original data, not of vectorised data.
+       block = ref
+    else
+       block = block[ref]
   }
 
   #If family is specified once, turn it into a list of n.vars family objects
@@ -79,6 +82,8 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
     
   fam = family
   # now ensure each family is a proper family function
+  
+  
   for(i.var in 1:n.vars)
   {
     if (is.character(family[[i.var]])) 
@@ -97,6 +102,7 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
     if(fam[[i.var]]$family=="binomial")
       warning("The binomial option of manyany currently assumes you have binary (presence/absence) response")
   }
+
   
   manyfit = list()
   fits = matrix(NA,n.rows,n.vars)
@@ -115,12 +121,17 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
     logL[i.var] = logLik(manyfit[[i.var]])
     if(is.na(logL[i.var]))
        logL[i.var] = -0.5*deviance(manyfit[[i.var]]) #just in case logL function is undefined, e.g. tweedie 
-    if(fam[[i.var]]$family == "negbinomial" || fam[[i.var]]$family=="negative.binomial")
+    if(grepl("egative",fam[[i.var]]$family) || fam[[i.var]]$family == "negbinomial")
     {
       if(any(names(manyfit[[i.var]])=="theta"))
         theta=manyfit[[i.var]]$theta
       else
-        theta=1/manyfit[[i.var]]$phi
+        {
+          if(any(names(manyfit[[i.var]])=="phi"))
+            theta = 1/manyfit[[i.var]]$phi
+          else # otherwise it must be fixed and tied up in the family argument 
+            theta = 1/(fam[[i.var]]$var(1)-1)
+        }
       params[[i.var]] = list(q=yMat[,i.var],mu=fits[,i.var],size=theta)
     }
     if(fam[[i.var]]$family=="poisson")
@@ -202,7 +213,7 @@ residuals.manyany<- function(object, ...)
   {
     param.minus = params[[i.var]]
     param.minus$q = params[[i.var]]$q - 1.e-6
-    if(family[[i.var]]$family=="negative.binomial")
+    if(grepl("egative",family[[i.var]]$family) || family[[i.var]]$family == "negbinomial")
       pfn = "pnbinom"
     if(family[[i.var]]$family=="poisson")
       pfn = "ppois"

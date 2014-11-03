@@ -6,7 +6,7 @@
 }
 \usage{
 manyany(fn, yMat, formula, data, family="negative.binomial", composition = FALSE, 
-var.power=NA, ...)
+block = NULL, var.power=NA, ...)
 }
 \arguments{
   \item{fn}{a character string giving the name of the function for the univariate
@@ -27,6 +27,9 @@ var.power=NA, ...)
   \item{composition}{logical. FALSE (default) fits a separate model to each species.
     TRUE fits a single model to all variables, including site as a row effect, such
     that all other terms model relative abundance (compositional effects).  }
+  \item{block}{a factor specifying the sampling level to be resampled. Default is
+    resampling rows (if composition=TRUE in the manyany command, this means resampling
+    rows of data as originally sent to manyany).}
   \item{var.power}{the power parameter, if using the tweedie distribution.}
   \item{\dots}{further arguments passed to the fitting function.}
 }
