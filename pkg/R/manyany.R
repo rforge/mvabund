@@ -240,9 +240,16 @@ residuals.manyany<- function(object, ...)
 plot.manyany=function(x, ...)
 {
   object = x
+  tol = 1.e-8
   Dunn.Smyth.Residuals=qnorm(residuals.manyany(object))
-  Fitted.values=object$linear
-
+  if( any( grepl(object$family[[1]]$link, c("log","logit")) ) )
+  {
+    minFit = min(object$linear[object$linear>log(tol)/2])  
+    Fitted.values = pmax(object$linear,minFit-1)
+  }
+  else
+    Fitted.values = object$linear
+  
   # add colours if not already there...
   if(hasArg("col")==F)
   {
