@@ -1,4 +1,4 @@
-manyany = function(fn, yMat, formula, data, family="negative.binomial", composition = FALSE, block = NULL, var.power=NA, ...)
+manyany = function(fn, yMat, formula, data, family="negative.binomial", composition = FALSE, block = NULL, return.fits=FALSE, var.power=NA, ...)
 {
   #MANYANY - applies a function of your choice to each column of YMAT and computes logLik by taxon.
   # FN is a character vector giving the name of the function to be applied to each taxon.  e.g. "glm"
@@ -30,6 +30,7 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
   ## note this gives the same answer as:  
   # ft=manyglm(mvabund(abund)~X$soil,family="poisson")
   
+  tol=1.e-8 #for truncation of linear predictor
   yMat = as.matrix(yMat)
   data = as.data.frame(data)
   yNames = dimnames(yMat)
@@ -118,7 +119,36 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
       etas[,i.var] = manyfit[[i.var]]@eta
     else
       etas[,i.var] = predict(manyfit[[i.var]])
-    logL[i.var] = logLik(manyfit[[i.var]])
+    if(fam[[i.var]]$family=="binomial") #truncate linear predictor to more reasonable range
+    {
+      etas[,i.var] = pmax(etas[,i.var], family[[i.var]]$linkfun(tol)/2)
+      etas[,i.var] = pmin(etas[,i.var], family[[i.var]]$linkfun(1-tol)/2)
+    }
+    if(fam[[i.var]]$link=="log") #truncate linear predictor to more reasonable range
+      etas[,i.var] = pmax(etas[,i.var], log(tol)/2)
+    logL[i.var]  = logLik(manyfit[[i.var]])
+    if(i.var==1)
+    {
+      cf = try(coef(manyfit[[i.var]]),silent=TRUE) #don't know if this function is defined
+      if(class(cf)=="try-error")
+      {
+        do.coef   = FALSE
+        coefs     = NULL
+      } 
+      else
+      {
+        coefs     = matrix(NA,length(cf),n.vars)
+        coefs[,1] = cf
+        dimnames(coefs)[[1]]=dimnames(cf)[[1]]
+        dimnames(coefs)[[2]]=dimnames(yMat)[[2]]
+        do.coef   = TRUE
+      }
+    }
+    else
+    {
+      if(do.coef==TRUE)
+        coefs[,i.var] = coef(manyfit[[i.var]])
+    }
     if(is.na(logL[i.var]))
        logL[i.var] = -0.5*deviance(manyfit[[i.var]]) #just in case logL function is undefined, e.g. tweedie 
     if(grepl("egative",fam[[i.var]]$family) || fam[[i.var]]$family == "negbinomial")
@@ -167,9 +197,13 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
   dimnames(resids) = yNames
   dimnames(fits)   = yNames
   dimnames(etas)   = yNames
-  object=list(logL=logL,fitted.values=fits,residuals=resids,linear.predictor=etas,family=fam,call=call,params=params,model=model.frame(manyfit[[i.var]]), terms = terms(manyfit[[i.var]]), formula=formula, block=block, composition=composition)
+  object=list(logL=logL,fitted.values=fits,residuals=resids,linear.predictor=etas,family=fam, coefficients = coefs, call=call,params=params,model=model.frame(manyfit[[i.var]]), terms = terms(manyfit[[i.var]]), formula=formula, block=block, composition=composition)
   class(object)=c("manyany", class(manyfit[[i.var]]) )
-  
+  if(return.fits==TRUE)
+  {
+    object$fits = manyfit
+    names(object$fits) = dimnames(yMat)[[2]]
+  }
   return(object)
 }
 
@@ -194,6 +228,11 @@ print.manyany <- function(object, digits = max(3L, getOption("digits") - 3L),...
 logLik.manyany <- function(object, ...)
 {
   object$logL
+}
+
+coef.manyany <- function(object, ...)
+{
+  object$coefficients
 }
 
 residuals.manyany<- function(object, ...)
@@ -240,15 +279,16 @@ residuals.manyany<- function(object, ...)
 plot.manyany=function(x, ...)
 {
   object = x
-  tol = 1.e-8
   Dunn.Smyth.Residuals=qnorm(residuals.manyany(object))
-  if( any( grepl(object$family[[1]]$link, c("log","logit")) ) )
-  {
-    minFit = min(object$linear[object$linear>log(tol)/2])  
-    Fitted.values = pmax(object$linear,minFit-1)
-  }
-  else
-    Fitted.values = object$linear
+
+#  truncation of predictors has been moved up to original manyany function
+#  if( any( grepl(object$family[[1]]$link, c("log","logit","cloglog")) ) )
+#  {
+#    minFit = min(object$linear[object$linear>log(tol)/2])  
+#    Fitted.values = pmax(object$linear,minFit-1)
+#  }
+#  else
+  Fitted.values = object$linear
   
   # add colours if not already there...
   if(hasArg("col")==F)

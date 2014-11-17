@@ -6,7 +6,7 @@
 }
 \usage{
 manyany(fn, yMat, formula, data, family="negative.binomial", composition = FALSE, 
-block = NULL, var.power=NA, ...)
+block = NULL, return.fits=FALSE, var.power=NA, ...)
 }
 \arguments{
   \item{fn}{a character string giving the name of the function for the univariate
@@ -30,6 +30,9 @@ block = NULL, var.power=NA, ...)
   \item{block}{a factor specifying the sampling level to be resampled. Default is
     resampling rows (if composition=TRUE in the manyany command, this means resampling
     rows of data as originally sent to manyany).}
+  \item{return.fits}{logical. TRUE returns the univariate model objects fitted to each
+    response variable, as a list. FALSE (default) does not, because the list can be
+    very large.}
   \item{var.power}{the power parameter, if using the tweedie distribution.}
   \item{\dots}{further arguments passed to the fitting function.}
 }
@@ -99,10 +102,21 @@ data(spider)
 abund <- spider$abund
 X <- as.matrix(spider$x)
 
-## To fit a log-linear model assuming counts are poisson:
-spidPois <- manyany("glm",abund,data=X,abund~X,family=poisson())
+## To fit a log-linear model assuming counts are negative binomial, via manyglm:
+spidNB <- manyany("manyglm",abund,data=X,abund~X,family="negative.binomial")
 
-logLik(spidPois) # a number of generic functions are applible to manyany objects
+logLik(spidNB) # a number of generic functions are applible to manyany objects
+
+## To fit a glm with complementary log-log link to presence/absence data:
+PAdat = pmin(as.matrix(abund),1) #constructing presence/absence dataset
+spidPA <- manyany("glm",PAdat,data=X,PAdat~X,family=binomial("cloglog"),method="glm.fit2")
+plot(spidPA)
+# There are some wild values in there for the Pardmont variable, which didn't converge. 
+
+# Can try again using the glm2 package, this fixes things up:
+# library(glm2)
+# spidPA <- manyany("glm",PAdat,data=X,PAdat~X,family=binomial("cloglog"),method="glm.fit2")
+# plot(spidPA) #looks much better.
 
 }
 \keyword{models}
