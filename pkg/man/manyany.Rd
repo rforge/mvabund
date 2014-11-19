@@ -117,12 +117,12 @@ plot(spidPA)
 #The Pardmont model didn't converge, coefficients are a bit crazy:
 coef(spidPA) 
 
-# Can try again using the glm2 package, this fixes things up:
+# Can try again using the glm2 package to fit the models, this fixes things up:
 # library(glm2)
 # spidPA2 <- manyany("glm",PAdat,data=X,PAdat~X,family=binomial("cloglog"),method="glm.fit2")
 # plot(spidPA2) #looks much better.
 
-# To simultaneously fit models to ordinal data using the ordinal package:
+## To simultaneously fit models to ordinal data using the ordinal package:
 # library(ordinal)
 ## First construct an ordinal dataset:
 # spidOrd = abund

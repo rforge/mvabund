@@ -109,7 +109,8 @@ anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$bl
   if(object1$family[[1]]$family=="ordinal")
     yMat=data.frame(yMat)
   statj.i = matrix(NA,n.vars,nBoot)
-  dimnames(statj.i)[[1]] = dimnames(object1$residuals)[[2]]
+  if(n.vars>1)
+    dimnames(statj.i)[[1]] = dimnames(object1$residuals)[[2]]
   stat.i=rep(NA,nBoot)
   boot.Resamp = rep(NA,n.rows)
   for(iBoot in 1:(nBoot))
