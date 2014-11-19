@@ -6,7 +6,7 @@
 }
 \usage{
 manyany(fn, yMat, formula, data, family="negative.binomial", composition = FALSE, 
-block = NULL, return.fits=FALSE, var.power=NA, ...)
+block = NULL, get.what="details", var.power=NA, ...)
 }
 \arguments{
   \item{fn}{a character string giving the name of the function for the univariate
@@ -30,9 +30,9 @@ block = NULL, return.fits=FALSE, var.power=NA, ...)
   \item{block}{a factor specifying the sampling level to be resampled. Default is
     resampling rows (if composition=TRUE in the manyany command, this means resampling
     rows of data as originally sent to manyany).}
-  \item{return.fits}{logical. TRUE returns the univariate model objects fitted to each
-    response variable, as a list. FALSE (default) does not, because the list can be
-    very large.}
+  \item{get.what}{what to return from each model fit: "details" (default) includes
+    predicted values and residuals in output, "models" also returns the fitted objects
+    for each model, "none" returns just the log-likelihood (mostly for internal use).}
   \item{var.power}{the power parameter, if using the tweedie distribution.}
   \item{\dots}{further arguments passed to the fitting function.}
 }
@@ -43,13 +43,15 @@ block = NULL, return.fits=FALSE, var.power=NA, ...)
    any fixed effects modelling function that has \code{predict} and \code{logLik}
    functions, and that accepts a \code{family} argument, provided that the family
    is on our list (currently 'gaussian', 'poisson', 'binomial', 'negative.binomial'
-   and 'tweedie'). Models for \code{manyany} are specified symbolically, see for
-   example the details section of \code{\link{lm}} and \code{\link{formula}}.
+   and 'tweedie', although models for ordinal data are also accepted if using the
+   \code{clm} function form the \code{ordinal} package). Models for \code{manyany}
+   are specified symbolically, see for example the details section of \code{\link{lm}}
+   and \code{\link{formula}}.
 
 Unlike \code{manyglm}, this function accepts \code{family} functions as arguments
 instead of just character strings, giving greater flexibility. For example, you can
 use \code{family=binomial(link="cloglog")} to fit a model using the complementary
-log-log link, rather than using the default logit link.
+log-log link, rather than being restricted to the default logit link.
 
 A \code{data} argument is required, and it must be a dataframe containing more than
 one object.  It need not contain that matrix of response variables, that is specified
@@ -78,7 +80,7 @@ The default \code{composition=FALSE} just fits a separate model for each variabl
   \item{fitted.values}{the matrix of fitted mean values, obtained by transforming the linear predictors by the inverse of the link function.}
   \item{residuals}{the matrix of probability integral transform (PIT) residuals.
      If the fitted model is a good fit, these will be approximately standard uniformly distributed.}
-  \item{linear.predictor}{the linear fit on link scale.}
+  \item{linear.predictor}{the linear fit on link scale. But for ordinal models fitted using \code{clm}, these values are for the first category only.}
   \item{family}{a vector of \code{\link{family}} arguments, one for each response variable.}
   \item{call}{the matched call.}
   \item{model}{the \code{model.frame} from the model for the last response variable.}
@@ -109,14 +111,28 @@ logLik(spidNB) # a number of generic functions are applible to manyany objects
 
 ## To fit a glm with complementary log-log link to presence/absence data:
 PAdat = pmin(as.matrix(abund),1) #constructing presence/absence dataset
-spidPA <- manyany("glm",PAdat,data=X,PAdat~X,family=binomial("cloglog"),method="glm.fit2")
+spidPA <- manyany("glm",PAdat,data=X,PAdat~X,family=binomial("cloglog"))
 plot(spidPA)
-# There are some wild values in there for the Pardmont variable, which didn't converge. 
+# There are some wild values in there for the Pardmont variable (residuals >5 or <-8).
+#The Pardmont model didn't converge, coefficients are a bit crazy:
+coef(spidPA) 
 
 # Can try again using the glm2 package, this fixes things up:
 # library(glm2)
-# spidPA <- manyany("glm",PAdat,data=X,PAdat~X,family=binomial("cloglog"),method="glm.fit2")
-# plot(spidPA) #looks much better.
+# spidPA2 <- manyany("glm",PAdat,data=X,PAdat~X,family=binomial("cloglog"),method="glm.fit2")
+# plot(spidPA2) #looks much better.
+
+# To simultaneously fit models to ordinal data using the ordinal package:
+# library(ordinal)
+## First construct an ordinal dataset:
+# spidOrd = abund
+# spidOrd[abund>1 & abund<=10]=2
+# spidOrd[abund>10]=3
+# for(iVar in 1:dim(spidOrd)[2])
+#   spidOrd[,iVar]=factor(spidOrd[,iVar])
+##Now fit a model using the clm function:
+# manyOrd=manyany("clm",spidOrd,abund~bare.sand+fallen.leaves,data=X)
+# plot(manyOrd)
 
 }
 \keyword{models}

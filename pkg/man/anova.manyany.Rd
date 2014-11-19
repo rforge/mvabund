@@ -113,8 +113,7 @@ coral <- as.matrix(tikus$abund[1:20,])
 sumSpp = apply(coral>0,2,sum)
 
 coral <- coral[,sumSpp>6] #cutting to just species with seven(!) or more presences to 
-##avoid errors and cut computation time.  Worth rerunning with less (e.g. 4 or more 
-##presences) if curious and patient.
+##cut computation time.  Worth rerunning with less (e.g. 4 or more presences) if curious and patient.
 coralX <- tikus$x[1:20,]
 
 require(tweedie)
@@ -125,14 +124,10 @@ family=tweedie(var.power=1.5, link.power=0), var.power=1.5, composition=TRUE)
 
 ftRep <- manyany("glm",coral, coral ~ rep, data=coralX, 
 family=tweedie(var.power=1.5, link.power=0), var.power=1.5, composition=TRUE)
-anova(ftRep,ftTimeRep,nBoot=9) #this takes several seconds to run even for just 9 resamples
-## This should be rerun for nBoot=999, which would take closer to an hour...
-## Results though are worth the effort, they suggest no evidence that composition changed!
-## (Although there was a very strong signal of a change in total abundance)
-## (And the Tweedie model has some issues for this dataset, as seen in a plot of the fit)
+anova(ftRep,ftTimeRep,nBoot=19) #this takes several seconds to run even for just 19 resamples
+## This should be rerun for nBoot=999, which would take maybe five minutes...
 
 }
 \keyword{models}
 \keyword{regression}
 \keyword{multivariate}
-

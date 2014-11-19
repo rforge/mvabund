@@ -32,7 +32,7 @@ anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$bl
        stop("missing a second manyany object")
     }else {
        if (ndots>1)
-           warning("crrently version only compares two manyany objects")
+           warning("current version only compares two manyany objects")
        for (i in 1:ndots) {
            if (any(class(dots[[i]])=="manyany")){
               object2 <- dots[[i]]
@@ -77,6 +77,8 @@ anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$bl
       qfn[i.var] = "qnorm"  
     if(object1$family[[i.var]]$family=="Tweedie")
       qfn[i.var] = "qtweedie"
+    if(object1$family[[i.var]]$family=="ordinal")
+      qfn[i.var] = "qordinal"
   }
 
   if(is.null(block)==FALSE)
@@ -104,6 +106,8 @@ anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$bl
   
   #initialise parameters for bootstrapping
   yMat = matrix(NA,n.rows,n.vars)
+  if(object1$family[[1]]$family=="ordinal")
+    yMat=data.frame(yMat)
   statj.i = matrix(NA,n.vars,nBoot)
   dimnames(statj.i)[[1]] = dimnames(object1$residuals)[[2]]
   stat.i=rep(NA,nBoot)
@@ -117,6 +121,9 @@ anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$bl
       boot.Resamp[unlistIDs] = unlist(blockIDs[sample(n.levels,replace=replace)]) #unlistIDs is needed to make sure each unlisted blockID ends up in the right place
       resid.i = as.matrix(object1$residuals[boot.Resamp,])
     # simulate data to get resampled yMat
+
+    object1$call$get.what="none" #to avoid wasting time computing residuals etc
+    object2$call$get.what="none" #to avoid wasting time computing residuals etc
     
     for(i.var in 1:n.vars)
     {
@@ -126,7 +133,10 @@ anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$bl
       yMat[,i.var] = do.call(qfn[i.var], qparams)
     }
     #save resampled yMat as whatever the original yMat was called in workspace - but without zerotons
-    is.zeroton = apply(yMat,2,sum)==0
+    if(object1$family[[1]]$family=="ordinal")
+      is.zeroton = apply(yMat,2,function(x) length(table(x)))==1
+    else
+      is.zeroton = apply(yMat,2,sum)==0
     assign(as.character(object1$call[[3]]),yMat[,is.zeroton==FALSE]) 
     assign(as.character(object2$call[[3]]),yMat[,is.zeroton==FALSE]) 
     #re-fit manyany functions and calculate test stats using the resampled yMat:

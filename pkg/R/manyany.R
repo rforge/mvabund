@@ -1,4 +1,4 @@
-manyany = function(fn, yMat, formula, data, family="negative.binomial", composition = FALSE, block = NULL, return.fits=FALSE, var.power=NA, ...)
+manyany = function(fn, yMat, formula, data, family="negative.binomial", composition = FALSE, block = NULL, get.what="details", var.power=NA, ...)
 {
   #MANYANY - applies a function of your choice to each column of YMAT and computes logLik by taxon.
   # FN is a character vector giving the name of the function to be applied to each taxon.  e.g. "glm"
@@ -30,14 +30,20 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
   ## note this gives the same answer as:  
   # ft=manyglm(mvabund(abund)~X$soil,family="poisson")
   
+  #Now compatible with ordinal data, but note that linear predictor is for the lowest
+  #category only, whereas fitted is for the observed category.
+  
+  
   tol=1.e-8 #for truncation of linear predictor
   yMat = as.matrix(yMat)
   data = as.data.frame(data)
   yNames = dimnames(yMat)
   n.rows = dim(yMat)[1]
   n.vars = dim(yMat)[2]
-  if(is.null(dimnames(yMat)[[1]]))
-    dimnames(yMat)[[1]] = 1:n.rows
+  if(is.null(yNames[[1]]))
+    yNames[[1]] = 1:n.rows
+  if(length(yNames)==1)
+    yNames[[2]] = "y" #to avoid issues later.
   
   call=match.call()
   
@@ -57,7 +63,7 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
     n.vars.orig = n.vars #save for later
     n.rows  = length(yVec)
     n.vars  = 1
-    names(yVec) = paste( dimnames(yMat)[[2]][spp], ".", dimnames(yMat)[[1]][ref], sep="")
+    names(yVec) = paste( yNames[[2]][spp], ".", yNames[[1]][ref], sep="")
     yMat    = as.matrix(yVec)
     if(class(family)!="family" & length(family)>1)
       stop("when using composition=TRUE, family argument must have length one.")
@@ -83,7 +89,21 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
     
   fam = family
   # now ensure each family is a proper family function
-  
+
+  if(fn=="clm")
+  {
+    allargs <- match.call(expand.dots = FALSE)
+    dots <- allargs$...
+    if( "link" %in% names(dots) )
+      link <- dots$link
+    else
+      link="logit"
+    fam.i = binomial(link) #although not binomial
+    fam.i$family = "ordinal"
+    fam = vector(mode="list",length=n.vars)
+    family=fam
+    yMat = data.frame(yMat) #converting to data frame so factor input is read as factors
+  }
   
   for(i.var in 1:n.vars)
   {
@@ -100,112 +120,137 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
         fam[[i.var]] = fam.fn()
       }  
     }
+    if(fn=="clm")
+      fam[[i.var]] = fam.i
     if(fam[[i.var]]$family=="binomial")
       warning("The binomial option of manyany currently assumes you have binary (presence/absence) response")
   }
 
   
-  manyfit = list()
+  manyfit = vector(mode="list",length=n.vars)
   fits = matrix(NA,n.rows,n.vars)
   etas = matrix(NA,n.rows,n.vars)
-  params = list()
+  params = manyfit
   logL = rep(NA,n.vars)
   for(i.var in 1:n.vars)
   {
     data$y = yMat[,i.var]
     manyfit[[i.var]] = do.call(fn, list(formula=formula, family=family[[i.var]], data=data, ...)) #note use of family argument as originally specified
-    fits[,i.var] = fitted(manyfit[[i.var]])
-    if(fn=="lmer")
-      etas[,i.var] = manyfit[[i.var]]@eta
-    else
-      etas[,i.var] = predict(manyfit[[i.var]])
-    if(fam[[i.var]]$family=="binomial") #truncate linear predictor to more reasonable range
-    {
-      etas[,i.var] = pmax(etas[,i.var], family[[i.var]]$linkfun(tol)/2)
-      etas[,i.var] = pmin(etas[,i.var], family[[i.var]]$linkfun(1-tol)/2)
-    }
-    if(fam[[i.var]]$link=="log") #truncate linear predictor to more reasonable range
-      etas[,i.var] = pmax(etas[,i.var], log(tol)/2)
     logL[i.var]  = logLik(manyfit[[i.var]])
-    if(i.var==1)
+    object=list(logL=logL, get.what=get.what)
+    
+    if(get.what=="details"||get.what=="models")
     {
-      cf = try(coef(manyfit[[i.var]]),silent=TRUE) #don't know if this function is defined
-      if(class(cf)=="try-error")
+      fits[,i.var] = fitted(manyfit[[i.var]])
+      # if(fn=="lmer")
+      #   etas[,i.var] = manyfit[[i.var]]@eta
+      # else
+      #   etas[,i.var] = predict(manyfit[[i.var]])
+      etas[,i.var] = switch(fn,
+                            "lmer"=manyfit[[i.var]]@eta,
+                            "clm"=predict(manyfit[[i.var]],type="linear.predictor",newdata=data[,names(data)!="y"])$eta1[,1],
+                            predict(manyfit[[i.var]])
+                         )
+      #need to then truncate as if on logit scale...
+      if(fam[[i.var]]$family=="binomial" || fam[[i.var]]$family=="ordinal") #truncate linear predictor to more reasonable range
       {
-        do.coef   = FALSE
-        coefs     = NULL
-      } 
+        etas[,i.var] = pmax(etas[,i.var], fam[[i.var]]$linkfun(tol)/2)
+        etas[,i.var] = pmin(etas[,i.var], fam[[i.var]]$linkfun(1-tol)/2)
+      }
+      if(fam[[i.var]]$link=="log"||fam[[i.var]]$link=="mu^0") #truncate linear predictor to more reasonable range
+        etas[,i.var] = pmax(etas[,i.var], log(tol)/2)
+      if(i.var==1)
+      {
+        cf = try(coef(manyfit[[i.var]]),silent=TRUE) #don't know if this function is defined
+        if(class(cf)=="try-error")
+        {
+          do.coef   = FALSE
+          coefs     = NULL
+        } 
+        else
+        {
+          coefs     = matrix(NA,length(cf),n.vars)
+          coefs[,1] = cf
+          dimnames(coefs)[[1]]=dimnames(cf)[[1]]
+          if(composition==FALSE & n.vars>1) #only name y variable if not compositional model
+            dimnames(coefs)[[2]]=yNames[[2]]
+          do.coef   = TRUE
+        }
+      }
       else
       {
-        coefs     = matrix(NA,length(cf),n.vars)
-        coefs[,1] = cf
-        dimnames(coefs)[[1]]=dimnames(cf)[[1]]
-        dimnames(coefs)[[2]]=dimnames(yMat)[[2]]
-        do.coef   = TRUE
+        if(do.coef==TRUE)
+          coefs[,i.var] = coef(manyfit[[i.var]])
+      }
+      if(is.na(logL[i.var]))
+         logL[i.var] = -0.5*deviance(manyfit[[i.var]]) #just in case logL function is undefined, e.g. tweedie 
+      if(fam[[i.var]]$family=="poisson")
+        params[[i.var]] = list(q=yMat[,i.var],lambda=fits[,i.var])
+      if(fam[[i.var]]$family=="binomial")
+        params[[i.var]] = list(q=yMat[,i.var],prob=fits[,i.var],size=1)
+      if(fam[[i.var]]$family=="Tweedie")
+        params[[i.var]] = list(q=yMat[,i.var], power=var.power[i.var], mu=fits[,i.var], phi=summary(manyfit[[i.var]])$disp)
+      if(fam[[i.var]]$family=="ordinal")
+        params[[i.var]] = list(q=yMat[,i.var], mu=predict(manyfit[[i.var]], type="cum.prob"), muAll=predict(manyfit[[i.var]],type="cum.prob",newdata=data[,names(data)!="y"])$cprob2)
+      if(grepl("egative",fam[[i.var]]$family) || fam[[i.var]]$family == "negbinomial")
+      {
+        if(any(names(manyfit[[i.var]])=="theta"))
+          theta=manyfit[[i.var]]$theta
+        else
+          {
+            if(any(names(manyfit[[i.var]])=="phi"))
+              theta = 1/manyfit[[i.var]]$phi
+            else # otherwise it must be fixed and tied up in the family argument 
+              theta = 1/(fam[[i.var]]$var(1)-1)
+          }
+        params[[i.var]] = list(q=yMat[,i.var],mu=fits[,i.var],size=theta)
+      }
+      if(fam[[i.var]]$family=="gaussian")
+      {
+        s.ft=summary(manyfit[[i.var]])
+        if(any(names(s.ft)=="sigma"))
+          sd=s.ft$sigma
+        else
+          sd=s.ft$scale
+        params[[i.var]] = list(q=yMat[,i.var],mean=fits[,i.var],sd=sd)
+      }
+    } #end get.what if statement
+  } #end i.var loop
+
+  #now format predictions and get residuals, if required
+  if(get.what=="details"||get.what=="models")
+  {
+    if(composition==TRUE) #reshape to original data size if required
+    {
+      fits   = matrix(fits,n.rows.orig,n.vars.orig)
+      etas   = matrix(etas,n.rows.orig,n.vars.orig)
+    }    
+    else #only name y variables for logL and params if not compositional model
+    {
+      if(n.vars>1)
+      {
+        names(logL) = yNames[[2]]
+        names(params) = yNames[[2]]
       }
     }
-    else
-    {
-      if(do.coef==TRUE)
-        coefs[,i.var] = coef(manyfit[[i.var]])
-    }
-    if(is.na(logL[i.var]))
-       logL[i.var] = -0.5*deviance(manyfit[[i.var]]) #just in case logL function is undefined, e.g. tweedie 
-    if(grepl("egative",fam[[i.var]]$family) || fam[[i.var]]$family == "negbinomial")
-    {
-      if(any(names(manyfit[[i.var]])=="theta"))
-        theta=manyfit[[i.var]]$theta
-      else
-        {
-          if(any(names(manyfit[[i.var]])=="phi"))
-            theta = 1/manyfit[[i.var]]$phi
-          else # otherwise it must be fixed and tied up in the family argument 
-            theta = 1/(fam[[i.var]]$var(1)-1)
-        }
-      params[[i.var]] = list(q=yMat[,i.var],mu=fits[,i.var],size=theta)
-    }
-    if(fam[[i.var]]$family=="poisson")
-      params[[i.var]] = list(q=yMat[,i.var],lambda=fits[,i.var])
-    if(fam[[i.var]]$family=="binomial")
-      params[[i.var]] = list(q=yMat[,i.var],prob=fits[,i.var],size=1)
-    if(fam[[i.var]]$family=="gaussian")
-    {
-      s.ft=summary(manyfit[[i.var]])
-      if(any(names(s.ft)=="sigma"))
-        sd=s.ft$sigma
-      else
-        sd=s.ft$scale
-      params[[i.var]] = list(q=yMat[,i.var],mean=fits[,i.var],sd=sd)
-    }
-    if(fam[[i.var]]$family=="Tweedie")
-    {
-      params[[i.var]] = list(q=yMat[,i.var], power=var.power[i.var], mu=fits[,i.var], phi=summary(manyfit[[i.var]])$disp)
-    }
-  } 
-  names(params) = dimnames(yMat)[[2]]
-  attributes(logL)$df = attributes(logLik(manyfit[[i.var]]))$df
-  attributes(logL)$nobs = n.rows
-  names(logL) = dimnames(yMat)[[2]]
-  class(logL) = "logLik"
-  
-  if(composition==TRUE) #reshape to original data size if required
-  {
-    fits   = matrix(fits,n.rows.orig,n.vars.orig)
-    etas   = matrix(etas,n.rows.orig,n.vars.orig)
-  }    
-  resids = residuals.manyany(list(params=params, family=fam, composition=composition, fitted.values=fits))
-  dimnames(resids) = yNames
-  dimnames(fits)   = yNames
-  dimnames(etas)   = yNames
-  object=list(logL=logL,fitted.values=fits,residuals=resids,linear.predictor=etas,family=fam, coefficients = coefs, call=call,params=params,model=model.frame(manyfit[[i.var]]), terms = terms(manyfit[[i.var]]), formula=formula, block=block, composition=composition)
-  class(object)=c("manyany", class(manyfit[[i.var]]) )
-  if(return.fits==TRUE)
+    attributes(logL)$df = attributes(logLik(manyfit[[i.var]]))$df
+    attributes(logL)$nobs = n.rows
+    class(logL) = "logLik"
+
+    resids = residuals.manyany(list(params=params, family=fam, composition=composition, fitted.values=fits, get.what=get.what))
+    dimnames(resids) = yNames
+    dimnames(fits)   = yNames
+    dimnames(etas)   = yNames
+    object=list(logL=logL,fitted.values=fits,residuals=resids,linear.predictor=etas,family=fam, coefficients = coefs, call=call,params=params,model=model.frame(manyfit[[i.var]]), terms = terms(manyfit[[i.var]]), formula=formula, block=block, composition=composition, get.what=get.what)
+  }
+  if(get.what=="models") #also return the model fits, if requested
   {
     object$fits = manyfit
-    names(object$fits) = dimnames(yMat)[[2]]
+    names(object$fits) = yNames[[2]]
   }
+  class(object)=c("manyany", class(manyfit[[i.var]]) )
   return(object)
-}
+} #end manyany function
 
 
 print.manyany <- function(object, digits = max(3L, getOption("digits") - 3L),...)
@@ -237,6 +282,8 @@ coef.manyany <- function(object, ...)
 
 residuals.manyany<- function(object, ...)
 {
+  if(object$get.what!="details" & object$get.what!="models")
+    stop("To compute residuals, set get.what='details' in your manyany call")
   tol=1.e-8
   params = object$params
   n.rows = length(params[[1]]$q)
@@ -250,25 +297,33 @@ residuals.manyany<- function(object, ...)
   dimnames(resids)[[2]] = names(params)
   for(i.var in 1:n.vars)
   {
-    param.minus = params[[i.var]]
-    param.minus$q = params[[i.var]]$q - 1.e-6
-    if(grepl("egative",family[[i.var]]$family) || family[[i.var]]$family == "negbinomial")
-      pfn = "pnbinom"
-    if(family[[i.var]]$family=="poisson")
-      pfn = "ppois"
-    if(family[[i.var]]$family=="binomial")
-      pfn = "pbinom"
-    if(family[[i.var]]$family=="gaussian")
+    if(family[[i.var]]$family=="ordinal")
     {
-      pfn = "pnorm"
-      param.minus$q = params[[i.var]]$q
-    } 
-    if(family[[i.var]]$family=="Tweedie")
-      pfn = "ptweedie"
-    u = runif(n.rows)
-    #to avoid any values identically 1:
-    pMinus = pmin(do.call(pfn, param.minus), 1-tol)
-    resids[,i.var] = u*do.call(pfn, params[[i.var]]) + (1-u)*pMinus
+      u = runif(n.rows)
+      resids[,i.var] = u*params[[i.var]]$mu$cprob1 + (1-u)*params[[i.var]]$mu$cprob2      
+    }
+    else
+    {
+      param.minus = params[[i.var]]
+      param.minus$q = params[[i.var]]$q - 1.e-6
+      if(grepl("egative",family[[i.var]]$family) || family[[i.var]]$family == "negbinomial")
+        pfn = "pnbinom"
+      if(family[[i.var]]$family=="poisson")
+        pfn = "ppois"
+      if(family[[i.var]]$family=="binomial")
+        pfn = "pbinom"
+      if(family[[i.var]]$family=="gaussian")
+      {
+        pfn = "pnorm"
+        param.minus$q = params[[i.var]]$q
+      } 
+      if(family[[i.var]]$family=="Tweedie")
+        pfn = "ptweedie"
+      u = runif(n.rows)
+      #to avoid any values identically 1:
+      pMinus = pmin(do.call(pfn, param.minus), 1-tol)
+      resids[,i.var] = u*do.call(pfn, params[[i.var]]) + (1-u)*pMinus
+    }
   }
   if(object$composition==TRUE) #reshape to original data size if required
     resids = matrix(resids, dim(object$fitted)[1], dim(object$fitted)[2])
@@ -279,6 +334,9 @@ residuals.manyany<- function(object, ...)
 plot.manyany=function(x, ...)
 {
   object = x
+  if(object$get.what!="details" & object$get.what!="models")
+    stop("To plot your fit, set get.what='details' in your manyany call")
+  
   Dunn.Smyth.Residuals=qnorm(residuals.manyany(object))
 
 #  truncation of predictors has been moved up to original manyany function
@@ -290,12 +348,13 @@ plot.manyany=function(x, ...)
 #  else
   Fitted.values = object$linear
   
-  # add colours if not already there...
+  # add colours if not already there, rainbow sorted by total abundance...
   if(hasArg("col")==F)
   {
     n.rows = dim(object$fitt)[1]
     n.vars = dim(object$fitt)[2]
-    col=rep(1:n.vars,each=n.rows)
+    sumRank = rank(apply(object$linear,2,sum),ties.method="first")
+    col=rep(rainbow(n.vars+1)[sumRank],each=n.rows)
     plot(Dunn.Smyth.Residuals~Fitted.values, ann=F, col=col, ...)
   }
   else
