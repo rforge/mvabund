@@ -151,32 +151,45 @@ anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$bl
 
   class(stat.i) = "numeric"
   if(p.uni=="unadjusted")
-    result = list(stat=stat,p=p,uni.test=statj,uni.p=pj,stat.i=stat.i,statj.i=statj.i,p.uni=p.uni) 
+    result = list(stat=stat,p=p,uni.test=statj,uni.p=pj,stat.i=stat.i,statj.i=statj.i,p.uni=p.uni,nBoot=nBoot) 
   if(p.uni=="none")
-    result = list(stat=stat,p=p,stat.i=stat.i,p.uni=p.uni) 
+    result = list(stat=stat,p=p,stat.i=stat.i,p.uni=p.uni,nBoot=nBoot) 
   
   class(result) = "anova.manyany"
   return(result)  
 }
 
-print.anova.manyany=function(object)
+print.anova.manyany=function(x, ...)
 {
   #get overall results in a table
-  table=matrix(c(object$stat,object$p),1,2)
-  dimnames(table)[[2]]=c("LR","P(>LR)")
+  table=matrix(c(x$stat,x$p),1,2)
+  dimnames(table)[[2]]=c("LR","Pr(>LR)")
   dimnames(table)[[1]]=c("sum-of-LR")
+
+  allargs <- match.call(expand.dots = FALSE)
+  dots <- allargs$...
+  s.legend = TRUE
+  if(length(dots)>1)
+  {
+    if("signif.legend" %in% dots)
+      s.legend = signif.legend
+  }
+  if(x$p.uni=="none")
+    signif.legend = s.legend
+  else
+    signif.legend = FALSE
   
   #print overall results
   cat("\n")
-  printCoefmat(table,has.Pvalue=T,signif.legend=F)
+  printCoefmat(table, tst.ind=1, P.values=TRUE, has.Pvalue=TRUE, signif.legend=signif.legend, eps.Pvalue=1/(x$nBoot+1-1.e-8),...)
   cat("\n")
-  
   #print univariate results in a table, if required
-  if(object$p.uni!="none")
+  if(x$p.uni!="none")
   {
-  tablej=cbind(object$uni.test,object$uni.p)
-  dimnames(tablej)[[2]]=c("LR","P(>LR)")
-  printCoefmat(tablej,has.Pvalue=T)
+    signif.legend = s.legend
+    tablej=cbind(x$uni.test,x$uni.p)
+    dimnames(tablej)[[2]]=c("LR","P(>LR)")
+    printCoefmat(tablej, tst.ind=1, P.values=TRUE, has.Pvalue=TRUE, signif.legend=signif.legend, eps.Pvalue=1/(x$nBoot+1-1.e-8), ...)
   }
 }
 

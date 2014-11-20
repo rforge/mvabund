@@ -43,8 +43,8 @@ predict.manyglm=function(object,newdata = NULL,type = c("link", "response",
 	        if(is.null(object$data))
 	            dat.i = model.frame(object)
 	        else
-                    dat.i = data.frame(object$y[,iVar], object$data)
-                object.i = glm(form, family=fam, data=dat.i, start=as.vector(object$coef)) #returning some NAs
+              dat.i = data.frame(object$y[,iVar], object$data)
+          object.i = glm(form, family=fam, data=dat.i, start=as.vector(object$coef[,iVar])) #returning some NAs
 	       #DW, 18/11/14:  starting valued included in predict to avoid errors with sparse data
          
                 ft.i <- predict.glm(object.i, newdata=newdata, se.fit=se.fit, 

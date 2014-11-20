@@ -112,8 +112,8 @@ data(tikus)
 coral <- as.matrix(tikus$abund[1:20,])
 sumSpp = apply(coral>0,2,sum)
 
-coral <- coral[,sumSpp>6] #cutting to just species with seven(!) or more presences to 
-##cut computation time.  Worth rerunning with less (e.g. 4 or more presences) if curious and patient.
+coral <- coral[,sumSpp>6] ## cutting to just species with seven(!) or more presences to cut
+## computation time.  Maybe rerun with less (e.g. 4 or more presences) if curious and patient.
 coralX <- tikus$x[1:20,]
 
 require(tweedie)
