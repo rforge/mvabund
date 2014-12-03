@@ -217,6 +217,7 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
       }
     } #end get.what if statement
   } #end i.var loop
+
   #now format predictions and get residuals, if required
   if(get.what=="details"||get.what=="models")
   {

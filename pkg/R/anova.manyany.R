@@ -108,9 +108,9 @@ anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$bl
     }
   }
   #get observed test stat
-  ft.1i=eval(object1$call)
-  ft.2i=eval(object2$call)
-  statj = 2 * ( logLik(ft.2i)-logLik(ft.1i) )
+#  ft.1i=eval(object1$call) #this call seems unnecessary
+#  ft.2i=eval(object2$call) #this call seems unnecessary
+  statj = 2 * ( logLik(object1)-logLik(object2) )
   stat = sum(statj)
   
   #initialise parameters for bootstrapping
