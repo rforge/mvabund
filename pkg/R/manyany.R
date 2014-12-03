@@ -43,7 +43,8 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
   if(is.null(yNames[[1]]))
     yNames[[1]] = 1:n.rows
   if(length(yNames)==1)
-    yNames[[2]] = "y" #to avoid issues later.
+    yNames[[2]] = paste("y",1:n.vars,sep="")
+  #    yNames[[2]] = "y" #to avoid issues later.
   
   call=match.call()
   
@@ -169,18 +170,18 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
         } 
         else
         {
-          coefs     = matrix(NA,length(cf),n.vars)
-          coefs[,1] = cf
-          dimnames(coefs)[[1]]=dimnames(cf)[[1]]
+          coefs     = vector(mode="list",n.vars)
+          coefs[[1]] = cf
+          names(coefs[[1]])=dimnames(cf)[[1]]
           if(composition==FALSE & n.vars>1) #only name y variable if not compositional model
-            dimnames(coefs)[[2]]=yNames[[2]]
+            names(coefs)=yNames[[2]]
           do.coef   = TRUE
         }
       }
       else
       {
         if(do.coef==TRUE)
-          coefs[,i.var] = coef(manyfit[[i.var]])
+          coefs[[i.var]] = coef(manyfit[[i.var]])
       }
       if(is.na(logL[i.var]))
          logL[i.var] = -0.5*deviance(manyfit[[i.var]]) #just in case logL function is undefined, e.g. tweedie 
@@ -216,7 +217,6 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
       }
     } #end get.what if statement
   } #end i.var loop
-
   #now format predictions and get residuals, if required
   if(get.what=="details"||get.what=="models")
   {
@@ -259,7 +259,7 @@ print.manyany <- function(object, digits = max(3L, getOption("digits") - 3L),...
   cat("\nCall:  ", paste(deparse(object$call), sep = "\n", collapse = "\n"), "\n\n", sep = "")
   cat("Number of rows:\t   ", dim(object$fitted)[1], "\t Number of columns:\t   ", n.vars)
   cat("\n")
-  cat("Number of parameters in model:\t   ", n.vars*dim(model.matrix(object))[2])
+  cat("Number of parameters in model:\t   ", length(unlist(object)))
   cat("\n\n")
   cat("Residual Deviance:\t   ", format(signif(-2*sum(object$logL), digits)))
   cat("\n\n")

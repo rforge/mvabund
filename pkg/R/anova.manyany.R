@@ -1,4 +1,4 @@
-anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$block, replace=TRUE)
+anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$block, bootID=NULL, replace=TRUE)
 {
 # analysis of variance comparing object1 (null) to object2 (alternative)
 # uses the PIT-trap
@@ -81,6 +81,15 @@ anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$bl
       qfn[i.var] = "qordinal"
   }
 
+  if(is.null(bootID)==FALSE)
+  {
+    bootID = as.matrix(bootID)
+    if(dim(bootID)[2]!=n.rows)
+      stop("Number of rows of bootID must match number of rows in data")
+    nBoot = dim(bootID)[1] #overwriting nBoot with value implied by user-entered ID matrix
+    block = NULL #overwriting previous value for block
+    print("User-entered bootID matrix will be used to generate bootstrap samples")
+  }  
   if(is.null(block)==FALSE)
   {
     tb=table(block)
@@ -112,20 +121,26 @@ anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$bl
   if(n.vars>1)
     dimnames(statj.i)[[1]] = dimnames(object1$residuals)[[2]]
   stat.i=rep(NA,nBoot)
-  boot.Resamp = rep(NA,n.rows)
+  if(is.null(bootID))
+    boot.Resamp = rep(NA,n.rows)
+  object1$call$get.what="none" #to avoid wasting time computing residuals etc when resampling
+  object2$call$get.what="none" #to avoid wasting time computing residuals etc when resampling
+    
+  #now do the bootstrap
   for(iBoot in 1:(nBoot))
   {
-    # generate resampled residuals
-    if(is.null(block))
-      boot.Resamp = sample(1:n.rows,replace=replace)
-    else
-      boot.Resamp[unlistIDs] = unlist(blockIDs[sample(n.levels,replace=replace)]) #unlistIDs is needed to make sure each unlisted blockID ends up in the right place
-      resid.i = as.matrix(object1$residuals[boot.Resamp,])
+    if(is.null(bootID)==FALSE)
+      boot.Resamp = bootID[iBoot,]
+    else      # generate resampled residuals
+    {
+      if(is.null(block))
+        boot.Resamp = sample(1:n.rows,replace=replace)
+      else
+        boot.Resamp[unlistIDs] = unlist(blockIDs[sample(n.levels,replace=replace)]) #unlistIDs is needed to make sure each unlisted blockID ends up in the right place
+    }
+    resid.i = as.matrix(object1$residuals[boot.Resamp,])
     # simulate data to get resampled yMat
 
-    object1$call$get.what="none" #to avoid wasting time computing residuals etc
-    object2$call$get.what="none" #to avoid wasting time computing residuals etc
-    
     for(i.var in 1:n.vars)
     {
       qparams = object1$params[[i.var]]
