@@ -124,7 +124,6 @@ default.plot.manyglm  <- function(x, which = 1, res.type="pit.norm", caption = c
         
        # Find abundance ranks OF MVABUND.OBJECT.1.
        var.subset <- order(sum.y, decreasing = TRUE)
-       var.subset <- var.subset[1:n.vars]
        typeofvarsubset <- " \n(the variables with highest total abundance)"   
     }       
     else {  # if var.subset is specified
@@ -155,7 +154,10 @@ default.plot.manyglm  <- function(x, which = 1, res.type="pit.norm", caption = c
    # Get all the graphical parameters.
    opp <- par("col.main","mfrow","mfcol","oma")
    if( "col" %in% names(dots) )
-     col <- dots$col
+   {
+     col <- dots$col[var.subset]
+     dots$col=NULL
+   } 
    else
      col = rainbow(n.vars+1)[2:(n.vars+1)]
    if (write.plot=="show")
@@ -420,8 +422,9 @@ default.plot.manyglm  <- function(x, which = 1, res.type="pit.norm", caption = c
           
           rtmp <- c(r)
           r0 <- rtmp[!yh.is.zero]
-          ylim <- range(r0, na.rm = TRUE)
-
+#          ylim <- range(r0, na.rm = TRUE)
+          ylim <- range(max(abs(r0))*c(-1,1), na.rm = TRUE) #DW, 10/02/15: to make ylims symmetric about zero
+          
           colortmp <- rep(color, each=n)
           color0 <- colortmp[!yh.is.zero]
             

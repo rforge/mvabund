@@ -99,7 +99,10 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
       link <- dots$link
     else
       link="logit"
-    fam.i = binomial(link) #although not binomial
+    if(link=="loglog")
+      fam.i = binomial("cloglog") #to avoid errors since "loglog" is not defined
+    else
+      fam.i = binomial(link) #although not binomial
     fam.i$family = "ordinal"
     fam = vector(mode="list",length=n.vars)
     family=fam
@@ -237,7 +240,6 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
     attributes(logL)$df = attributes(logLik(manyfit[[i.var]]))$df
     attributes(logL)$nobs = n.rows
     class(logL) = "logLik"
-
     resids = residuals.manyany(list(params=params, family=fam, composition=composition, fitted.values=fits, get.what=get.what))
     dimnames(resids) = yNames
     dimnames(fits)   = yNames
