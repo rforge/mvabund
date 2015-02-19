@@ -156,10 +156,15 @@ anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$bl
     assign(as.character(object1$call[[3]]),yMat[,is.zeroton==FALSE]) 
     assign(as.character(object2$call[[3]]),yMat[,is.zeroton==FALSE]) 
     #re-fit manyany functions and calculate test stats using the resampled yMat:
-    ft.1i=eval(object1$call)
-    ft.2i=eval(object2$call)
-    statj.i[is.zeroton==FALSE,iBoot]=2 * ( logLik(ft.2i)-logLik(ft.1i) )
-    stat.i[iBoot] = sum(statj.i[,iBoot], na.rm=TRUE)
+    if(sum(is.zeroton==FALSE)>0)
+    {
+      ft.1i=eval(object1$call)
+      ft.2i=eval(object2$call)
+      statj.i[is.zeroton==FALSE,iBoot]=2 * ( logLik(ft.2i)-logLik(ft.1i) )
+      stat.i[iBoot] = sum(statj.i[,iBoot], na.rm=TRUE)      
+    }
+    else
+      stat.i[iBoot] = 0
   }
   p = ( 1 + sum(stat.i>stat-1.e-8) ) / (nBoot + 1)
   pj = ( 1 + apply(statj.i>statj-1.e-8,1,sum) ) / ( nBoot + 1)
