@@ -141,8 +141,9 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
     data$y = yMat[,i.var]
     manyfit[[i.var]] = do.call(fn, list(formula=formula, family=family[[i.var]], data=data, ...)) #note use of family argument as originally specified
     logL[i.var]  = logLik(manyfit[[i.var]])
-    object=list(logL=logL, get.what=get.what)
-    
+    if(is.na(logL[i.var]))
+      logL[i.var] = -0.5*deviance(manyfit[[i.var]]) #just in case logL function is undefined, e.g. tweedie 
+
     if(get.what=="details"||get.what=="models")
     {
       fits[,i.var] = fitted(manyfit[[i.var]])
@@ -186,8 +187,6 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
         if(do.coef==TRUE)
           coefs[[i.var]] = coef(manyfit[[i.var]])
       }
-      if(is.na(logL[i.var]))
-         logL[i.var] = -0.5*deviance(manyfit[[i.var]]) #just in case logL function is undefined, e.g. tweedie 
       if(fam[[i.var]]$family=="poisson")
         params[[i.var]] = list(q=yMat[,i.var],lambda=fits[,i.var])
       if(fam[[i.var]]$family=="binomial")
@@ -220,6 +219,7 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
       }
     } #end get.what if statement
   } #end i.var loop
+  object=list(logL=logL, get.what=get.what)
 
   #now format predictions and get residuals, if required
   if(get.what=="details"||get.what=="models")
