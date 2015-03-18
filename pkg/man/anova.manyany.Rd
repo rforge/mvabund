@@ -4,7 +4,8 @@
 \title{Analysis of Deviance for Many Univariate Models Fitted to Multivariate Abundance Data}
 \description{Compute an analysis of deviance table for many univariate model fits. Slowly!}
 \usage{
-\method{anova}{manyany}(object, \dots, nBoot=99, p.uni="none", block = object1$block, bootID=NULL, replace=TRUE) 
+\method{anova}{manyany}(object, \dots, nBoot=99, p.uni="none", block = object1$block,
+       bootID=NULL, replace=TRUE) 
 \method{print}{anova.manyany}(object) 
 }
 \arguments{

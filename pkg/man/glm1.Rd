@@ -6,8 +6,11 @@ Fits a Generalised Linear Models with a LASSO (or L1) penalty, given a value of 
 \description{
 Fits a generalised linear model with a LASSO penalty, using an iteratively reweighted local linearisation approach, given a value of the penalty parameter (lamb). Can handle negative binomial family, even with overdispersion parameter unknown, as well as other GLM families. 
 }
+ %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
-glm1(y, X, lambda, family = "negative.binomial", ob.wt = rep(1, length(y)), b.init = NA, phi.init = NA, phi.method = "ML", tol = c(1e-08, .Machine$double.eps), n.iter = 100, phi.iter = 1)
+glm1(y, X, lambda, family = "negative.binomial", ob.wt = rep(1, length(y)), b.init = NA, 
+     phi.init = NA, phi.method = "ML", tol = c(1e-08, .Machine$double.eps), n.iter = 100,
+     phi.iter = 1)
 }
 \arguments{
   \item{y}{
@@ -17,7 +20,7 @@ A vector of values for the response variable.
 A design matrix of p explanatory variables.
 }
   \item{family}{
-The family of the response variable, see \link{\code{family}}. Negative binomial with unknown overdispersion can be specified as "negative.binomial", and is the default.
+The family of the response variable, see \code{\link{family}}. Negative binomial with unknown overdispersion can be specified as "negative.binomial", and is the default.
 }
   \item{lambda}{
 The penalty parameter applied to slope parameters. Different penalties can be specified for different parameters by specifying lamb as a vector, whose length is the number of columns of X. If scalar, this penalty is applied uniformly across all parameters except for the first (assuming that it is an intercept) 
@@ -77,6 +80,9 @@ Alopacce <- spider$abund[,1]
 X <- cbind(1,spider$x)
 #fit a LASSO-penalised negative binomial GLM, with penalty parameter 10:
 ft = glm1(Alopacce,X,lambda=10)
+
+plot(ft$likes) # a plot of the log-likelihood, each iteration to convergence
+ft$beta # coefficients in the final model
 
 }
 \keyword{models}

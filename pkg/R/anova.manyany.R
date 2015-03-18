@@ -179,10 +179,10 @@ anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$bl
   return(result)  
 }
 
-print.anova.manyany=function(x, ...)
+print.anova.manyany=function(object, ...)
 {
   #get overall results in a table
-  table=matrix(c(x$stat,x$p),1,2)
+  table=matrix(c(object$stat,object$p),1,2)
   dimnames(table)[[2]]=c("LR","Pr(>LR)")
   dimnames(table)[[1]]=c("sum-of-LR")
 
@@ -194,22 +194,22 @@ print.anova.manyany=function(x, ...)
     if("signif.legend" %in% dots)
       s.legend = signif.legend
   }
-  if(x$p.uni=="none")
+  if(object$p.uni=="none")
     signif.legend = s.legend
   else
     signif.legend = FALSE
   
   #print overall results
   cat("\n")
-  printCoefmat(table, tst.ind=1, P.values=TRUE, has.Pvalue=TRUE, signif.legend=signif.legend, eps.Pvalue=1/(x$nBoot+1-1.e-8),...)
+  printCoefmat(table, tst.ind=1, P.values=TRUE, has.Pvalue=TRUE, signif.legend=signif.legend, eps.Pvalue=1/(object$nBoot+1-1.e-8),...)
   cat("\n")
   #print univariate results in a table, if required
-  if(x$p.uni!="none")
+  if(object$p.uni!="none")
   {
     signif.legend = s.legend
-    tablej=cbind(x$uni.test,x$uni.p)
+    tablej=cbind(object$uni.test,object$uni.p)
     dimnames(tablej)[[2]]=c("LR","P(>LR)")
-    printCoefmat(tablej, tst.ind=1, P.values=TRUE, has.Pvalue=TRUE, signif.legend=signif.legend, eps.Pvalue=1/(x$nBoot+1-1.e-8), ...)
+    printCoefmat(tablej, tst.ind=1, P.values=TRUE, has.Pvalue=TRUE, signif.legend=signif.legend, eps.Pvalue=1/(object$nBoot+1-1.e-8), ...)
   }
 }
 

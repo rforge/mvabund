@@ -1,7 +1,6 @@
 glm1 = function(y, X, lambda, family="negative.binomial", ob.wt = rep(1, length(y)), b.init = NA, phi.init=NA,
 phi.method="ML", tol=c(1.e-8,.Machine$double.eps), n.iter=100, phi.iter=1)
 {
-    require(MASS)
     counter = 1
     zero.counter=0
 
@@ -194,8 +193,12 @@ phi.method="ML", tol=c(1.e-8,.Machine$double.eps), n.iter=100, phi.iter=1)
     likes = likes + sum(as.vector(lambda)*abs(b.lasso))
     
     check = any( abs(score[is.in==F])>lambda[is.in==F]+tol[1] ) || any( abs( abs(score[is.in])-lambda[is.in] ) > tol[1] )    
-    
     #end IRLS/LASSO algorithm
+
+    names(b.lasso) = dimnames(X)[[2]]   
+    dimnames(score)[[1]]=dimnames(X)[[2]]   
+    dimnames(res$mu)=dimnames(y)
+
     return(list(beta=b.lasso, mu=res$mu, likes = likes, phis=phis, phi=res$phi, score=score, counter = counter, check=check, family=res$family))
 }
 

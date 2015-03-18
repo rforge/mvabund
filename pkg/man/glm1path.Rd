@@ -7,8 +7,11 @@ Fits a path of Generalised Linear Models with LASSO (or L1) penalties, and finds
 \description{
 Fits a sequence (path) of generalised linear models with LASSO penalties, using an iteratively reweighted local linearisation approach. The whole path of models is returned, as well as the one that minimises BIC. Can handle negative binomial family, even with overdispersion parameter unknown, as well as other GLM families. 
 }
+ %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
-glm1path(y, X, family = "negative.binomial", lambdas = NULL, penalty = c(0, rep(1, dim(X)[2] - 1)), df.max = sum(y > 0), n.lambda = 25, lam.max = NULL, lam.min = NULL, k = log(length(y)), b.init = NA, phi.init = NA, phi.iter = 1, ...)
+glm1path(y, X, family = "negative.binomial", lambdas = NULL,
+  penalty = c(0, rep(1, dim(X)[2]-1)), df.max = sum(y > 0), n.lambda = 25, lam.max = NULL,
+  lam.min = NULL, k = log(length(y)), b.init = NA, phi.init = NA, phi.iter = 1, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -19,7 +22,7 @@ A vector of values for the response variable.
 A design matrix of p explanatory variables.
 }
   \item{family}{
-The family of the response variable, see \link{\code{family}}. Negative binomial with unknown overdispersion can be specified as "negative.binomial", and is the default.
+The family of the response variable, see \code{\link{family}}. Negative binomial with unknown overdispersion can be specified as "negative.binomial", and is the default.
 }
   \item{lambdas}{
 An optional vector of LASSO penalty parameters, specifying the path along which models will be fitted. This penalty is applied to parameters as specified in \code{penalty}. By default, a geometric sequence of values will be constructed with \code{n.lambda} values, starting from the intercept model and reducing lambda to 1.e-6 of its original value. Any vector that is provided will be sorted in decreasing order, so that the smallest model (biggest penalty) is fitted first.
@@ -92,12 +95,12 @@ ft = glm1path(Alopacce,X)
 # have a look at the BICS for all models:
 plot(ft$bics~ft$lambdas, log="x")
 
-#the action alls seems to be at lambda above 1, re-do with a minimum lambda at 0.1 and more lambdas:
-ft = glm1path(Alopacce,X,lam.min=0.1,n.lambda=100)
-plot(ft$bics~ft$lambdas, log="x")
+#the action alls seems to be at lambda above maybe 0.5, re-do with a minimum lambda at 0.1 and more lambdas:
+ft2 = glm1path(Alopacce,X,lam.min=0.1,n.lambda=100)
+plot(ft2$bics~ft2$lambdas, log="x")
 
 # return the slope estimates for the best-fitting model:
-ft$beta
+ft2$beta
 
 }
 \keyword{models}
