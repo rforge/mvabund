@@ -2,10 +2,10 @@
 \alias{antTraits.RData}
 \docType{data}
 \title{
-%%   ~~ data name/kind ... ~~
+Ant traits data (this file needs updating)
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of the dataset. ~~
+Ant abundances for 60 species across 20 sites in eastern Australia, with species trait and environmental data 
 }
 \usage{data("antTraits.RData")}
 \format{
@@ -13,16 +13,13 @@
  chr "antTraits.RData"
 }
 \details{
-%%  ~~ If necessary, more details than the __description__ above ~~
+Details coming soon...
 }
 \source{
-%%  ~~ reference to a publication or URL from which the data were obtained ~~
-}
-\references{
-%%  ~~ possibly secondary sources and usages ~~
+Coming soon...
 }
 \examples{
 data(antTraits.RData)
-## maybe str(antTraits.RData) ; plot(antTraits.RData) ...
+## insert something here
 }
 \keyword{datasets}
