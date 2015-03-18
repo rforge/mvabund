@@ -9,8 +9,13 @@ Ant abundances for 60 species across 20 sites in eastern Australia, with species
 }
 \usage{data("antTraits.RData")}
 \format{
-  The format is:
- chr "antTraits.RData"
+A list containing three data frames:
+\describe{
+\item{abund}{A data frame with 20 observations at different locations
+ of abundances on 60 species.
+}
+\item{env}{A data frame containing 7 environmental variables measured at each of the 20 sites.
+\item{traits}{A data frame containing 6 species traits measured for each of the 60 species.
 }
 \details{
 Details coming soon...
@@ -19,7 +24,7 @@ Details coming soon...
 Coming soon...
 }
 \examples{
-data(antTraits.RData)
+data(antTraits)
 ## insert something here
 }
 \keyword{datasets}

@@ -6,7 +6,7 @@
 \usage{
 \method{anova}{manyany}(object, \dots, nBoot=99, p.uni="none", block = object1$block,
        bootID=NULL, replace=TRUE) 
-\method{print}{anova.manyany}(object) 
+\method{print}{anova.manyany}(x, ...) 
 }
 \arguments{
 \item{object}{of class \code{manyany} under the null hypothesis, typically the result of a call to \code{\link{manyany}}.}
@@ -23,6 +23,7 @@ composition=TRUE in the manyany command, this means resampling rows of data as o
 resamples in rows, observations in columns. When specified, overwrites \code{nBoot} and \code{block}. Default is NULL.}
 \item{replace}{whether to sample with or without replacement, as in the \code{\link{sample}} function.
 \code{= FALSE} for PIT-permutation, \code{ = TRUE} for PIT-trap.}
+\item{x}{\code{anova.manyany} object to be printed.}
 }
 
 \details{
