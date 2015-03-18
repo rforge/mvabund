@@ -2,10 +2,10 @@
 \alias{glm1path}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Fits a path of Generalised Linear Models with LASSO (or L1) penalties, and finds the model that minimises BIC.
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Fits a sequence (path) of generalised linear models with LASSO penalties, using an iteratively reweighted local linearisation approach. The whole path of models is returned, as well as the one that minimises BIC. Can handle negative binomial family, even with overdispersion parameter unknown, as well as other GLM families. 
 }
 \usage{
 glm1path(y, X, family = "negative.binomial", lambdas = NULL, penalty = c(0, rep(1, dim(X)[2] - 1)), df.max = sum(y > 0), n.lambda = 25, lam.max = NULL, lam.min = NULL, k = log(length(y)), b.init = NA, phi.init = NA, phi.iter = 1, ...)
