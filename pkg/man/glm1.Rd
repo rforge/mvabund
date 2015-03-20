@@ -8,9 +8,9 @@ Fits a generalised linear model with a LASSO penalty, using an iteratively rewei
 }
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
-glm1(y, X, lambda, family = "negative.binomial", weights = rep(1, length(y)), b.init = NA, 
-     phi.init = NA, phi.method = "ML", tol = c(1e-08, .Machine$double.eps), n.iter = 100,
-     phi.iter = 1)
+glm1(y, X, lambda, family = "negative.binomial", weights = rep(1, length(y)),
+     b.init = NA, phi.init = NA, phi.method = "ML", tol = c(1e-08, .Machine$double.eps),
+     n.iter = 100, phi.iter = 1)
 }
 \arguments{
   \item{y}{
@@ -82,7 +82,7 @@ X <- cbind(1,spider$x)
 #fit a LASSO-penalised negative binomial GLM, with penalty parameter 10:
 ft = glm1(Alopacce,X,lambda=10)
 
-plot(ft$likes) # a plot of the log-likelihood, each iteration to convergence
+plot(ft$logLs) # a plot of the log-likelihood, each iteration to convergence
 coef(ft) # coefficients in the final model
 
 }

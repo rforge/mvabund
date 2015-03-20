@@ -31,8 +31,10 @@ The proportion of observations (or blocks) to assign as test observations. Defau
 The number of random training/test splits to use. Default is 10 but the more the merrier (and the slower).
 }
   \item{seed}{
-A vector of seeds to use for the random test/training splits. This is useful if you want to be able to exactly replicate analyses, without Monte Carlo variation in the splits. Default will not used fixed seeds.}
+A vector of seeds to use for the random test/training splits. This is useful if you want to be able to exactly replicate analyses, without Monte Carlo variation in the splits. Default will not used fixed seeds.
 }
+}
+
 \details{
 This function fits a series of LASSO-penalised generalised linear models, with different values for the LASSO penalty, as for \code{\link{glm1path}}. The main difference is that the best fitting model is selected by cross-validation, using \code{n.test} different random training/test splits to estimate predictive performance on new (test) data. Mean predictive log-likelihood (per test observation) is used as the criterion for choosing the best model, which has connections with the Kullback-Leibler distance. The \code{best} argument controls whether to select the model that maximises predictive log-likelihood, or the smallest model within 1se of the maximum (the '1 standard error rule').
 
@@ -42,7 +44,9 @@ All other details of this function are as for \code{\link{glm1path}}.
 \item{coefficients.best}{Vector of model coefficients for the best-fitting model (as judged by predictive log-likelihood)}
 \item{lambda.best}{The value of the LASOS penalty parameter, lambda, for the best-fitting model (as judged by predictive log-likelihood)}
 \item{glm1.best}{The glm1 fit for the best-fitting model (as judged by predictive log-likelihood). For what this contains see \code{\link{glm1}}.}
-\item{coefficients}{A matrix where each column represents the model coefficients for a fit along the path specified by \item{lambdas}{A vector specifying the path of values for the LASSO penalty, arranged from largest (strongest penalty, smallest fitted model) to smallest (giving the largest fitted model).}
+\item{coefficients}{A matrix where each column represents the model coefficients for a fit along the path specified by
+\item{coefficients}{A matrix where each column represents the model coefficients for a fit along the path specified by \code{\link{lambdas}}
+}
 \item{logL}{A vector of log-likelihood values for each model along the path.}
 \item{df}{A vector giving the number of non-zero parameter estimates (a crude measure of degrees of freedom) for each model along the path.}
 \item{bics}{A vector of BIC values for each model along the path. Calculated using a penalty on model complexity as specified by input argument \code{k}.}
