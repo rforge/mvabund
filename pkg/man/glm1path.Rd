@@ -58,22 +58,25 @@ Number of iterations estimating the negative binomial overdispersion parameter (
 Arguments passed to \code{\link{glm1}}.}
 }
 \details{
-This function fits a series of LASSO-penalised generalised linear models, with different values for the LASSO penalty. this leads to a path of fitted models, from small ones (with big LASSO penalties) to larger ones (with smaller penalties). Each individual model is fitted using the  \code{\link{glm1}} function, which uses a local linearisation approach as in Osborne et al (2000), nested inside iteratively reweighted (penalised) least squares, and using results from the previous fit as initial estimates. Look it's not the fastest thing going around, try glmnet if you want something faster (and possibly rougher as an approximation). The main advantage of the \code{glm1path} function is that it has been written to accept any glm family argument (although not yet tested beyond discrete data!), and also the negative binomial distribution, which is especially useful for modelling overdispersed counts.
+This function fits a series of LASSO-penalised generalised linear models, with different values for the LASSO penalty. Largely inspired by the glmnet package. This results in  a path of fitted models, from small ones (with big LASSO penalties) to larger ones (with smaller penalties). Each individual model is fitted using the  \code{\link{glm1}} function, which uses a local linearisation approach as in Osborne et al (2000), nested inside iteratively reweighted (penalised) least squares, and using results from the previous fit as initial estimates. Look it's not the fastest thing going around, try glmnet if you want something faster (and possibly rougher as an approximation). The main advantage of the \code{glm1path} function is that it has been written to accept any glm family argument (although not yet tested beyond discrete data!), and also the negative binomial distribution, which is especially useful for modelling overdispersed counts.
 
-For negative binomial with unknown overdispersion use \code{"negative.binomial"}, or if overdispersion is to be specified, use \code{negative.binomial(theta)} as in the \code{MASS} package. Note that the output refers to phi=1/theta, i.e. the overdispersion is parameterised such that the variance is mu+phi*mu^2. Hence values of phi close to zero suggest little overdispersion, values over one suggest a lot.
+For negative binomial with unknown overdispersion use \code{"negative.binomial"}, or if overdispersion is to be specified, use \code{negative.binomial(theta)} as in the \code{MASS} package. Note that the output refers to phi=1/theta, i.e. the overdispersion is parameterised in output such that the variance is mu+phi*mu^2. Hence values of phi close to zero suggest little overdispersion, values over one suggest a lot.
 }
 \value{
-\item{beta.best}{Vector of model coefficients for the best-fitting model (as judged by BIC)}
+\item{coefficients.best}{Vector of model coefficients for the best-fitting model (as judged by BIC)}
 \item{lambda.best}{The value of the LASOS penalty parameter, lambda, for the best-fitting model (as judged by BIC)}
 \item{glm1.best}{The glm1 fit for the best-fitting model (as judged by BIC). For what this contains see \code{\link{glm1}}.}
-\item{all.beta}{A matrix where each column represnts the model coefficients for a fit along the path specified by \code{lambdas}.}
-\item{lambdas}{A vector specifying the path of values for the LASSO penalty, arranged from largest (strongest penalty, smallest fitted model) to smallest (giving the largest fitted model).}
-\item{ll}{A vector of log-likelihood values for each model along the path.}
+\item{coefficients}{A matrix where each column represents the model coefficients for a fit along the path specified by \item{lambdas}{A vector specifying the path of values for the LASSO penalty, arranged from largest (strongest penalty, smallest fitted model) to smallest (giving the largest fitted model).}
+\item{logL}{A vector of log-likelihood values for each model along the path.}
 \item{df}{A vector giving the number of non-zero parameter estimates (a crude measure of degrees of freedom) for each model along the path.}
 \item{bics}{A vector of BIC values for each model along the path. Calculated using a penalty on model complexity as specified by input argument \code{k}.}
 \item{counter}{A vector counting how many iterations until convergence, for each model along the path.}
 \item{check}{A vector of logical values specifying whether or not Karush-Kuhn-Tucker conditions are satisfied at the solution.}
 \item{phi}{For negative binomial regression - a vector of overdispersion parameters, for each model along the path.}
+\item{y}{The vector of values for the response variable specified as an input argument.}
+\item{X}{The design matrix of p explanatory variables specified as an input argument.}
+\item{penalty}{The vector to be multiplied by each lambda to make the penalty for each fitted model.}
+\item{family}{The family argument specified as input.}
 }
 
 \references{
@@ -101,7 +104,7 @@ ft2 = glm1path(Alopacce,X,lam.min=0.1,n.lambda=100)
 plot(ft2$bics~ft2$lambdas, log="x")
 
 # return the slope estimates for the best-fitting model:
-ft2$beta
+ft2$coefficients.best
 
 }
 \keyword{models}

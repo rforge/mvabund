@@ -49,10 +49,7 @@ manyany = function(fn, yMat, formula, data, family="negative.binomial", composit
   call=match.call()
   
   if(composition==FALSE)
-  {
     formula = formula(paste("y~",formula[3],sep=""))
-#    block = NULL
-  }
   else
   {
     yVec    = as.vector(yMat)

@@ -1,4 +1,4 @@
-glm1 = function(y, X, lambda, family="negative.binomial", ob.wt = rep(1, length(y)), b.init = NA, phi.init=NA,
+glm1 = function(y, X, lambda, family="negative.binomial", weights = rep(1, length(y)), b.init = NA, phi.init=NA,
 phi.method="ML", tol=c(1.e-8,.Machine$double.eps), n.iter=100, phi.iter=1)
 {
     counter = 1
@@ -51,7 +51,7 @@ phi.method="ML", tol=c(1.e-8,.Machine$double.eps), n.iter=100, phi.iter=1)
 
     signs = sign(b.lasso)
 
-    res = mu.update(b.lasso,y,X,ob.wt,family,is.nb,phi.init,lambda,init=T,tol=tol)
+    res = mu.update(b.lasso,y,X,weights,family,is.nb,phi.init,lambda,init=T,tol=tol)
 
 
 #BEGINNING THE LASSO ESTIMATION ALGORITHM.
@@ -80,7 +80,7 @@ phi.method="ML", tol=c(1.e-8,.Machine$double.eps), n.iter=100, phi.iter=1)
 
 ### UPDATE MU, WEIGHTS, etc ###
         b.lasso[is.in] = betaa #changing the lasso estimate to the most recent estimate
-        res      = mu.update(b.lasso,y,X,ob.wt,res$family,is.nb,phi.old,lambda,init=F,phi.step=F,phi.method,tol=tol)
+        res      = mu.update(b.lasso,y,X,weights,res$family,is.nb,phi.old,lambda,init=F,phi.step=F,phi.method,tol=tol)
         #at this stage, not updating phi, hence phi.step=F
 # end updating mu etc
 
@@ -95,7 +95,7 @@ phi.method="ML", tol=c(1.e-8,.Machine$double.eps), n.iter=100, phi.iter=1)
 
             half.step = half.step + 1
 
-            res = mu.update(b.lasso,y,X,ob.wt,res$family,is.nb,phi.old,lambda,init=F,phi.step=F,phi.method,tol=tol)
+            res = mu.update(b.lasso,y,X,weights,res$family,is.nb,phi.old,lambda,init=F,phi.step=F,phi.method,tol=tol)
             #still not updating phi
             dev.change = (res$like - likes[length(likes)])/abs(likes[length(likes)]+0.1)
         }
@@ -118,7 +118,7 @@ phi.method="ML", tol=c(1.e-8,.Machine$double.eps), n.iter=100, phi.iter=1)
             #print(paste("exclusion step, variable", "...","excluded"))
             b.lasso[is.in]              = b.old[is.in] + prop*delta
             mult                        = 2
-            res = mu.update(b.lasso,y,X,ob.wt,res$family,is.nb,phi.old,lambda,init=F,phi.step=F,phi.method,tol=tol)
+            res = mu.update(b.lasso,y,X,weights,res$family,is.nb,phi.old,lambda,init=F,phi.step=F,phi.method,tol=tol)
             dev.change = (res$like - likes[length(likes)])/abs(likes[length(likes)]+0.1)
         }
         is.in[abs(b.lasso) < tol[2]] = FALSE
@@ -129,7 +129,7 @@ phi.method="ML", tol=c(1.e-8,.Machine$double.eps), n.iter=100, phi.iter=1)
 
 ### INCLUSION STEP ###
 
-#need to update mu and weights first to get correct score eqns.
+#need to update mu and IRLS weights first to get correct score eqns.
 #but note that nuisance params should not be updated yet - otherwise score eqns won't be satisfied
         xw  = t(as.vector(res$weii) * t(t(X)))
         score    =  t( t(xw) / as.vector(res$deriv) ) %*% (y - res$mu)
@@ -158,7 +158,7 @@ phi.method="ML", tol=c(1.e-8,.Machine$double.eps), n.iter=100, phi.iter=1)
         if(is.nb)
         {
             phi.step = counter%%phi.iter==0
-            res = mu.update(b.lasso,y,X,ob.wt,res$family,is.nb,phi.old,lambda,init=F,phi.step=phi.step,phi.method,tol=tol)
+            res = mu.update(b.lasso,y,X,weights,res$family,is.nb,phi.old,lambda,init=F,phi.step=phi.step,phi.method,tol=tol)
 
             phis[length(phis)] = res$phi
 
@@ -199,11 +199,11 @@ phi.method="ML", tol=c(1.e-8,.Machine$double.eps), n.iter=100, phi.iter=1)
     dimnames(score)[[1]]=dimnames(X)[[2]]   
     dimnames(res$mu)=dimnames(y)
 
-    return(list(beta=b.lasso, mu=res$mu, likes = likes, phis=phis, phi=res$phi, score=score, counter = counter, check=check, family=res$family))
+    return(list(coefficients=b.lasso, fitted.values=res$mu, logLs = likes, phis=phis, phi=res$phi, score=score, counter = counter, check=check, family=res$family, weights=weights))
 }
 
 
-mu.update = function(b.lasso, y, X, ob.wt, family, is.nb, phi, lambda, init=F, phi.step=T, phi.method="ML",tol=c(1.e-8,.Machine$double.eps))
+mu.update = function(b.lasso, y, X, weights, family, is.nb, phi, lambda, init=F, phi.step=T, phi.method="ML",tol=c(1.e-8,.Machine$double.eps))
 {
     eta   = X %*% b.lasso
     mu = family$linkinv(eta)
@@ -272,11 +272,11 @@ mu.update = function(b.lasso, y, X, ob.wt, family, is.nb, phi, lambda, init=F, p
     if( family$family=="binomial" || family$family=="poisson" || pmatch("Negative Binomial",family$family,nomatch=0)==1 )
       dev = NA #to save a little computation time, don't get dev when it is not needed by the aic function.
     else
-      dev = family$dev(y,mu,ob.wt) #only actually needed by gaussian, gamma, inverse.gaussian
-    like  = -sum(family$aic(y,1,mu,ob.wt,dev))/2 - sum(as.vector(lambda)*abs(b.lasso))
+      dev = family$dev(y,mu,weights) #only actually needed by gaussian, gamma, inverse.gaussian
+    like  = -sum(family$aic(y,1,mu,weights,dev))/2 - sum(as.vector(lambda)*abs(b.lasso))
     vari = family$variance(mu)
     deriv = family$mu.eta(eta)
     z     = eta + (y - mu)/deriv
-    weii  = ob.wt*deriv^2/vari
+    weii  = weights*deriv^2/vari
     return(list(eta=eta,mu=mu,like=like,vari=vari,deriv=deriv,z=z,weii=weii,phi=phi,family=family))
 }

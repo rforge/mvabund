@@ -8,7 +8,7 @@ Fits a generalised linear model with a LASSO penalty, using an iteratively rewei
 }
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
-glm1(y, X, lambda, family = "negative.binomial", ob.wt = rep(1, length(y)), b.init = NA, 
+glm1(y, X, lambda, family = "negative.binomial", weights = rep(1, length(y)), b.init = NA, 
      phi.init = NA, phi.method = "ML", tol = c(1e-08, .Machine$double.eps), n.iter = 100,
      phi.iter = 1)
 }
@@ -25,7 +25,7 @@ The family of the response variable, see \code{\link{family}}. Negative binomial
   \item{lambda}{
 The penalty parameter applied to slope parameters. Different penalties can be specified for different parameters by specifying lamb as a vector, whose length is the number of columns of X. If scalar, this penalty is applied uniformly across all parameters except for the first (assuming that it is an intercept) 
 }
-  \item{ob.wt}{
+  \item{weights}{
 Observation weights. These might be useful if you want to fit a Poisson point process model...
 }
   \item{b.init}{
@@ -54,9 +54,9 @@ For negative binomial with unknown overdispersion use \code{"negative.binomial"}
 }
 
 \value{
-\item{beta}{Vector of parameter estimates}
-\item{mu}{Vector of predicted values (on scale of the original response)}
-\item{likes}{Vector of log-likelihoods at each iteration of the model.  The last entry is the log-likelihood for the final fit.}
+\item{coefficients}{Vector of parameter estimates}
+\item{fitted.values}{Vector of predicted values (on scale of the original response)}
+\item{logLs}{Vector of log-likelihoods at each iteration of the model.  The last entry is the log-likelihood for the final fit.}
 \item{phis}{Estimated overdispersion parameter at each iteration, for a negative binomial fit.}
 \item{phi}{Final estimate of the overdispersion parameter, for a negative binomial fit.}
 \item{score}{Vector of score equation values for each parameter in the model.}
@@ -72,8 +72,9 @@ David I. Warton <David.Warton@unsw.edu.au>, Ian W. Renner and Luke Wilson.
 }
 
 \seealso{
-\code{\link{glm1}}, \code{\link{glm}}, \code{\link{family}}
+\code{\link{glm1path}}, \code{\link{glm1}}, \code{\link{glm}}, \code{\link{family}}
 }
+
 \examples{
 data(spider)
 Alopacce <- spider$abund[,1]
@@ -82,7 +83,7 @@ X <- cbind(1,spider$x)
 ft = glm1(Alopacce,X,lambda=10)
 
 plot(ft$likes) # a plot of the log-likelihood, each iteration to convergence
-ft$beta # coefficients in the final model
+coef(ft) # coefficients in the final model
 
 }
 \keyword{models}

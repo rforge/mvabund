@@ -20,6 +20,7 @@ glm1path = function(y, X, family="negative.binomial", lambdas=NULL, penalty = c(
   else
     n.iter = 100
   
+  family.old = family #save this to return at end
   if(is.character(family)) 
   {
     if (family == "negbinomial" || family=="negative.binomial")
@@ -81,12 +82,14 @@ glm1path = function(y, X, family="negative.binomial", lambdas=NULL, penalty = c(
   
 
 ################## Fit model to full dataset ########################
-  ll         = rep( NA, length=n.lambda)
-  phi        = ll
-  df         = ll
-  counter    = ll
-  check      = ll
-  beta       = matrix( NA, dim(X)[2],   n.lambda, dimnames = list( dimnames(X)[[2]],   lambdas ) )
+  logL         = rep( NA, length=n.lambda)
+  names(logL)  = signif(lambdas,3)
+  phi        = logL
+  df         = logL
+  counter    = logL
+  check      = logL
+  beta       = matrix( NA, dim(X)[2], n.lambda, dimnames = list( dimnames(X)[[2]],   signif(lambdas,3) ) )
+#  mu         = matrix( NA, length(y), n.lambda, dimnames = list( names(y),   lambdas ))
 
   b.old    = b.init
   phi.old  = phi.init
@@ -96,12 +99,13 @@ glm1path = function(y, X, family="negative.binomial", lambdas=NULL, penalty = c(
   {
     penalty.i = lambdas[i.lambda] * penalty
     out       = glm1(y, X, penalty.i, family=family, b.init=b.old, phi.init=phi.old, phi.iter=phi.iter, ...)
-    b.old     = out$beta
+    b.old     = out$coef
     phi.old   = out$phi
   
-    ll[i.lambda]      = out$likes[length(out$likes)]
-    df[i.lambda]      = sum(abs(out$beta)>tol[1])
-    beta[,i.lambda]   = out$beta
+    logL[i.lambda]      = out$logLs[length(out$logLs)]
+    df[i.lambda]      = sum(abs(out$coef)>tol[1])
+    beta[,i.lambda]   = out$coef
+#    mu[,i.lambda]     = out$fitted.values
     phi[i.lambda]     = out$phi
     counter[i.lambda] = out$counter
     check[i.lambda]   = out$check
@@ -110,16 +114,17 @@ glm1path = function(y, X, family="negative.binomial", lambdas=NULL, penalty = c(
   }
   if(i.lambda<n.lambda) #delete all the NA's if broke out of loop early:
   {
-    ll=ll[1:i.lambda]
+    logL=logL[1:i.lambda]
     df=df[1:i.lambda]
     beta=beta[,1:i.lambda]
+#    mu=mu[,1:i.lambda]
     phi = phi[1:i.lambda]
     counter = counter[1:i.lambda]
     check = check[1:i.lambda]
     lambdas = lambdas[1:i.lambda]
     n.lambda=i.lambda
   }
-  bics  = -2*ll + k * df
+  bics  = -2*logL + k * df
 
   id.use = which(bics==min(bics))[1]
 
@@ -127,7 +132,7 @@ glm1path = function(y, X, family="negative.binomial", lambdas=NULL, penalty = c(
   penalty.i = lambdas[id.use] * penalty
   best = glm1(y, X, penalty.i, family=family, b.init=beta[,id.use], phi.init=phi[id.use], phi.iter=phi.iter)
 
-  lasso.final = list(beta.best = beta[,id.use], lambda.best = lambdas[id.use], glm1.best=best, ll=ll, df=df, bics=bics, counter=counter, check=check, phi=phi, lambdas=lambdas, all.beta=beta)
+  lasso.final = list(coefficients.best = beta[,id.use], lambda.best = lambdas[id.use], glm1.best=best, coefficients=beta, lambdas=lambdas, logL=logL, df=df, bics=bics, counter=counter, check=check, phi=phi, y=y, X=X, penalty = penalty, family=family.old)
 
 }
 # end function
