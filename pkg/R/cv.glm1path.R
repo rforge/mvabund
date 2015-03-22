@@ -1,4 +1,4 @@
-cv.glm1path = function(object, block = NULL, best="1se", plot=TRUE, prop.test=0.2, n.split = 10, seed=NULL)
+cv.glm1path = function(object, block = NULL, best="1se", plot=TRUE, prop.test=0.2, n.split = 10, seed=NULL, show.progress=FALSE)
 {
 
   tol=c(1.e-8,.Machine$double.eps)
@@ -66,58 +66,65 @@ cv.glm1path = function(object, block = NULL, best="1se", plot=TRUE, prop.test=0.
       beta.cv[,,i.split] = out$coefficients
       phi.cv[,i.split] <- out$phi
       counter.cv[,i.split] = out$counter
-    
-#      flush.console()
-#      print(paste("train/test split is number", i.split, "of", n.split))
-#      print( cbind( ll.test[,i.split], df.cv[,i.split] ) )
+
+      if(show.progress)
+      {
+        flush.console()
+        print(paste("train/test split number", i.split, "of", n.split, "completed"))
+#        print( cbind( ll.test[,i.split], df.cv[,i.split] ) )
+      }
   }
   ll.cv = apply(ll.test,1,mean)
-  if(length(seed)>1)
+
+## Find which model minimises predictive logL
+  ll.min = max(ll.cv)
+  id.min = which(ll.cv==ll.min)[1]
+
+## Find se hence best model by 1 se rule (if it can be computed from replicate test/training splits)
+  if(n.split>1)
+  {
     ll.se = apply(ll.test,1,sd) * sqrt( length(is.test) / n.levels ) #jackknife-style estimator
+    llminusSE = ll.min - ll.se[id.min]
+  }
   else
-    ll.se = 0
+  {
+    ll.se = NULL 
+    llminusSE = ll.min
+  }
+  lam.1se = max( object$lambdas[ll.cv>llminusSE] )
+  id.1se = which(object$lambdas == lam.1se)[1]
 
-
-  lasso.final = object
-  lasso.final$ll.cv = ll.cv
-  lasso.final$se = ll.se
-    
-  ### Find which model is optimal (best predictions and best by 1se rule)
-  ll.min = max(lasso.final$ll.cv)
-  id.min = which(lasso.final$ll.cv==ll.min)[1]
-  # 1se rule: find model with biggest lam within 1se of best
-  llse = ll.min - lasso.final$se[id.min]
-  lam.1se = max( lambdas[lasso.final$ll.cv>llse] )
-  id.1se = which(lambdas == lam.1se)[1]
-  ### report beta etc for "best" model
-        
   # choose which criterion to use for "best" model: best ll or 1se rule
   if(best=="1se")
-      id.use = id.1se
+    id.use = id.1se
   else
-      id.use = id.min
-    
-  # report beta etc for "best" model
-  lasso.final$lambda.best = object$lambdas[id.use]
-  beta.best   = object$coefficients[,id.use]
-  lasso.final$coefficients.best = beta.best
+    id.use = id.min
+
+  # add these funky new objects to the output object.
+  object$ll.cv = ll.cv
+  object$se = ll.se
+  object$lambda = object$lambdas[id.use]
+  beta.best   = object$all.coefficients[,id.use]
+  object$coefficients = beta.best
   penalty.i = object$lambdas[id.use] * object$penalty
-  best = glm1(object$y, object$X, penalty.i, family=object$family, b.init=object$coefficients[,id.use], phi.init=object$phi[id.use])
-  lasso.final$glm1.best = best  
+
+  best = glm1(object$y, object$X, penalty.i, family=object$family, b.init=beta.best, phi.init=object$phi[id.use])
+  object$glm1.best = best  
+
 
   if(plot==TRUE)
   {
-    lls = lasso.final$ll.cv
-    ses = lasso.final$se
+    lls = object$ll.cv
+    ses = object$se
     y.lab = "log-likelihood (per test observation)"
 
-    plot(lasso.final$df,lls,type="l",ylim=range(c(lls-ses,lls+ses)),xlab="Number of terms in model (df)",ylab=y.lab)
-    polygon( c(lasso.final$df,lasso.final$df[n.lambda:1]) , c(lls+ses,lls[n.lambda:1]-ses[n.lambda:1]), col="lightgrey", border="lightgrey" )
-    lines(lasso.final$df,lls,type="l")
-    points( lasso.final$df[id.min], ll.min,         col="red",  pch=19 )
-    points( lasso.final$df[id.1se],  ll.cv[id.1se], col="blue", pch=19 )
+    plot(object$df,lls,type="l",ylim=range(c(lls-ses,lls+ses)),xlab="Number of terms in model (df)",ylab=y.lab)
+    polygon( c(object$df,object$df[n.lambda:1]) , c(lls+ses,lls[n.lambda:1]-ses[n.lambda:1]), col="lightgrey", border="lightgrey" )
+    lines(object$df,lls,type="l")
+    points( object$df[id.min], ll.min,         col="red",  pch=19 )
+    points( object$df[id.1se],  ll.cv[id.1se], col="blue", pch=19 )
     legend("bottomleft",c("maximum predictive likelihood","best within 1 se of max"),col=c("red","blue"),pch=19)
   }
-  return( lasso.final )
+  return( object )
     
 }

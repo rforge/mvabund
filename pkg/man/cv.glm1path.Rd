@@ -9,7 +9,7 @@ Fits a sequence (path) of generalised linear models with LASSO penalties, using 
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
 cv.glm1path = function(object, block = NULL, best="1se", plot=TRUE, prop.test=0.2, 
-  n.split = 10, seed=NULL)
+  n.split = 10, seed=NULL, show.progress=FALSE)
 }
 \arguments{
   \item{object}{
@@ -33,6 +33,8 @@ The number of random training/test splits to use. Default is 10 but the more the
   \item{seed}{
 A vector of seeds to use for the random test/training splits. This is useful if you want to be able to exactly replicate analyses, without Monte Carlo variation in the splits. Default will not used fixed seeds.
 }
+  \item{show.progress}{Logical argument, if TRUE, console will report when a run for a seed has been completed. This option has been included because this function can take yonks to run on large datasets.
+  }
 }
 
 \details{
@@ -41,11 +43,10 @@ This function fits a series of LASSO-penalised generalised linear models, with d
 All other details of this function are as for \code{\link{glm1path}}.
 }
 \value{
-\item{coefficients.best}{Vector of model coefficients for the best-fitting model (as judged by predictive log-likelihood)}
-\item{lambda.best}{The value of the LASOS penalty parameter, lambda, for the best-fitting model (as judged by predictive log-likelihood)}
+\item{coefficients}{Vector of model coefficients for the best-fitting model (as judged by predictive log-likelihood)}
+\item{lambda}{The value of the LASOS penalty parameter, lambda, for the best-fitting model (as judged by predictive log-likelihood)}
 \item{glm1.best}{The glm1 fit for the best-fitting model (as judged by predictive log-likelihood). For what this contains see \code{\link{glm1}}.}
-\item{coefficients}{A matrix where each column represents the model coefficients for a fit along the path specified by
-\item{coefficients}{A matrix where each column represents the model coefficients for a fit along the path specified by \code{\link{lambdas}}
+\item{all.coefficients}{A matrix where each column represents the model coefficients for a fit along the path specified by \code{\link{lambdas}}
 }
 \item{logL}{A vector of log-likelihood values for each model along the path.}
 \item{df}{A vector giving the number of non-zero parameter estimates (a crude measure of degrees of freedom) for each model along the path.}
@@ -78,11 +79,11 @@ X <- cbind(1,spider$x)
 
 # fit a LASSO-penalised negative binomial regression:
 ft = glm1path(Alopacce,X,lam.min=0.1)
-ft$coefficients.best
+coef(ft)
 
 # now estimate the best-fitting model by cross-validation:
 cvft = cv.glm1path(ft)
-cvft$coefficients.best
+coef(cvft)
 
 }
 \keyword{models}

@@ -63,11 +63,11 @@ glm1path = function(y, X, family="negative.binomial", lambdas=NULL, penalty = c(
   }
 
   #Determine the range of lambda values to assess:
-  if(is.null(lambdas))
+  if(length(lambdas)==0)
   {
-    if(is.null(lam.max))
+    if(length(lam.max)==0)
       lam.max = max.score
-    if(is.null(lam.min))
+    if(length(lam.min)==0)
       lam.min = lam.max / 100000
     lambdas = exp( seq( log(lam.max), log(lam.min), length=n.lambda ) )
     if(lam.max!=max.score) #to add intercept model to path if not yet included
@@ -132,7 +132,7 @@ glm1path = function(y, X, family="negative.binomial", lambdas=NULL, penalty = c(
   penalty.i = lambdas[id.use] * penalty
   best = glm1(y, X, penalty.i, family=family, b.init=beta[,id.use], phi.init=phi[id.use], phi.iter=phi.iter)
 
-  lasso.final = list(coefficients.best = beta[,id.use], lambda.best = lambdas[id.use], glm1.best=best, coefficients=beta, lambdas=lambdas, logL=logL, df=df, bics=bics, counter=counter, check=check, phi=phi, y=y, X=X, penalty = penalty, family=family.old)
+  lasso.final = list(coefficients = beta[,id.use], lambda = lambdas[id.use], glm1.best=best, all.coefficients=beta, lambdas=lambdas, logL=logL, df=df, bics=bics, counter=counter, check=check, phi=phi, y=y, X=X, penalty = penalty, family=family.old)
 
 }
 # end function
