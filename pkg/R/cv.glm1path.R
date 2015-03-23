@@ -51,7 +51,7 @@ cv.glm1path = function(object, block = NULL, best="1se", plot=TRUE, prop.test=0.
         
       # get test likelihood
 # If I write a predict function, the following can be done generically and can apply across manyglm, manyany, etc...
-      mu.test      = object$glm1.best$family$linkinv(object$X[is.test,] %*% out$coefficients)
+      mu.test      = object$glm1.best$family$linkinv(object$X[is.test,] %*% out$all.coefficients)
       y.test       = object$y[is.test]
       weights.test = object$glm1.best$weights[is.test]
       if( object$glm1.best$family$family=="binomial" || object$glm1.best$family$family=="poisson" || pmatch("Negative Binomial",object$glm1.best$family$family,nomatch=0)==1 )
@@ -62,8 +62,8 @@ cv.glm1path = function(object, block = NULL, best="1se", plot=TRUE, prop.test=0.
         ll.test[i.lambda,i.split]  = -object$glm1.best$family$aic(y.test, 1, mu.test[,i.lambda], weights.test, dev)/2
 
 #      ll.test[abs(ll.test[,i.split])<100*tol[1],i.split]=min(ll.test[,i.split],na.rm=T) #what is this line about???
-      df.cv[,i.split] = apply(abs(out$coefficients)>tol[1],2,sum)
-      beta.cv[,,i.split] = out$coefficients
+      df.cv[,i.split] = apply(abs(out$all.coefficients)>tol[1],2,sum)
+      beta.cv[,,i.split] = out$all.coefficients
       phi.cv[,i.split] <- out$phi
       counter.cv[,i.split] = out$counter
 
@@ -105,7 +105,7 @@ cv.glm1path = function(object, block = NULL, best="1se", plot=TRUE, prop.test=0.
   object$se = ll.se
   object$lambda = object$lambdas[id.use]
   beta.best   = object$all.coefficients[,id.use]
-  object$coefficients = beta.best
+  object$all.coefficients = beta.best
   penalty.i = object$lambdas[id.use] * object$penalty
 
   best = glm1(object$y, object$X, penalty.i, family=object$family, b.init=beta.best, phi.init=object$phi[id.use])
