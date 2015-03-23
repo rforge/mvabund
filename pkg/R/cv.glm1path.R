@@ -1,4 +1,4 @@
-cv.glm1path = function(object, block = NULL, best="1se", plot=TRUE, prop.test=0.2, n.split = 10, seed=NULL, show.progress=FALSE)
+cv.glm1path = function(object, block = NULL, best="1se", plot=TRUE, prop.test=0.2, n.split = 10, seed=NULL, show.progress=FALSE, ...)
 {
 
   tol=c(1.e-8,.Machine$double.eps)
@@ -40,7 +40,7 @@ cv.glm1path = function(object, block = NULL, best="1se", plot=TRUE, prop.test=0.
         is.test    = unlist(blockIDs[is.test]) # if block sampling, turn into a vector of row IDs
       y.test     = object$y[is.test]
       
-      out       = glm1path(object$y[-is.test], object$X[-is.test,], lambdas=object$lambdas, family=object$family, penalty=object$penalty)
+      out       = glm1path(object$y[-is.test], object$X[-is.test,], lambdas=object$lambdas, family=object$family, penalty=object$penalty, ...)
       ll.train[,i.split] = out$logL
 
 #WOULD BE BETTER TO USE EVAL: like in anova.manyany
@@ -105,7 +105,7 @@ cv.glm1path = function(object, block = NULL, best="1se", plot=TRUE, prop.test=0.
   object$se = ll.se
   object$lambda = object$lambdas[id.use]
   beta.best   = object$all.coefficients[,id.use]
-  object$all.coefficients = beta.best
+  object$coefficients = beta.best
   penalty.i = object$lambdas[id.use] * object$penalty
 
   best = glm1(object$y, object$X, penalty.i, family=object$family, b.init=beta.best, phi.init=object$phi[id.use])
