@@ -43,11 +43,12 @@ The model is fitted by vectorising \code{L} then constructing a big mega-matrix 
 
 Future versions of the code will allow the user to specify the formula of the model to be fitted. By default all variables are standardised prior to fitting.
 
-If no trait matrix \code{Q} is specified, this will fit a different environmental response for each taxon (and the outcome will be very similar to \code{manyglm(L~R)}). This can be understood as a fourth corner model where species identities are used as the species traits (i.e. no attempt is made to explain differences across species). 
+If trait matrix \code{Q} is not specified, default behaviour will fit a different environmental response for each taxon (and the outcome will be very similar to \code{manyglm(L~R)}). This can be understood as a fourth corner model where species identities are used as the species traits (i.e. no attempt is made to explain differences across species).
 }
 \value{Returns a \code{traitglm} object, a list that contains at least the following components:
 \describe{
 \item{...}{Exactly what is included in output depends on the fitting function - by default, a \code{\link{manyglm}} object is returned, so all usual \code{manyglm} output is included (coefficients, residuals, deviance, etc).}
+\item{family}{A \code{family} object matching the final model.}
 \item{fourth.corner}{A matrix of fourth corner coefficients.}
 \item{R.des}{The reduced-size design matrix for environmental variables, including further arguments:
 \describe{
@@ -60,7 +61,7 @@ If no trait matrix \code{Q} is specified, this will fit a different environmenta
 \item{Q.des}{The reduced-size design matrix for traits, set up as for \code{R.des}.}
 \item{spp.penalty}{For LASSO fits: a vector of the same length as the final design matrix, indicating which variables had a penalty imposed on them in model fitting.}
 \item{L}{The data frame of abundances specified as input.}
-\item{penalty}{The vector to be multiplied by each lambda to make the penalty for each fitted model.}
+\item{any.penalty}{Logical, is any penalty applied to parameters at all (not if using a \code{manyglm} fit).}
 \item{scaling}{A list of coefficients describing the standaridsations of variables used in analyses. Stored for use later if making predictions.}
 }
 }
@@ -83,6 +84,9 @@ data(antTraits)
 # fit a fourth corner model using negative binomial regression via manyglm:
 ft=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="manyglm")
 ft$fourth #print fourth corner terms
+
+# predict to the first five sites
+predict(ft,newL=antTraits$abund[1:5,])
 
 # fit another model using L1 penalisation (choosing penalty to minimise BIC):
 ft1=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="glm1path")

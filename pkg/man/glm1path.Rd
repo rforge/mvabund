@@ -74,7 +74,7 @@ For negative binomial with unknown overdispersion use \code{"negative.binomial"}
 \item{bics}{A vector of BIC values for each model along the path. Calculated using a penalty on model complexity as specified by input argument \code{k}.}
 \item{counter}{A vector counting how many iterations until convergence, for each model along the path.}
 \item{check}{A vector of logical values specifying whether or not Karush-Kuhn-Tucker conditions are satisfied at the solution.}
-\item{phi}{For negative binomial regression - a vector of overdispersion parameters, for each model along the path.}
+\item{phis}{For negative binomial regression - a vector of overdispersion parameters, for each model along the path.}
 \item{y}{The vector of values for the response variable specified as an input argument.}
 \item{X}{The design matrix of p explanatory variables specified as an input argument.}
 \item{penalty}{The vector to be multiplied by each lambda to make the penalty for each fitted model.}

@@ -8,6 +8,7 @@ setClass("mvformula")
 # Model classes
 setClass("manylm")
 setClass("manyglm")
+setClass("traitglm" ) 
 
 # summary classes
 setClass("summary.manylm")

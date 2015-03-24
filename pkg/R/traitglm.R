@@ -73,11 +73,24 @@ traitglm = function( L, R, Q=NULL, family="negative.binomial", method="manyglm",
                                       seed=seed, show.progress=show.progress), dots))
       id.use = which(ft$lambdas==ft$lambda)
       ft$deviance = -2*ft$logL[id.use]
+      ft$phi = ft$glm1$phi
       if(ft$df[1]==1)
         null.deviance = ft$logL[1]
+      ft$family=ft$glm1$family
     }
     else
       ft = do.call( method, c(list(formula=l~., family=family, data=data.frame(X)), dots) )
+
+    if(is.character(ft$family))
+    {
+      ft$family = switch(ft$family,
+             "binomial"=binomial(),
+             "poisson"=poisson(),
+             "gaussian"=gaussian(),
+             "negative.binomial"=negative.binomial(theta=1/ft$phi),
+              warning("Unknown family function")
+            )
+    }
 
     # report fourth corner matrix for "best" model
     ft$fourth.corner = matrix( coef(ft)[X.des$is.4th.corner], length(X.des$names.Q), length(X.des$names.R) )
@@ -109,11 +122,11 @@ traitglm = function( L, R, Q=NULL, family="negative.binomial", method="manyglm",
     
     ft$R.des = R.des
     ft$Q.des = Q.des
-    ft$spp.penalty = X.des$penalty
+    ft$any.penalty = any.penalty
     ft$L = L
     ft$scaling = X.des$scaling
 
-    class(ft)="traitglm"
+    class(ft)=c("traitglm",class(ft))
     return( ft )
     
 }
@@ -196,6 +209,7 @@ get.polys = function( X, X.des.train=NULL)
 ################ get.design for getting the design matrix ###################
 get.design = function( R.des, Q.des, L.names, spp.penalty=FALSE, any.penalty=TRUE, scaling=NULL )
 {
+
 # get.design will take matrices of linear env and trait terms, and orthogonal quadratic terms,
 # and return a mega-matrix that can be regressed against vectorised abundance.
 # also returns logical for fourth corner terms, and their row and column names
@@ -346,6 +360,65 @@ get.design = function( R.des, Q.des, L.names, spp.penalty=FALSE, any.penalty=TRU
       if (spp.penalty==FALSE)
         penalty  = c( rep( 0,dim(X.spp)[2] ), rep( 1, dim(X)[2]-dim(X.spp)[2] ) )
     }
-    return(list(X=X, is.4th.corner=is.4th.corner, names.R=names.R[is.lin.R], names.Q=names.Q[is.lin.Q], penalty=penalty, scaling=scaling) )
+    return(list(X=X, is.4th.corner=is.4th.corner, names.R=names.R[is.lin.R], names.Q=names.Q[is.lin.Q], penalty=penalty, any.penalty=any.penalty, scaling=scaling) )
 
+}
+
+
+predict.traitglm = function(object, newR=NULL, newQ=NULL, newL=NULL, type="response")
+{
+  # predict function. takes as arguments:
+  # object - fitted "trait" object
+  # newR   - for new env predictions
+  # newQ   - for new traits
+  # newL   -  for new spp data (only relevant for type="ll")
+  # type   - "response" (default) for predicted response, "link" for linear predictor, or
+  #          "ll" for mean log-likelihood
+  # which.lambda - "best" (default) for the best lambda as chosen in the trait.mod call,
+  #                "all" for predictions at all values of lambda considered in trait.mod.
+  
+  # get new polynomial values for R and Q, if required
+  if(is.null(newR))
+    R.des.test = object$R.des
+  else
+    R.des.test = get.polys( newR, object$R.des )
+  
+  if(is.null(newQ))
+    Q.des.test = object$Q.des
+  else
+    Q.des.test = get.polys( newQ, object$Q.des )
+  
+  if(is.null(newL))
+    newL = object$L
+  
+  n.sites = dim(R.des.test$X)[1]
+  n.spp   = dim(Q.des.test$X)[1]
+  
+  # get new design matrix values for L
+  X.des.test = get.design( R.des=R.des.test, Q.des=Q.des.test, L.names=names(object$L), spp.penalty=TRUE, any.penalty=object$any.penalty, scaling=object$scaling )
+  
+  #    recover()
+  # get predicted eta and store in out
+  out = X.des.test$X %*% coef(object)
+  
+  # get predicted mu (if required) and overwrite prev value of out.
+  if(type=="response" | type=="ll")
+  {
+    out = as.matrix(out)  
+    out = object$family$linkinv(out)
+  }
+  # get mean predicted ll (if required) and overwrite prev value of out.
+  if(type=="ll")
+  {
+    Lm   = as.matrix(newL)
+    newl = as.vector(Lm)
+    newl = as.matrix(newl)
+    n.vars = dim(Lm)[2]
+    rm(Lm)
+    out = -0.5 * object$family$aic( newl, 1, out, 1, 1 )
+  }
+  out = matrix(as.vector(out), n.sites, n.spp)
+  dimnames(out)[[1]]=dimnames(R.des.test$X)[[1]]
+  dimnames(out)[[2]]=dimnames(Q.des.test$X)[[1]]
+  return(out)
 }

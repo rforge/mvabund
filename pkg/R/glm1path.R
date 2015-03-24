@@ -84,7 +84,7 @@ glm1path = function(y, X, family="negative.binomial", lambdas=NULL, penalty = c(
 ################## Fit model to full dataset ########################
   logL         = rep( NA, length=n.lambda)
   names(logL)  = signif(lambdas,3)
-  phi        = logL
+  phis        = logL
   df         = logL
   counter    = logL
   check      = logL
@@ -106,7 +106,7 @@ glm1path = function(y, X, family="negative.binomial", lambdas=NULL, penalty = c(
     df[i.lambda]      = sum(abs(out$coef)>tol[1])
     beta[,i.lambda]   = out$coef
 #    mu[,i.lambda]     = out$fitted.values
-    phi[i.lambda]     = out$phi
+    phis[i.lambda]     = out$phi
     counter[i.lambda] = out$counter
     check[i.lambda]   = out$check
     if(df[i.lambda]>df.max)
@@ -118,7 +118,7 @@ glm1path = function(y, X, family="negative.binomial", lambdas=NULL, penalty = c(
     df=df[1:i.lambda]
     beta=beta[,1:i.lambda]
 #    mu=mu[,1:i.lambda]
-    phi = phi[1:i.lambda]
+    phis = phis[1:i.lambda]
     counter = counter[1:i.lambda]
     check = check[1:i.lambda]
     lambdas = lambdas[1:i.lambda]
@@ -130,9 +130,9 @@ glm1path = function(y, X, family="negative.binomial", lambdas=NULL, penalty = c(
 
   #refit best model to get all its bells and whistles
   penalty.i = lambdas[id.use] * penalty
-  best = glm1(y, X, penalty.i, family=family, b.init=beta[,id.use], phi.init=phi[id.use], phi.iter=phi.iter)
+  best = glm1(y, X, penalty.i, family=family, b.init=beta[,id.use], phi.init=phis[id.use], phi.iter=phi.iter)
 
-  lasso.final = list(coefficients = beta[,id.use], lambda = lambdas[id.use], glm1.best=best, all.coefficients=beta, lambdas=lambdas, logL=logL, df=df, bics=bics, counter=counter, check=check, phi=phi, y=y, X=X, penalty = penalty, family=family.old)
+  lasso.final = list(coefficients = beta[,id.use], lambda = lambdas[id.use], glm1.best=best, all.coefficients=beta, lambdas=lambdas, logL=logL, df=df, bics=bics, counter=counter, check=check, phis=phis, y=y, X=X, penalty = penalty, family=family.old)
 
 }
 # end function

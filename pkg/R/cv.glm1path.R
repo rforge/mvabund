@@ -64,7 +64,7 @@ cv.glm1path = function(object, block = NULL, best="1se", plot=TRUE, prop.test=0.
 #      ll.test[abs(ll.test[,i.split])<100*tol[1],i.split]=min(ll.test[,i.split],na.rm=T) #what is this line about???
       df.cv[,i.split] = apply(abs(out$all.coefficients)>tol[1],2,sum)
       beta.cv[,,i.split] = out$all.coefficients
-      phi.cv[,i.split] <- out$phi
+      phi.cv[,i.split] <- out$phis
       counter.cv[,i.split] = out$counter
 
       if(show.progress)
@@ -108,7 +108,7 @@ cv.glm1path = function(object, block = NULL, best="1se", plot=TRUE, prop.test=0.
   object$coefficients = beta.best
   penalty.i = object$lambdas[id.use] * object$penalty
 
-  best = glm1(object$y, object$X, penalty.i, family=object$family, b.init=beta.best, phi.init=object$phi[id.use])
+  best = glm1(object$y, object$X, penalty.i, family=object$family, b.init=beta.best, phi.init=object$phis[id.use])
   object$glm1.best = best  
 
 

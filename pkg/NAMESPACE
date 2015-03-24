@@ -23,6 +23,7 @@ export(RcppVersion,
        manyany,
        predict.manylm,
        predict.manyglm,
+       predict.traitglm,
        print.manyglm,
        print.anova.manyany,
        print.anova.manylm, 
@@ -47,7 +48,7 @@ export(RcppVersion,
        unabund       
        )
 
-exportClasses(mvabund, mvformula, traitglm)
+exportClasses(mvabund, mvformula)
 
 exportMethods(meanvar.plot)
 
