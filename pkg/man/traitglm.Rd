@@ -10,7 +10,7 @@ Fits a fourth corner model - a model to study how variation in environmental res
 \usage{
 traitglm = function( L, R, Q=NULL, family="negative.binomial", method="manyglm",
      fourthPlot=TRUE, dec.pl=3, ...  )
-{
+}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{L}{
@@ -63,6 +63,7 @@ If trait matrix \code{Q} is not specified, default behaviour will fit a differen
 \item{L}{The data frame of abundances specified as input.}
 \item{any.penalty}{Logical, is any penalty applied to parameters at all (not if using a \code{manyglm} fit).}
 \item{scaling}{A list of coefficients describing the standaridsations of variables used in analyses. Stored for use later if making predictions.}
+\item{call}{The original call \code{traitglm} call.}
 }
 }
 

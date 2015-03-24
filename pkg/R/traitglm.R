@@ -30,8 +30,12 @@ traitglm = function( L, R, Q=NULL, family="negative.binomial", method="manyglm",
     show.progress <- dots$show.progress
   else
     show.progress = FALSE
+  if( "get.fourth" %in% names(dots) )
+    get.fourth <- dots$get.fourth
+  else
+    get.fourth = TRUE
   
-  deactive <- c("best", "plot", "prop.test", "n.split", "seed", "show.progress") 
+  deactive <- c("best", "plot", "prop.test", "n.split", "seed", "show.progress", "get.fourth") 
   deactivate <- (1:length(dots))[names(dots) %in% deactive ]  
   for (i in length(deactivate):1) 
     dots[ deactivate[i] ]<-NULL
@@ -55,7 +59,7 @@ traitglm = function( L, R, Q=NULL, family="negative.binomial", method="manyglm",
 
     any.penalty = method=="cv.glm1path" || method=="glm1path"
     # get mega-matrix of design for regression against vectorised l
-    X.des = get.design( R.des, Q.des, names(L), spp.penalty=TRUE, any.penalty=any.penalty )
+    X.des = get.design( R.des, Q.des, names(L), spp.penalty=TRUE, any.penalty=any.penalty, get.fourth=get.fourth )
     X = X.des$X
     Lm <- as.matrix(L)
     l <- as.vector(Lm)
@@ -64,9 +68,9 @@ traitglm = function( L, R, Q=NULL, family="negative.binomial", method="manyglm",
 #    require(Matrix)
 #    require(MASS)
 
-    block = factor(rep(1:n.sites,n.spp))
     if( method=="cv.glm1path" || method=="glm1path" )
     {
+      block = factor(rep(1:n.sites,n.spp))
       ft = do.call(glm1path,c(list(y=l, X=X, family=family, penalty = X.des$penalty), k=log(n.sites), dots))
       if( method=="cv.glm1path" )
         ft = do.call(cv.glm1path,c(list(object=ft, block=block, best=best, plot=plot, prop.test=prop.test, n.split=n.split, 
@@ -125,6 +129,7 @@ traitglm = function( L, R, Q=NULL, family="negative.binomial", method="manyglm",
     ft$any.penalty = any.penalty
     ft$L = L
     ft$scaling = X.des$scaling
+    ft$call=match.call()
 
     class(ft)=c("traitglm",class(ft))
     return( ft )
@@ -207,7 +212,7 @@ get.polys = function( X, X.des.train=NULL)
 
 
 ################ get.design for getting the design matrix ###################
-get.design = function( R.des, Q.des, L.names, spp.penalty=FALSE, any.penalty=TRUE, scaling=NULL )
+get.design = function( R.des, Q.des, L.names, spp.penalty=FALSE, any.penalty=TRUE, scaling=NULL, get.fourth=TRUE )
 {
 
 # get.design will take matrices of linear env and trait terms, and orthogonal quadratic terms,
@@ -327,22 +332,27 @@ get.design = function( R.des, Q.des, L.names, spp.penalty=FALSE, any.penalty=TRU
     if(is.scaling.given)
       X.Q = scale(X.Q, center=scaling$Q$center, scale=scaling$Q$scale)
     
-    # R*Q interaction
-    X.RQ    = X.spp[,0]
-    n.R = sum(is.lin.R)
-    n.Q = sum(is.lin.Q)
-    ref.R = rep(1:n.R,each=n.Q)
-    ref.Q = rep(1:n.Q,n.R)
-    X.RQ = X.R[,ref.R] * X.Q[,ref.Q]
-    dimnames(X.RQ)[[2]] = paste(dimnames(X.R)[[2]][ref.R], dimnames(X.Q)[[2]][ref.Q], sep=":")
-    if(is.scaling.given==F)
+    if(get.fourth==TRUE)
     {
-      X.RQ = scale(X.RQ)
-      scaling$RQ$center = attr(X.RQ,"scaled:center")
-      scaling$RQ$scale  = attr(X.RQ,"scaled:scale")      
+      # R*Q interaction
+      X.RQ    = X.spp[,0]
+      n.R = sum(is.lin.R)
+      n.Q = sum(is.lin.Q)
+      ref.R = rep(1:n.R,each=n.Q)
+      ref.Q = rep(1:n.Q,n.R)
+      X.RQ = X.R[,ref.R] * X.Q[,ref.Q]
+      dimnames(X.RQ)[[2]] = paste(dimnames(X.R)[[2]][ref.R], dimnames(X.Q)[[2]][ref.Q], sep=":")
+      if(is.scaling.given==F)
+      {
+        X.RQ = scale(X.RQ)
+        scaling$RQ$center = attr(X.RQ,"scaled:center")
+        scaling$RQ$scale  = attr(X.RQ,"scaled:scale")      
+      }
+      if(is.scaling.given)
+        X.RQ = scale(X.RQ,center=scaling$RQ$center, scale=scaling$RQ$scale)
     }
-    if(is.scaling.given)
-      X.RQ = scale(X.RQ,center=scaling$RQ$center, scale=scaling$RQ$scale)
+    else
+      X.RQ=X.R[,0]
     
     if(any.penalty)
       X             = cbind(X.spp,X.R,X.Q,X.RQ)
@@ -350,7 +360,10 @@ get.design = function( R.des, Q.des, L.names, spp.penalty=FALSE, any.penalty=TRU
       X             = cbind(X.spp,X.R,X.RQ) #no trait main effects if there is no penalty on trait params, covered by spp.
     
     n.X           = dim(X)[2]
-    is.4th.corner = c( rep(F,n.X-n.R*n.Q), rep(T,n.R*n.Q) )
+    if(get.fourth==TRUE)
+      is.4th.corner = c( rep(F,n.X-n.R*n.Q), rep(T,n.R*n.Q) )
+    else
+      is.4th.corner = rep(F,n.X)
     names.R = dimnames(X.R)[[2]]
     names.Q = dimnames(X.Q)[[2]]
 

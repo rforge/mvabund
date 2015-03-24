@@ -18,7 +18,6 @@ A list containing three elements:
 \item{traits}{A data frame containing 5 species traits measured for each of the 41 species. Weber's length was log-transformed, Femur length was log-transformed then regressed against log(Weber's length), to remove the effect of size.}
 }
 }
-\sources{Data provided by Heloise Gibb.}
 \references{
 Gibb H, Stoklosa J, Warton, DI, Brown, AM, Andrew, NR and Cunningham, SA (2015) Does morphology predict trophic position and habitat use of ant species and assemblages? Oecologia 177, 519-531.
 }
