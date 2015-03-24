@@ -43,10 +43,11 @@ export(RcppVersion,
        summary.manylm,
        summary.manyglm,
        shiftpoints,
+       traitglm,
        unabund       
        )
 
-exportClasses(mvabund, mvformula)
+exportClasses(mvabund, mvformula, traitglm)
 
 exportMethods(meanvar.plot)
 

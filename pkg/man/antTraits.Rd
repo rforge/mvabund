@@ -1,10 +1,9 @@
 \name{antTraits}
 \docType{data}
 \alias{antTraits}
-% \encoding{latin1}
 \title{Ant data, with species traits}
 \description{
-Ant abundances for 60 species across 20 sites in eastern Australia, with species trait and environmental data 
+Abundances of 41 epigaeic ant species across 30 sites in south-eastern Australia, with species trait and environmental data 
 }
 \usage{
 data(antTraits)
@@ -12,21 +11,19 @@ data(antTraits)
 \format{
 A list containing three elements:
 \describe{
-\item{abund}{A data frame with 20 observations at different locations
- of abundances on 60 species.
+\item{abund}{A data frame with observations at 30 different locations
+ of abundances on 41 epigaeic ant species.
 }
-\item{env}{A data frame containing 7 environmental variables measured at each of the 20 sites.}
-\item{traits}{A data frame containing 6 species traits measured for each of the 60 species.}
+\item{env}{A data frame containing 7 environmental variables from transects at each of the 30 sites. Most varibles are percent cover (either in two 20x20m transects, or in ten 1x1 metre quadrats), but \code{feral.mammal.dung} reports the proporion out of 10 quadrats in which dung was found. Details in Gibb et al (2015).}
+\item{traits}{A data frame containing 5 species traits measured for each of the 41 species. Weber's length was log-transformed, Femur length was log-transformed then regressed against log(Weber's length), to remove the effect of size.}
 }
 }
-\details{
-Details coming soon...
-}
-\source{
-Coming soon...
+\sources{Data provided by Heloise Gibb.}
+\references{
+Gibb H, Stoklosa J, Warton, DI, Brown, AM, Andrew, NR and Cunningham, SA (2015) Does morphology predict trophic position and habitat use of ant species and assemblages? Oecologia 177, 519-531.
 }
 \examples{
 data(antTraits)
-## insert something here
+ft = traitglm(ab,env2,tr) #to do a fourth corner analysis
 }
 \keyword{datasets}
