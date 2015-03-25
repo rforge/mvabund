@@ -1,4 +1,4 @@
-traitglm = function( L, R, Q=NULL, family="negative.binomial", method="manyglm", fourthPlot=TRUE, ...  )
+traitglm = function( L, R, Q=NULL, family="negative.binomial", method="manyglm", ...  )
 {
 
 #subfunctions get.design and get.polys defined below.
@@ -99,19 +99,19 @@ traitglm = function( L, R, Q=NULL, family="negative.binomial", method="manyglm",
     ### Plot results
 
     # do a lattice "levelplot" of the coefficients in the matrix of fourth corner interactions
-    if( fourthPlot == TRUE & get.fourth == TRUE )
-    {
+#    if( fourthPlot == TRUE & get.fourth == TRUE )
+#    {
 #        library(lattice)
-        a        = max( abs(ft$fourth.corner) )
-        if(a < 1.e-8)
-            warning("No fourth corner interactions were included in final model")
-        else
-        {
-            colort   = colorRampPalette(c("blue","white","red")) 
-            plot.4th = levelplot(t(as.matrix(ft$fourth.corner)), xlab="Environmental Variables", ylab="Species traits", col.regions=colort(100), at=seq(-a, a, length=100), scales = list( x= list(rot = 45)))
-            print(plot.4th)
-        }
-    }
+#        a        = max( abs(ft$fourth.corner) )
+#        if(a < 1.e-8)
+#            warning("No fourth corner interactions were included in final model")
+#        else
+#        {
+#            colort   = colorRampPalette(c("blue","white","red")) 
+#            plot.4th = levelplot(t(as.matrix(ft$fourth.corner)), xlab="Environmental Variables", ylab="Species traits", col.regions=colort(100), at=seq(-a, a, length=100), scales = list( x= list(rot = 45)))
+#            print(plot.4th)
+#        }
+#    }
     
     ft$R.des = R.des
     ft$Q.des = Q.des

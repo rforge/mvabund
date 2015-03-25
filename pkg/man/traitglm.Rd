@@ -8,7 +8,7 @@ Fits a fourth corner model - a model to study how variation in environmental res
 }
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
-traitglm(L, R, Q=NULL, family="negative.binomial", method="manyglm", fourthPlot=TRUE,...)
+traitglm(L, R, Q=NULL, family="negative.binomial", method="manyglm", ,...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -27,9 +27,9 @@ The family of the response variable, see \code{\link{family}}. Negative binomial
   \item{method}{
 The function to use to fit the model. Default is \code{\link{manyglm}}, some other available options are \code{\link{glm1path}}, \code{\link{cv.glm1path}} for LASSO-penalised fits, but in principle any model-fitting function that accepts formula input and a family argument should work.
 }
-  \item{fourthPlot}{
-Logical, default (\code{TRUE}) will produce a lattice plot of fourth corner coefficients, that is, of interactions between environmental and trait variables in predicting abundance. Otherwise nothing is plotted.
-}
+%  \item{fourthPlot}{
+%Logical, default (\code{TRUE}) will produce a lattice plot of fourth corner coefficients, that is, of interactions between environmental and %trait variables in predicting abundance. Otherwise nothing is plotted.
+%}
   \item{\dots}{
 Arguments passed to the function specified at \code{method} that will be used to fit the model.}
 }
@@ -92,6 +92,14 @@ predict(ft,newR=antTraits$env[1:5,])
 ft1=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="glm1path")
 ft1$fourth #notice LASSO penalty has shrunk many interactions to zero
 
+# for a pretty picture of fourth corner coefficients, uncomment the following lines:
+# library(lattice)
+# a        = max( abs(ft1$fourth.corner) )
+# colort   = colorRampPalette(c("blue","white","red")) 
+# plot.4th = levelplot(t(as.matrix(ft1$fourth.corner)), xlab="Environmental Variables",
+#   ylab="Species traits", col.regions=colort(100), at=seq(-a, a, length=100),
+#   scales = list( x= list(rot = 45)))
+# print(plot.4th)
 }
 \keyword{models}
 \keyword{regression}
