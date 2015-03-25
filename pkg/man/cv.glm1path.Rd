@@ -8,8 +8,8 @@ Fits a sequence (path) of generalised linear models with LASSO penalties, using 
 }
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
-cv.glm1path = function(object, block = NULL, best="1se", plot=TRUE, prop.test=0.2, 
-  n.split = 10, seed=NULL, show.progress=FALSE)
+cv.glm1path(object, block = NULL, best="1se", plot=TRUE, prop.test=0.2, n.split = 10,
+    seed=NULL, show.progress=FALSE)
 }
 \arguments{
   \item{object}{

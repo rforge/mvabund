@@ -7,7 +7,7 @@ Obtains a prediction from a fitted fourth corner model object.
 }
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
-predict.traitglm(object, newR=NULL, newQ=NULL, newL=NULL, type="response", ...)
+\method{predict}{traitglm}(object, newR=NULL, newQ=NULL, newL=NULL, type="response", ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -46,7 +46,7 @@ David I. Warton <David.Warton@unsw.edu.au>
 }
 \seealso{
 \code{\link{traitglm}}}
-}
+
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \examples{
 data(antTraits)

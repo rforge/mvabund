@@ -6,7 +6,7 @@ return an analysis of deviance from a fourth corner model, as computed using \co
 }
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
-anova.traitglm(object, \dots, nBoot=100, show.time="all")
+\method{anova}{traitglm}(object, \dots, nBoot=100, show.time="all")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -40,8 +40,9 @@ Warton DI, Shipley B & Hastie T (in press) CATS regression - a model-based appro
 David I. Warton <David.Warton@unsw.edu.au>
 }
 \seealso{
-\code{\link{traitglm}}}
+\code{\link{traitglm}}
 }
+
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \examples{
 data(antTraits)
