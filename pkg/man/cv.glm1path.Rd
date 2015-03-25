@@ -9,7 +9,7 @@ Fits a sequence (path) of generalised linear models with LASSO penalties, using 
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
 cv.glm1path(object, block = NULL, best="1se", plot=TRUE, prop.test=0.2, n.split = 10,
-    seed=NULL, show.progress=FALSE)
+    seed=NULL, show.progress=FALSE, \dots)
 }
 \arguments{
   \item{object}{
@@ -34,6 +34,8 @@ The number of random training/test splits to use. Default is 10 but the more the
 A vector of seeds to use for the random test/training splits. This is useful if you want to be able to exactly replicate analyses, without Monte Carlo variation in the splits. Default will not used fixed seeds.
 }
   \item{show.progress}{Logical argument, if TRUE, console will report when a run for a seed has been completed. This option has been included because this function can take yonks to run on large datasets.
+  }
+  \item{\dots}{Further arguments passed through to \code{\link{glm1path}}.
   }
 }
 

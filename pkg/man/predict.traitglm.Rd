@@ -56,7 +56,7 @@ ft=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="manyglm")
 ft$fourth #print fourth corner terms
 
 # predict to the first five sites
-predict(ft,newR=antTraits$abund[1:5,])
+predict(ft, newR=antTraits$env[1:5,])
 
 }
 \keyword{models}
