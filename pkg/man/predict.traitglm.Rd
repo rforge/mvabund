@@ -30,12 +30,7 @@ The type of prediction required. The default is predictions on the scale of the 
 Further arguments passed to or from other methods.}
 }
 \details{
-If \code{newR} and \code{newQ} are omitted, then as usual, predictions are based on the data used for the fit. Note that two types of predictions are possible in principle:
-\describe{
-\item{Predicting at new sites} by specifying a new set of environmental variables only, as \code{newR}.
-\item{Predicting for new taxa} by specifying a new set of traits only, as \code{newQ}.
-}
-Unfortunately, only predicting at new sites has been implemented at the moment! An issue with predicting to new taxa is that intercept terms are included in the model, and these would be unknown for new species.
+If \code{newR} and \code{newQ} are omitted, then as usual, predictions are based on the data used for the fit. Note that two types of predictions are possible in principle: predicting at new sites (by specifying a new set of environmental variables only, as \code{newR}) and predicting for new taxa (by specifying a new set of traits only, as \code{newQ}). Unfortunately, only predicting at new sites has been implemented at the moment! An issue with predicting to new taxa is that a main effect is included in the model for each taxon (by default), and the intercept would be unknown for a new species.
 
 If predictive log-likelihoods are desired, a new data frame of abundances \code{newL} would need to be specified, whose rows correspond to those of \code{newR} and whose columns correspond to rows of \code{newQ}.
 }
