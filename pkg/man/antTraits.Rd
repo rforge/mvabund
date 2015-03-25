@@ -23,6 +23,6 @@ Gibb H, Stoklosa J, Warton, DI, Brown, AM, Andrew, NR and Cunningham, SA (2015) 
 }
 \examples{
 data(antTraits)
-ft = traitglm(ab,env2,tr) #to do a fourth corner analysis
+ft = traitglm(antTraits$abund,antTraits$env,antTraits$traits) #to do a fourth corner analysis
 }
 \keyword{datasets}

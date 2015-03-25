@@ -66,8 +66,7 @@ For negative binomial with unknown overdispersion use \code{"negative.binomial"}
 \item{coefficients}{Vector of model coefficients for the best-fitting model (as judged by BIC)}
 \item{lambda}{The value of the LASOS penalty parameter, lambda, for the best-fitting model (as judged by BIC)}
 \item{glm1.best}{The glm1 fit for the best-fitting model (as judged by BIC). For what this contains see \code{\link{glm1}}.}
-\item{all.coefficients}{A matrix where each column represents the model coefficients for a fit along the path specified by \code{\link{lambdas}}
-}
+\item{all.coefficients}{A matrix where each column represents the model coefficients for a fit along the path specified by \code{lambdas}.}
 \item{lambdas}{A vector specifying the path of values for the LASSO penalty, arranged from largest (strongest penalty, smallest fitted model) to smallest (giving the largest fitted model).}
 \item{logL}{A vector of log-likelihood values for each model along the path.}
 \item{df}{A vector giving the number of non-zero parameter estimates (a crude measure of degrees of freedom) for each model along the path.}

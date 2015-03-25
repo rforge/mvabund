@@ -9,7 +9,7 @@ Fits a fourth corner model - a model to study how variation in environmental res
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
 traitglm = function( L, R, Q=NULL, family="negative.binomial", method="manyglm",
-     fourthPlot=TRUE, dec.pl=3, ...  )
+     fourthPlot=TRUE, ...  )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -87,7 +87,7 @@ ft=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="manyglm")
 ft$fourth #print fourth corner terms
 
 # predict to the first five sites
-predict(ft,newL=antTraits$abund[1:5,])
+predict(ft,newR=antTraits$env[1:5,])
 
 # fit another model using L1 penalisation (choosing penalty to minimise BIC):
 ft1=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="glm1path")
