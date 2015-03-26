@@ -8,7 +8,7 @@ Fits a sequence (path) of generalised linear models with LASSO penalties, using 
 }
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
-cv.glm1path(object, block = NULL, best="1se", plot=TRUE, prop.test=0.2, n.split = 10,
+cv.glm1path(object, block = NULL, best="min", plot=TRUE, prop.test=0.2, n.split = 10,
     seed=NULL, show.progress=FALSE, \dots)
 }
 \arguments{
@@ -19,7 +19,7 @@ Output from a \code{\link{glm1path}} fit.
 A factor specifying a blocking variable, where training/test splits randomly assign blocks of observations to different groups rather than breaking up observations within blocks. Default (\code{NULL}) will randomly split rows into test and training groups.
 }
   \item{best}{
-How should the best-fitting model be determined? \code{"1se"} uses the one standard error rule, \code{"min"} (or any other value) will return the model with best predictive performance.
+How should the best-fitting model be determined? \code{"1se"} uses the one standard error rule, \code{"min"} (or any other value) will return the model with best predictive performance. WARNING: David needs to check se calculatios...
 }
   \item{plot}{
 Logical value indicating whether to plot the predictive log-likelihood as a function of model complexity.

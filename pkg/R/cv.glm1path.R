@@ -1,4 +1,4 @@
-cv.glm1path = function(object, block = NULL, best="1se", plot=TRUE, prop.test=0.2, n.split = 10, seed=NULL, show.progress=FALSE, ...)
+cv.glm1path = function(object, block = NULL, best="min", plot=TRUE, prop.test=0.2, n.split = 10, seed=NULL, show.progress=FALSE, ...)
 {
 
   tol=c(1.e-8,.Machine$double.eps)
