@@ -8,7 +8,7 @@ Fits a fourth corner model - a model to study how variation in environmental res
 }
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
-traitglm(L, R, Q=NULL, family="negative.binomial", method="manyglm", ,...)
+traitglm(L, R, Q=NULL, family="negative.binomial", method="manyglm", ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
