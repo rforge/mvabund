@@ -187,7 +187,7 @@ get.polys = function( X, X.des.train=NULL)
         dimnames(X.squ)[[2]] = names.X.squ
         X[,var.type=="quantitative"] = X.squ[,degs==1]
         #get rid of the linear terms:
-        X.squ = X.squ[,degs==2]
+        X.squ = data.frame(X.squ[,degs==2])
     }
     else
     {
