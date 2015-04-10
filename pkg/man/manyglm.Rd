@@ -163,7 +163,7 @@ If \code{cor.type=="shrink"}, a numerical value will be assigned to \code{shrink
   \item{phi}{the inverse of theta}
   \item{tol}{the tolerance used in estimations.}
   \item{maxiter,maxiter2,family,theta.method,cor.type,formula}{arguments supplied in the \code{manyglm} call.}
-  \item{AIC}{a vector returning Akaike's \emph{An Information Criterion} for each response variable - minus twice the
+  \item{aic}{a vector returning Akaike's \emph{An Information Criterion} for each response variable - minus twice the
     maximized log-likelihood plus twice the number of coefficients.} 
   \item{AICsum}{the sum of the AIC's over all variables.}
   \item{shrink.param}{the shrink parameter to be used in subsequent inference.}

@@ -187,8 +187,6 @@ else {
     z$maxiter <- maxiter
     z$maxiter2 <- maxiter2
     z$prior.weight <- NULL
-    z$AIC <- z$aic
-    z$aic <- NULL
     z$AICsum <- sum(z$aic)
     z$family    <- familyname
     z$K         <- K
