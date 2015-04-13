@@ -61,8 +61,12 @@ Arguments passed to \code{\link{glm1}}.}
 This function fits a series of LASSO-penalised generalised linear models, with different values for the LASSO penalty. Largely inspired by the glmnet package. This results in  a path of fitted models, from small ones (with big LASSO penalties) to larger ones (with smaller penalties). Each individual model is fitted using the  \code{\link{glm1}} function, which uses a local linearisation approach as in Osborne et al (2000), nested inside iteratively reweighted (penalised) least squares, and using results from the previous fit as initial estimates. Look it's not the fastest thing going around, try glmnet if you want something faster (and possibly rougher as an approximation). The main advantage of the \code{glm1path} function is that it has been written to accept any glm family argument (although not yet tested beyond discrete data!), and also the negative binomial distribution, which is especially useful for modelling overdispersed counts.
 
 For negative binomial with unknown overdispersion use \code{"negative.binomial"}, or if overdispersion is to be specified, use \code{negative.binomial(theta)} as in the \code{MASS} package. Note that the output refers to phi=1/theta, i.e. the overdispersion is parameterised in output such that the variance is mu+phi*mu^2. Hence values of phi close to zero suggest little overdispersion, values over one suggest a lot.
+
+You can use the \code{residuals} and \code{plot} functions on \code{glm1path} objects in order to compute Dunn-Smyth residuals and a plots of these residuals against linear predictors, as for \code{\link{manyglm}}.
 }
-\value{
+
+\value{An object of class \code{glm1path} with the following components:
+\describe{
 \item{coefficients}{Vector of model coefficients for the best-fitting model (as judged by BIC)}
 \item{lambda}{The value of the LASOS penalty parameter, lambda, for the best-fitting model (as judged by BIC)}
 \item{glm1.best}{The glm1 fit for the best-fitting model (as judged by BIC). For what this contains see \code{\link{glm1}}.}
@@ -79,6 +83,7 @@ For negative binomial with unknown overdispersion use \code{"negative.binomial"}
 \item{penalty}{The vector to be multiplied by each lambda to make the penalty for each fitted model.}
 \item{family}{The family argument specified as input.}
 }
+}
 
 \references{
 Osborne, M.R., Presnell, B. and Turlach, B.A. (2000) On the LASSO and its dual. Journal of Computational and Graphical Statistics, 9, 319-337.
@@ -87,7 +92,7 @@ Osborne, M.R., Presnell, B. and Turlach, B.A. (2000) On the LASSO and its dual. 
 David I. Warton <David.Warton@unsw.edu.au>
 }
 \seealso{
-\code{\link{glm1}}, \code{\link{glm}}, \code{\link{family}}
+\code{\link{glm1}}, \code{\link{glm}}, \code{\link{family}}, \code{\link[mvabund:residuals.manyglm]{residuals.manyglm}}, \code{\link[mvabund:plot.manyany]{plot.manyany}}
 }
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \examples{
@@ -106,6 +111,9 @@ plot(ft2$bics~ft2$lambdas, log="x")
 
 # return the slope estimates for the best-fitting model:
 coef(ft2)
+
+# look at a residual plot:
+plot(ft2)
 
 }
 \keyword{models}

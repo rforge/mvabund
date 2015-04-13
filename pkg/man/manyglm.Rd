@@ -222,8 +222,7 @@ Yi Wang, Ulrike Naumann and David Warton <David.Warton@unsw.edu.au>.
 %\code{\link{negative.binomial}}, \code{\link{quasipoisson}},
 %\code{\link{binomialMany}}, \code{\link{quasibinomialMany}},
 %\code{\link{binstruc}}, 
-\code{\link[mvabund:anova.manyglm]{anova.manyglm}}, \code{\link[mvabund:summary.manyglm]{summary.manyglm}},
-%\code{\link{fitted.values}}, \code{\link{residuals}}.
+\code{\link[mvabund:anova.manyglm]{anova.manyglm}}, \code{\link[mvabund:summary.manyglm]{summary.manyglm}}, \code{\link[mvabund:residuals.manyglm]{residuals.manyglm}}, \code{\link[mvabund:plot.manyglm]{plot.manyglm}}
 }
 \examples{
 data(spider)

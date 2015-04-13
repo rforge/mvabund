@@ -43,6 +43,8 @@ The model is fitted by vectorising \code{L} then constructing a big mega-matrix 
 Future versions of the code will allow the user to specify the formula of the model to be fitted. By default all variables are standardised prior to fitting.
 
 If trait matrix \code{Q} is not specified, default behaviour will fit a different environmental response for each taxon (and the outcome will be very similar to \code{manyglm(L~R)}). This can be understood as a fourth corner model where species identities are used as the species traits (i.e. no attempt is made to explain differences across species).
+
+These functions inherit default behaviour from their fitting functions. e.g. use \code{plot} for a Dunn-Smyth residual plot from a traits model fitted using \code{\link{manyglm}} or \code{\link{glm1path}}.
 }
 \value{Returns a \code{traitglm} object, a list that contains at least the following components:
 \describe{
@@ -75,7 +77,7 @@ Brown AM, Warton DI, Andrew NR, Binns M, Cassis G and Gibb H (2014) The fourth c
 David I. Warton <David.Warton@unsw.edu.au>
 }
 \seealso{
-\code{\link{glm1path}}, \code{\link{glm1}}, \code{\link{manyglm}}, \code{\link{family}}
+\code{\link{glm1path}}, \code{\link{glm1}}, \code{\link{manyglm}}, \code{\link{family}}, \code{\link[mvabund:residuals.manyglm]{residuals.manyglm}}, \code{\link[mvabund:plot.manyany]{plot.manyany}}
 }
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \examples{
@@ -84,6 +86,11 @@ data(antTraits)
 # fit a fourth corner model using negative binomial regression via manyglm:
 ft=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="manyglm")
 ft$fourth #print fourth corner terms
+
+# look at a Dunn-smyth residual plot:
+plot(ft)
+# a normal quantile plot:
+qqnorm(residuals(ft))
 
 # predict to the first five sites
 predict(ft,newR=antTraits$env[1:5,])

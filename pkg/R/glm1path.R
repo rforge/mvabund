@@ -134,5 +134,8 @@ glm1path = function(y, X, family="negative.binomial", lambdas=NULL, penalty = c(
 
   lasso.final = list(coefficients = beta[,id.use], lambda = lambdas[id.use], glm1.best=best, all.coefficients=beta, lambdas=lambdas, logL=logL, df=df, bics=bics, counter=counter, check=check, phis=phis, y=y, X=X, penalty = penalty, family=family.old)
 
+  class(lasso.final) = "glm1path"
+  return(lasso.final)
+
 }
 # end function

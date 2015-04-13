@@ -321,7 +321,7 @@ residuals.manyany<- function(object, ...)
         pfn = "ptweedie"
       u = runif(n.rows)
       #to avoid any values identically 1:
-      pMinus = pmin(do.call(pfn, param.minus), 1-tol)
+      pMinus = pmin(do.call(pfn, param.minus), 1-tol^3)
       resids[,i.var] = u*do.call(pfn, params[[i.var]]) + (1-u)*pMinus
     }
   }
