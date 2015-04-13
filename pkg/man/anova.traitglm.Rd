@@ -34,7 +34,7 @@ A list of values as returned by \code{\link{anova.manyglm}}, of which the most r
 }
 
 \references{
-Warton DI, Shipley B & Hastie T (in press) CATS regression - a model-based approach to studying trait-based community assembly, Methods in Ecology and Evolution
+Warton DI, Shipley B & Hastie T (2015) CATS regression - a model-based approach to studying trait-based community assembly, Methods in Ecology and Evolution 6, 389–398.
 }
 \author{
 David I. Warton <David.Warton@unsw.edu.au>

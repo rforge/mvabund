@@ -69,7 +69,7 @@ These functions inherit default behaviour from their fitting functions. e.g. use
 }
 
 \references{
-Warton DI, Shipley B & Hastie T (in press) CATS regression - a model-based approach to studying trait-based community assembly, Methods in Ecology and Evolution
+Warton DI, Shipley B & Hastie T (2015) CATS regression - a model-based approach to studying trait-based community assembly, Methods in Ecology and Evolution 6, 389–398.
 
 Brown AM, Warton DI, Andrew NR, Binns M, Cassis G and Gibb H (2014) The fourth corner solution - using species traits to better understand how species traits interact with their environment, Methods in Ecology and Evolution 5, 344-352.
 }
@@ -87,10 +87,8 @@ data(antTraits)
 ft=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="manyglm")
 ft$fourth #print fourth corner terms
 
-# look at a Dunn-smyth residual plot:
-plot(ft)
-# a normal quantile plot:
-qqnorm(residuals(ft))
+plot(ft) # for a Dunn-smyth residual plot
+qqnorm(residuals(ft)); abline(c(0,1),col="red") # for a normal quantile plot.
 
 # predict to the first five sites
 predict(ft,newR=antTraits$env[1:5,])
@@ -98,6 +96,7 @@ predict(ft,newR=antTraits$env[1:5,])
 # fit another model using L1 penalisation (choosing penalty to minimise BIC):
 ft1=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="glm1path")
 ft1$fourth #notice LASSO penalty has shrunk many interactions to zero
+plot(ft1) #for a Dunn-smyth residual plot of penalised fit
 
 # for a pretty picture of fourth corner coefficients, uncomment the following lines:
 # library(lattice)
