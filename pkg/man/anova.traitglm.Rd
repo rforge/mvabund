@@ -6,7 +6,7 @@ return an analysis of deviance from a fourth corner model, as computed using \co
 }
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
-\method{anova}{traitglm}(object, \dots, nBoot=100, show.time="all")
+\method{anova}{traitglm}(object, \dots, nBoot=99, show.time="all")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -17,7 +17,7 @@ a fitted object of class \code{traitglm} and class \code{manyglm}.
 other generic \code{anova} or \code{anova.manyglm} arguments. Note however that additional \code{traitglm} objects CAN NOT be specified here, at the moment.
 }
   \item{nBoot}{
-The number of bootstrap iterations. Default is 100 (NOTE: increase this for later runs!)
+The number of bootstrap iterations. Default is 99 (NOTE: you should increase this for later runs!)
 }
 \item{show.time}{Whether to display timing information for the resampling procedure: this is advisable, as resampling fourth corner models many times can take a while. The default value \code{"all"} shows all timing information, \code{"total"} shows only the overall time taken for the tests, and \code{"none"} shows none. }
 }
@@ -55,7 +55,8 @@ tr = antTraits$traits[abSum>0.25,]
 
 # now fit the fourth corner model, only as a function of a couple of traits and env variables:
 ft=traitglm(ab,antTraits$env[,1:3],data.frame(tr$Weber,tr$Femur))
-anova(ft)
+anova(ft,nBoot=49)
+# Note you should refit with a larger number of bootstrap samples (e.g. 999), will take <2 minutes
 
 }
 \keyword{models}

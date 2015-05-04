@@ -128,7 +128,7 @@ family=tweedie(var.power=1.5, link.power=0), var.power=1.5, composition=TRUE)
 
 ftRep <- manyany("glm",coral, coral ~ rep, data=coralX, 
 family=tweedie(var.power=1.5, link.power=0), var.power=1.5, composition=TRUE)
-anova(ftRep,ftTimeRep,nBoot=19) #this takes several seconds to run even for just 19 resamples
+anova(ftRep,ftTimeRep,nBoot=9) #this takes a few seconds to run even for just 9 resamples
 ## This should be rerun for nBoot=999, which would take maybe five minutes...
 
 }

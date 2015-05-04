@@ -93,8 +93,8 @@ qqnorm(residuals(ft)); abline(c(0,1),col="red") # for a normal quantile plot.
 # predict to the first five sites
 predict(ft,newR=antTraits$env[1:5,])
 
-# fit another model using L1 penalisation (choosing penalty to minimise BIC):
-ft1=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="glm1path")
+# re-fit using L1 penalisation (choosing penalty to minimise BIC), and only using first 3 traits:
+ft1=traitglm(antTraits$abund,antTraits$env,antTraits$traits[,1:3],method="glm1path")
 ft1$fourth #notice LASSO penalty has shrunk many interactions to zero
 plot(ft1) #for a Dunn-smyth residual plot of penalised fit
 

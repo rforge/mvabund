@@ -8,7 +8,7 @@ generalized linear model fits.}
 \usage{
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \method{anova}{manyglm}(object, \dots, resamp="pit.trap", test="LR", p.uni="none",
-    nBoot=1000, cor.type=object$cor.type, block=NULL, show.time="total",
+    nBoot=999, cor.type=object$cor.type, block=NULL, show.time="total",
     show.warning=FALSE, rep.seed=FALSE, bootID=NULL) 
 \method{print}{anova.manyglm}(x, \dots) 
 }
@@ -142,8 +142,8 @@ block <- Tasmania$block
 tasm.cop.nb <- manyglm(tasm.cop ~ block*treatment, family="negative.binomial")
 
 ## Testing hypotheses about the treatment effect and treatment-by-block interactions, 
-## using the default settings of parametric resampling and deviance as test statistics: 
-anova(tasm.cop.nb, nBoot=200, test="wald")
+## using a Wald statistic and 199 resamples (better to ramp up to 999 for a paper):
+anova(tasm.cop.nb, nBoot=199, test="wald")
 
 }
 \keyword{models}

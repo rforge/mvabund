@@ -23,7 +23,11 @@ default.print.anova.manyglm <- function( x, digits = max(getOption("digits") - 3
     modelnames <- dimnames(anova$table)[[1]]
     if(anova$resamp == "perm.resid")
        anova$resamp <- "residual permutation (without replacement)"
-
+   if(anova$resamp == "pit.trap")
+     anova$resamp <- "PIT-trap"
+   if(anova$resamp == "monte.carlo")
+     anova$resamp <- "parametric bootstrap"
+   
     if (anova$cor.type=="R")  corname <- "unconstrained correlation response"
     else if (anova$cor.type=="I")  corname <- "uncorrelated response (for faster computation)"
     else if (anova$cor.type=="shrink") 
@@ -62,11 +66,11 @@ default.print.anova.manyglm <- function( x, digits = max(getOption("digits") - 3
          if(dim(anova$uni.p)[2]>1)
          {   
            cat("Arguments:\n", "Test statistics calculated assuming", corname, 
-               "\n P-value calculated using", n.bootsdone, "resampling iterations via",       x$resamp, "resampling (to account for correlation in testing).\n")
+               "\n P-value calculated using", n.bootsdone, "resampling iterations via",       anova$resamp, "resampling (to account for correlation in testing).\n")
          }
          if(dim(anova$uni.p)[2]==1)
          {   
-           cat("Arguments: P-value calculated using", n.bootsdone, "resampling iterations via",       x$resamp, "resampling.\n")
+           cat("Arguments: P-value calculated using", n.bootsdone, "resampling iterations via",       anova$resamp, "resampling.\n")
          }
 #         cat("Arguments:\n", "Test statistics calculated assuming", corname, 
 #              "\n P-value calculated using", n.bootsdone, "resampling iterations via",       anova$resamp, "resampling (to account for correlation in testing).\n")
@@ -77,8 +81,8 @@ default.print.anova.manyglm <- function( x, digits = max(getOption("digits") - 3
         }
     }
   ########### END Anova Table for the simultaneous tests #################
-     
-    ###################### Anova Table for the univariate tests ################
+
+  ###################### Anova Table for the univariate tests ################
     if (substr(anova$p.uni,1,1)!="n" & !is.null(test) ) {
     # no significance stars for the univariate table! 
         dimnam.ab <- colnames(anova$uni.p)
