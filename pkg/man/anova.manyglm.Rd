@@ -94,6 +94,7 @@ Rather than stopping after testing for multivariate effects, it is often of inte
 \item{shrink.parameter}{a list of shrink parameters from all \code{manyglm} objects in the anova test.}
 \item{n.bootsdone}{the number of bootstrapping iterations that were done, i.e. had no error.}
 \item{table}{the table with Residual Degrees of Freedom, Degrees of Freedom, the Test Statistics and the P values.}
+\item{block}{any \code{block} argument specified as an inpout argument.}
 
 If \code{p.uni="adjusted"} or \code{"unadjusted"} the output list also contains\cr
 \item{uni.test}{a table showing the test statistics of the univariate tests.}

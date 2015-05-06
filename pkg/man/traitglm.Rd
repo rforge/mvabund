@@ -8,9 +8,9 @@ Fits a fourth corner model - a model to study how variation in environmental res
 }
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
-traitglm(L, R, Q=NULL, family="negative.binomial", method="manyglm", ...)
+traitglm(L, R, Q = NULL, family="negative.binomial", formula = NULL, method = "manyglm",
+            composition = FALSE, col.intercepts = TRUE, ...)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{L}{
 A data frame containing the abundances for each taxon (columns) across all sites (rows).
@@ -24,8 +24,15 @@ A data frame of traits (columns) across all taxa (rows). If not specified, a dif
   \item{family}{
 The family of the response variable, see \code{\link{family}}. Negative binomial with unknown overdispersion can be specified as "negative.binomial", and is the default.
 }
+  \item{formula}{
+A one-sided formula specifying exactly how to model abundance as a function of environmental and trait variables (as found in \code{R} and \code{Q} respecitively).  Default is to include all terms additively, with quadratics for quantitative terms, and all environment-by-trait interactions.
+}
   \item{method}{
 The function to use to fit the model. Default is \code{\link{manyglm}}, some other available options are \code{\link{glm1path}}, \code{\link{cv.glm1path}} for LASSO-penalised fits, but in principle any model-fitting function that accepts formula input and a family argument should work.
+}
+\item{composition}{logical. TRUE includes a row effect in the model, adjusting for different sampling intensities across different samples. This can be understood as a compositional term in the sense that all other terms then model relative abundance at a site. FALSE (default) does not include a row effect, hence the model is of absolute abundance.
+}
+\item{col.intercepts}{logical. TRUE (default) includes a column effect in the model, to adjust for different levels of abundance of different response (column) variables. FALSE removes this column effect.
 }
 %  \item{fourthPlot}{
 %Logical, default (\code{TRUE}) will produce a lattice plot of fourth corner coefficients, that is, of interactions between environmental and %trait variables in predicting abundance. Otherwise nothing is plotted.
@@ -38,9 +45,9 @@ This function fits a fourth corner model, that is, a model to predict abundance 
 
 The actual function used to fit the model is determined by the user through the \code{method} argument. The default is to use \code{link{manyglm}} to fit a GLM, although for predictive modelling, it might be better to use a LASSO lenalty as in \code{\link{glm1path}} and \code{\link{cv.glm1path}}. In \code{\link{glm1path}}, the penalty used for BIC calculation is \code{log(dim(L)[1])}, i.e. the log(number of sites), as opposed to total number of rows in the fitted model, which would have been \code{log(prod(dim(L)))}.
 
-The model is fitted by vectorising \code{L} then constructing a big mega-matrix from repeated values of \code{R}, \code{Q}, their quadratic terms (if required) and interactions. Hence this function will hit memory issues if any of these matrices are large, and can slow down (especially if using \code{\link{cv.glm1path}}). The design matrix to be used for analysis is constructed using all environmental variables and traits specified in \code{R} and \code{Q}, and quadratic terms for any of these variables that are quantitative, and all environment-trait interactions. If there are no penalties on coefficients (as for \code{\link{manyglm}}) then main effects for \code{R} are excluded, because these are redundant when a species main effect is already in the model.
+The model is fitted by vectorising \code{L} then constructing a big mega-matrix from repeated values of \code{R}, \code{Q}, their quadratic terms (if required) and interactions. Hence this function will hit memory issues if any of these matrices are large, and can slow down (especially if using \code{\link{cv.glm1path}}). If \code{formula} is left unspecified, the design matrix is constructed using all environmental variables and traits specified in \code{R} and \code{Q}, and quadratic terms for any of these variables that are quantitative, and all environment-trait interactions, after standardising these variables. Specifying a one-sided \code{formula} as a function of the variables in \code{R} and \code{Q} would instead give the user control over the precise model is fitted. The arguments \code{composition} and \code{col.intercepts} optionally add terms to the model for row and column total abundance, in addition to the terms specified in \code{formula}.
 
-Future versions of the code will allow the user to specify the formula of the model to be fitted. By default all variables are standardised prior to fitting.
+Note: when specifying a \code{formula}, if there are no penalties on coefficients (as for \code{\link{manyglm}}), then main effects for \code{R} should be excluded if including row effects (via \code{composition=TRUE}), and main effects for \code{Q} should be excluded if including column effects (via \code{col.intercepts=TRUE}), because those terms would otherwise be redundant. If using penalised likelihood (as in \code{\link{glm1path}} and \code{\link{cv.glm1path}}) you can include main effects as well as row/column effects, and the penalties will sort out which terms to use.
 
 If trait matrix \code{Q} is not specified, default behaviour will fit a different environmental response for each taxon (and the outcome will be very similar to \code{manyglm(L~R)}). This can be understood as a fourth corner model where species identities are used as the species traits (i.e. no attempt is made to explain differences across species).
 
@@ -50,7 +57,7 @@ These functions inherit default behaviour from their fitting functions. e.g. use
 \describe{
 \item{...}{Exactly what is included in output depends on the fitting function - by default, a \code{\link{manyglm}} object is returned, so all usual \code{manyglm} output is included (coefficients, residuals, deviance, etc).}
 \item{family}{A \code{family} object matching the final model.}
-\item{fourth.corner}{A matrix of fourth corner coefficients.}
+\item{fourth.corner}{A matrix of fourth corner coefficients. If \code{formula} has been manually entered, this will be a vector not a matrix.}
 \item{R.des}{The reduced-size design matrix for environmental variables, including further arguments:
 \describe{
 \item{X}{Data frame of (possibly standardised) environmental variables}
@@ -92,6 +99,11 @@ qqnorm(residuals(ft)); abline(c(0,1),col="red") # for a normal quantile plot.
 
 # predict to the first five sites
 predict(ft,newR=antTraits$env[1:5,])
+
+# refit but now only use a couple of variables, include row effects and only two interaction terms:
+ft2=traitglm(antTraits$abund,antTraits$env[,3:4],antTraits$traits[,c(1,3)],
+  formula=~Shrub.cover:Femur.length+Shrub.cover:Pilosity,composition=TRUE,method="manyglm")
+ft2$fourth # now fourth corner term is a vector
 
 # re-fit using L1 penalisation (choosing penalty to minimise BIC), and only using first 3 traits:
 ft1=traitglm(antTraits$abund,antTraits$env,antTraits$traits[,1:3],method="glm1path")

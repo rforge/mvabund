@@ -171,9 +171,8 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
         bootID[iBoot,unlistIDs] = unlist(blockIDs[samp[iBoot,]]) #unlistIDs is needed to make sure each unlisted blockID ends up in the right place
       bootID = bootID-1 #to fit the format in C, 0 to nRows.
       cat(paste("Using block resampling...","\n"))
-      print(bootID)
+#      print(bootID)
     }
-
 
     # construct for param list     
     modelParam <- list(tol=object$tol, regression=familynum, maxiter=object$maxiter, maxiter2=object$maxiter2, warning=warn, estimation=methodnum, stablizer=0, n=object$K)
@@ -247,8 +246,8 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
     }   
     else {
         targs <- match.call(expand.dots = FALSE)
-        if (targs[[1]] == "example")
-            modelnamelist <- paste("Model ", format(1:nModels))
+        if (targs[[1]] == "example" || any(class(object) == "traitglm"))
+            modelnamelist <- paste("Model", format(1:nModels))
         else    
             modelnamelist <- as.character(c(targs[[2]], targs[[3]]))
 
@@ -367,6 +366,7 @@ anova.manyglm <- function(object, ..., resamp="pit.trap", test="LR", p.uni="none
     if(p.uni=="none") #hack fix because univariate P's were all coming out as 1/B for "none" (!?)
       anova$uni.p[is.numeric(anova$uni.p)] <- NA
 
+    anova$block = block
     class(anova) <- "anova.manyglm"
     return(anova)
 }

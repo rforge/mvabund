@@ -2,6 +2,8 @@
 # Author: Yi Wang 
 # 05-Jan-2010
 
+# last modifed: David Warton, 06-May-2015
+
 default.print.anova.manyglm <- function( x, digits = max(getOption("digits") - 3, 3), signif.stars = getOption("show.signif.stars"),  dig.tst = max(1, min(5, digits - 1)), eps.Pvalue = .Machine$double.eps, ...) 
 {
    allargs <- match.call(expand.dots=FALSE)
@@ -34,6 +36,10 @@ default.print.anova.manyglm <- function( x, digits = max(getOption("digits") - 3
         corname <- "correlated response via ridge regularization"	  
     else corname <- ""
 
+    if(is.null(anova$block))
+      block.text=""
+    else
+     block.text= " block"
     ############## Anova Table for the simultaneous tests x ####################
 
     if (!is.null(heading <- attr(x, "heading"))) 
@@ -66,14 +72,14 @@ default.print.anova.manyglm <- function( x, digits = max(getOption("digits") - 3
          if(dim(anova$uni.p)[2]>1)
          {   
            cat("Arguments:\n", "Test statistics calculated assuming", corname, 
-               "\n P-value calculated using", n.bootsdone, "resampling iterations via",       anova$resamp, "resampling (to account for correlation in testing).\n")
+               "\n P-value calculated using", n.bootsdone, "resampling iterations via",       paste(anova$resamp,block.text,sep=""), "resampling (to account for correlation in testing).\n")
          }
          if(dim(anova$uni.p)[2]==1)
          {   
-           cat("Arguments: P-value calculated using", n.bootsdone, "resampling iterations via",       anova$resamp, "resampling.\n")
+           cat("Arguments: P-value calculated using", n.bootsdone, "resampling iterations via",       paste(anova$resamp,block.text,sep=""), "resampling (to account for correlation in testing).\n")
          }
 #         cat("Arguments:\n", "Test statistics calculated assuming", corname, 
-#              "\n P-value calculated using", n.bootsdone, "resampling iterations via",       anova$resamp, "resampling (to account for correlation in testing).\n")
+#              "\n P-value calculated using", n.bootsdone, "resampling iterations via",       paste(anova$resamp,block.text,sep=""), "resampling (to account for correlation in testing).\n")
                 if(sum(anova$nBoot - anova$n.bootsdone)>1){
                     cat("\nNumber of iterations with skipped test statistic as the respective variable/variable-group to test became linear dependent during the case resampling step\n")
                     print.default(anova$nBoot - anova$n.bootsdone - 1, quote = FALSE, right = TRUE, na.print = "", ...) 
@@ -138,7 +144,7 @@ default.print.anova.manyglm <- function( x, digits = max(getOption("digits") - 3
 
         if( substr(anova$resamp,1,1)!="n"){
               cat("Arguments:\n", "Test statistics calculated assuming", corname, 
-              "\nP-value calculated using", n.bootsdone, "resampling iterations via",       anova$resamp, "resampling (to account for correlation in testing.\n")
+              "\nP-value calculated using", n.bootsdone, "resampling iterations via",       paste(anova$resamp,block.text,sep=""), "resampling (to account for correlation in testing.\n")
            if(sum(anova$nBoot - anova$n.bootsdone)>1){
               cat("\nNumber of iterations with skipped test statistic as the respective              variable/variable-group to test became linear dependent during the case resampling step\n")
               print.default(anova$nBoot - anova$n.bootsdone - 1, quote = FALSE, right = TRUE, na.print = "", ...)

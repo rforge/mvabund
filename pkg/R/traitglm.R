@@ -1,6 +1,8 @@
-traitglm = function( L, R, Q=NULL, family="negative.binomial", method="manyglm", ...  )
+traitglm = function( L, R, Q=NULL, family="negative.binomial", formula = NULL, method="manyglm", composition=FALSE, col.intercepts = TRUE, ...  )
 {
 
+#  form = ~Bare.ground+Canopy.cover+Femur.length+Pilosity+Bare.ground:Femur.length+Bare.ground:Pilosity+Canopy.cover:Femur.length+Canopy.cover:Pilosity
+  
 #subfunctions get.design and get.polys defined below.
   
   # extract any arguments that work with cv.glm1path and save separately so they are not passed to glm1path.
@@ -43,85 +45,102 @@ traitglm = function( L, R, Q=NULL, family="negative.binomial", method="manyglm",
   dots <- lapply( dots, eval, parent.frame() )
   
   
-    n.sites = dim(L)[1] #use R.des gives number of sites for prediction / model fitting
-    n.spp   = dim(L)[2]
+  n.sites = dim(L)[1] #use R.des gives number of sites for prediction / model fitting
+  n.spp   = dim(L)[2]
 
-    # get standardised R, Q, orthogonal polys, and poly coeffs
+  # get standardised R, Q, orthogonal polys, and poly coeffs
+  if(is.null(formula))
     R.des = get.polys(R)
+  else
+    R.des = list(X=R)
     
-    if(is.null(Q))
-    {
-        cat(paste("No traits matrix entered, so will fit SDMs with different env response for each spp","\n"))
-        Q.des = list(X=data.frame(names(L)),X.squ=NULL,var.type="factor")
-    }
+  if(is.null(Q))
+  {
+      cat(paste("No traits matrix entered, so will fit SDMs with different env response for each spp","\n"))
+      Q.des = list(X=data.frame(names(L)),X.squ=NULL,var.type="factor")
+  }
+  else
+  {
+    if(is.null(formula))
+      Q.des = get.polys(Q)
     else
-        Q.des = get.polys(Q)
+      Q.des = list(X=Q)
+  }  
 
-    any.penalty = method=="cv.glm1path" || method=="glm1path"
-    # get mega-matrix of design for regression against vectorised l
-    X.des = get.design( R.des, Q.des, names(L), spp.penalty=TRUE, any.penalty=any.penalty, get.fourth=get.fourth )
-    X = X.des$X
-    Lm <- as.matrix(L)
-    l <- as.vector(Lm)
-    rm(Lm)
-
+  any.penalty = method=="cv.glm1path" || method=="glm1path"
+  # get mega-matrix of design for regression against vectorised l
+  marg.penalty = TRUE
+  X.des = get.design( R.des, Q.des, names(L), formula=formula, marg.penalty=marg.penalty, composition = composition, col.intercepts = col.intercepts, any.penalty=any.penalty, get.fourth=get.fourth )
+  # setting marg.penalty=TRUE means that spp are always in the model, and penalised if any.penalty=TRUE 
+  X = X.des$X
+  l <- as.vector(as.matrix(L))
+  
 #    require(Matrix)
 #    require(MASS)
 
-    if( method=="cv.glm1path" || method=="glm1path" )
-    {
-      block = factor(rep(1:n.sites,n.spp))
-      ft = do.call(glm1path,c(list(y=l, X=X, family=family, penalty = X.des$penalty), k=log(n.sites), dots))
-      if( method=="cv.glm1path" )
-        ft = do.call(cv.glm1path,c(list(object=ft, block=block, best=best, plot=plot, prop.test=prop.test, n.split=n.split, 
-                                      seed=seed, show.progress=show.progress), dots))
-      id.use = which(ft$lambdas==ft$lambda)
-      ft$deviance = -2*ft$logL[id.use]
-      ft$phi = ft$glm1$phi
-      if(ft$df[1]==1)
-        null.deviance = ft$logL[1]
-#      ft$family=ft$glm1$family
-    }
+  if( method=="cv.glm1path" || method=="glm1path" )
+  {
+    if( "block" %in% names(dots) )
+      blockID <- dots$block    
     else
-      ft = do.call( method, c(list(formula=l~., family=family, data=data.frame(X)), dots) )
+      blockID = 1:n.sites
+    block = factor(rep(blockID,n.spp))
+    ft = do.call(glm1path,c(list(y=l, X=X, family=family, penalty = X.des$penalty), k=log(n.sites), dots))
+    if( method=="cv.glm1path" )
+      ft = do.call(cv.glm1path,c(list(object=ft, block=block, best=best, plot=plot, prop.test=prop.test, n.split=n.split, 
+                                    seed=seed, show.progress=show.progress), dots))
+    id.use = which(ft$lambdas==ft$lambda)
+    ft$deviance = -2*ft$logL[id.use]
+    ft$phi = ft$glm1$phi
+    if(ft$df[1]==1)
+      null.deviance = ft$logL[1]
+#    ft$family=ft$glm1$family
+  }
+  else
+    ft = do.call( method, c(list(formula=l~., family=family, data=data.frame(X)), dots) )
+  # note user-entered formula was not used in fitting, because X is the model matrix generated from this formula.
 
-    # report fourth corner matrix for "best" model
-    ft$fourth.corner = matrix( coef(ft)[X.des$is.4th.corner], length(X.des$names.Q), length(X.des$names.R) )
-    dimnames(ft$fourth.corner)[[1]] = X.des$names.Q
-    dimnames(ft$fourth.corner)[[2]] = X.des$names.R
+  # report fourth corner matrix for "best" model
+  ft$fourth.corner = matrix( coef(ft)[X.des$is.4th.corner], length(X.des$names.Q), length(X.des$names.R) )
+  ft$fourth.corner = provideDimnames(ft$fourth,base=list(X.des$names.Q,X.des$names.R))
+
+#  dimnames(ft$fourth.corner)[[1]] = X.des$names.Q
+#  dimnames(ft$fourth.corner)[[2]] = X.des$names.R
 #    ft$fourth.corner = Matrix(fourth.corner, sparse=T)
-    # cat("\n")
-    # cat("Fourth corner matrix:    ")
-    # cat("\n")
-    # print(round(ft$fourth.corner,dec.pl))
+  # cat("\n")
+  # cat("Fourth corner matrix:    ")
+  # cat("\n")
+  # print(round(ft$fourth.corner,dec.pl))
 
 
-    ### Plot results
+  ### Plot results
 
-    # do a lattice "levelplot" of the coefficients in the matrix of fourth corner interactions
-#    if( fourthPlot == TRUE & get.fourth == TRUE )
-#    {
-#        library(lattice)
-#        a        = max( abs(ft$fourth.corner) )
-#        if(a < 1.e-8)
-#            warning("No fourth corner interactions were included in final model")
-#        else
-#        {
-#            colort   = colorRampPalette(c("blue","white","red")) 
-#            plot.4th = levelplot(t(as.matrix(ft$fourth.corner)), xlab="Environmental Variables", ylab="Species traits", col.regions=colort(100), at=seq(-a, a, length=100), scales = list( x= list(rot = 45)))
-#            print(plot.4th)
-#        }
-#    }
+  # do a lattice "levelplot" of the coefficients in the matrix of fourth corner interactions
+#  if( fourthPlot == TRUE & get.fourth == TRUE )
+#  {
+#      library(lattice)
+#      a        = max( abs(ft$fourth.corner) )
+#      if(a < 1.e-8)
+#          warning("No fourth corner interactions were included in final model")
+#      else
+#      {
+#          colort   = colorRampPalette(c("blue","white","red")) 
+#          plot.4th = levelplot(t(as.matrix(ft$fourth.corner)), xlab="Environmental Variables", ylab="Species traits", col.regions=colort(100), at=seq(-a, a, length=100), scales = list( x= list(rot = 45)))
+#          print(plot.4th)
+#      }
+#  }
     
-    ft$R.des = R.des
-    ft$Q.des = Q.des
-    ft$any.penalty = any.penalty
-    ft$L = L
-    ft$scaling = X.des$scaling
-    ft$call=match.call()
+  ft$R.des = R.des
+  ft$Q.des = Q.des
+  ft$any.penalty = any.penalty
+  ft$L = L
+  ft$scaling = X.des$scaling
+  ft$call=match.call()
 
-    class(ft)=c("traitglm",class(ft))
-    return( ft )
+  ft$formula = formula
+
+  class(ft)=c("traitglm",class(ft))
+  return( ft )
     
 }
 
@@ -199,48 +218,72 @@ get.polys = function( X, X.des.train=NULL)
 }
 
 
-
 ################ get.design for getting the design matrix ###################
-get.design = function( R.des, Q.des, L.names, spp.penalty=FALSE, any.penalty=TRUE, scaling=NULL, get.fourth=TRUE )
+get.design = function( R.des, Q.des, L.names, formula = formula, marg.penalty=FALSE, composition = FALSE, col.intercepts = TRUE, any.penalty=TRUE, scaling=NULL, get.fourth=TRUE )
 {
 
 # get.design will take matrices of linear env and trait terms, and orthogonal quadratic terms,
 # and return a mega-matrix that can be regressed against vectorised abundance.
 # also returns logical for fourth corner terms, and their row and column names
 
+# unless of course a formula is specified, in which case it will use that to build model matrix.
+  
     #How many site are there? This will be used later
-    n.sites = dim(R.des$X)[1] #use R.des gives number of sites for prediction / model fitting
-    n.spp   = length(L.names)
+  n.sites = dim(R.des$X)[1] #use R.des gives number of sites for prediction / model fitting
+  n.spp   = length(L.names)
 
-    is.scaling.given = is.null(scaling)==F #remember if scaling was specified - if not, build it up
-    #get spp indicator
-    if(is.null(spp.penalty)==FALSE)
+  is.scaling.given = is.null(scaling)==F #remember if scaling was specified - if not, build it up
+  #get spp indicator
+  if(col.intercepts==TRUE)
+  {
+      spp     = rep(L.names,each=n.sites)
+      spp     = as.factor(spp)
+      mod     = as.formula("~spp-1")
+      X.spp   = model.matrix(mod)
+      if(marg.penalty==FALSE || any.penalty==FALSE) #if species not penalised need to remove species 1 indicator
+        X.spp   = X.spp[,-1]
+      X.spp[X.spp==0] = -1
+      if(is.scaling.given==F) #rescale X.spp so ALL variables have variance 1.
+      {
+        scaling = list()
+        X.spp = scale(X.spp)
+        scaling$spp$center = attr(X.spp,"scaled:center")
+        scaling$spp$scale  = attr(X.spp,"scaled:scale")      
+      }
+      if(is.scaling.given)
+        X.spp = scale(X.spp,center=scaling$spp$center, scale=scaling$spp$scale)
+      X.spp   = cbind(1,X.spp) #add intercept since my code doesn't do that automatically
+  }
+  else
+  {
+    X.spp = as.matrix( rep(1,n.sites*n.spp) )
+      if(is.scaling.given==F) #if required, initiate scaling object (to be built later) 
+        scaling = list() 
+  }
+  if(composition==TRUE)
+  {
+    site    = rep(dimnames(R.des$X)[[1]],n.spp)
+    site    = as.factor(site)
+    mod     = as.formula("~site-1")
+    X.site  = model.matrix(mod)
+    if(marg.penalty==FALSE || any.penalty==FALSE) #if site not penalised need to remove site 1 indicator
+      X.site = X.site[,-1]
+    X.site[X.site==0] = -1
+    if(is.scaling.given==F) #rescale X.site so ALL variables have variance 1.
     {
-        spp     = rep(L.names,each=n.sites)
-        spp     = as.factor(spp)
-        mod     = as.formula("~spp-1")
-        X.spp   = model.matrix(mod)
-        if(spp.penalty==FALSE) #if species not penalised need to remove species 1 indicator
-          X.spp   = X.spp[,-1]
-        X.spp[X.spp==0] = -1
-        if(is.scaling.given==F) #rescale X.spp so ALL variables have variance 1.
-        {
-          scaling = list()
-          X.spp = scale(X.spp)
-          scaling$spp$center = attr(X.spp,"scaled:center")
-          scaling$spp$scale  = attr(X.spp,"scaled:scale")      
-        }
-        if(is.scaling.given)
-          X.spp = scale(X.spp,center=scaling$spp$center, scale=scaling$spp$scale)
-        X.spp   = cbind(1,X.spp) #add intercept since my code doesn't do that automatically
+      X.site  = scale(X.site)
+      scaling$site$center = attr(X.site,"scaled:center")
+      scaling$site$scale  = attr(X.site,"scaled:scale")      
     }
-    else
-    {
-        X.spp = as.matrix( rep(1,n.sites*n.spp) )
-        if(is.scaling.given==F) #if required, initiate scaling object (to be built later) 
-          scaling = list() 
-    }
+    if(is.scaling.given)
+      X.site = scale(X.site,center=scaling$site$center, scale=scaling$site$scale)
+  }
+  else #otherwise make it empty to avoid errors later
+    X.site = X.spp[,0]
 
+  if(is.null(formula)) #if no formula provided, build up a design matrix by default with quad terms etc
+  {
+    
     # R terms
     X.R     = X.spp[,0]
     if( is.null(R.des$X.squ) )
@@ -265,7 +308,13 @@ get.design = function( R.des, Q.des, L.names, spp.penalty=FALSE, any.penalty=TRU
         names.i = dimnames(R.small)[[2]][iR]
         if(var.type[iR]=="factor")
         {
-            names.i = paste(dimnames(R.small)[[2]][iR], levels(R.small[,iR]),sep="")
+            if(any.penalty==TRUE)
+              names.i = paste(dimnames(R.small)[[2]][iR], levels(R.small[,iR]),sep="")
+            else #if unpenalised, remove the first level
+            {
+              mm = mm[,-1]
+              names.i = paste(dimnames(R.small)[[2]][iR], dimnames(contrasts(R.small[,iR]))[[2]],sep="")
+            }
         }
         names.R = c( names.R, names.i )
         is.lin.R= c( is.lin.R, rep( is.lin.small[iR] , dim(mm)[2] ) )
@@ -305,7 +354,13 @@ get.design = function( R.des, Q.des, L.names, spp.penalty=FALSE, any.penalty=TRU
         names.i = dimnames(Q.small)[[2]][iQ]
         if(var.type[iQ]=="factor")
         {
+          if(any.penalty==TRUE)
             names.i = paste(dimnames(Q.small)[[2]][iQ], levels(Q.small[,iQ]),sep="")
+          else #if unpenalised, remove the first level
+          {
+            mm = mm[,-1]
+            names.i = paste(dimnames(Q.small)[[2]][iQ], dimnames(contrasts(Q.small[,iQ]))[[2]],sep="")
+          }
         }
         names.Q = c( names.Q, names.i )
         is.lin.Q= c( is.lin.Q, rep( is.lin.small[iQ] , dim(mm)[2] ) )
@@ -344,24 +399,85 @@ get.design = function( R.des, Q.des, L.names, spp.penalty=FALSE, any.penalty=TRU
       X.RQ=X.R[,0]
     
     if(any.penalty)
-      X             = cbind(X.spp,X.R,X.Q,X.RQ)
+    {
+      if(composition==TRUE)
+        X             = cbind(X.spp,X.site,X.R,X.Q,X.RQ)
+      else
+        X             = cbind(X.spp,X.R,X.Q,X.RQ)
+    }
     else
-      X             = cbind(X.spp,X.R,X.RQ) #no trait main effects if there is no penalty on trait params, covered by spp.
+    {  
+      if(composition==TRUE)
+        X             = cbind(X.spp,X.site,X.RQ) #no trait nor env main effects if there is no penalty on trait params, covered by spp and site.
+      else
+        X             = cbind(X.spp,X.R,X.RQ) #no trait main effects if there is no penalty on trait params, covered by spp.
+    }
     
     n.X           = dim(X)[2]
     if(get.fourth==TRUE)
       is.4th.corner = c( rep(F,n.X-n.R*n.Q), rep(T,n.R*n.Q) )
     else
       is.4th.corner = rep(F,n.X)
-    names.R = dimnames(X.R)[[2]]
-    names.Q = dimnames(X.Q)[[2]]
-
-    penalty = c( 0, rep(1,dim(X)[2]-1) )
-    if (is.null(spp.penalty)==FALSE) #change if spp intercept terms are to be left unpenalised:
+    names.R = dimnames(X.R)[[2]][is.lin.R]
+    names.Q = dimnames(X.Q)[[2]][is.lin.Q]
+  }
+  else # if formula has been provided, use it to build up design matrix
+  {
+    # construct design matrix X (minus any spp and site terms)
+    rowReps = rep(1:n.sites, times=n.spp)
+    R.i     = R.des$X[rowReps,]
+    colReps = rep(1:n.spp, each=n.sites)
+    Q.i     = Q.des$X[colReps,]
+    X       = model.matrix(formula,cbind(R.i,Q.i))
+    
+    # now extract fourth corner as a matrix with just one column
+    tt       = terms(formula)
+    facts    = attr(tt,"factors")
+    is.env   = charmatch(names(R.des$X),dimnames(facts)[[1]])
+    is.env   = is.env[is.na(is.env)==FALSE]
+    is.trait = charmatch(names(Q.des$X),dimnames(facts)[[1]])
+    is.trait = is.trait[is.na(is.trait)==FALSE]
+    if(length(is.env)==1) #get a vector saying which terms involve env variables
+      which.env = facts[is.env,]>0
+    else
     {
-      if (spp.penalty==FALSE)
-        penalty  = c( rep( 0,dim(X.spp)[2] ), rep( 1, dim(X)[2]-dim(X.spp)[2] ) )
+      if(length(is.env)==0)
+         which.env=FALSE
+      else
+         which.env = apply(facts[is.env,],2,sum)>0
     }
-    return(list(X=X, is.4th.corner=is.4th.corner, names.R=names.R[is.lin.R], names.Q=names.Q[is.lin.Q], penalty=penalty, any.penalty=any.penalty, scaling=scaling) )
+    if(length(is.trait)==1) #get a vector saying which terms involve traits
+      which.trait = facts[is.trait,]>0
+    else
+    {
+      if(length(is.trait)==0)
+        which.trait=FALSE
+      else
+        which.trait = apply(facts[is.trait,],2,sum)>0
+    }
+    is.4th.term   = which.env & which.trait # 4th corner terms (involve both env and traits)
+    is.4th.corner = is.4th.term[attr(X,"assign")] #coefs for 4th corner, missing a FALSE for intercept though
+    names.R = "coef"
+    if(attr(tt,"intercept")==1) #so get rid of intercept in X so everything matches up
+    {
+      names.Q = dimnames(X)[[2]][c(FALSE,is.4th.corner)]
+      X = as.matrix(X[,-1]) # as.matrix include in case it is reduced to a vector
+    }
+    else
+      names.Q = dimnames(X)[[2]][is.4th.corner]
+    
+    # add on spp and site terms, and add to is.4th.corner too:
+    X = cbind(X.spp,X.site,X)
+    is.4th.corner = c(rep(FALSE, dim(X.spp)[2]+dim(X.site)[2]), is.4th.corner)
+  }
+  if(any.penalty) #set the value of penalty, if using glm1path
+  {
+    penalty = c( 0, rep(1,dim(X)[2]-1) )
+    if (col.intercepts==TRUE & marg.penalty==FALSE) #change if spp intercept terms are to be left unpenalised:
+      penalty  = c( rep( 0,dim(X.spp)[2]+dim(X.site)[2] ), rep( 1, dim(X)[2]-dim(X.spp)[2]-dim(X.site)[2] ) )
+  }
+  else #otherwise penalty can be empty
+    penalty = NULL
 
+  return(list(X=X, is.4th.corner=is.4th.corner, names.R=names.R, names.Q=names.Q, penalty=penalty, any.penalty=any.penalty, scaling=scaling) )  
 }
