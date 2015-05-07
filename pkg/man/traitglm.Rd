@@ -25,7 +25,7 @@ A data frame of traits (columns) across all taxa (rows). If not specified, a dif
 The family of the response variable, see \code{\link{family}}. Negative binomial with unknown overdispersion can be specified as "negative.binomial", and is the default.
 }
   \item{formula}{
-A one-sided formula specifying exactly how to model abundance as a function of environmental and trait variables (as found in \code{R} and \code{Q} respecitively).  Default is to include all terms additively, with quadratics for quantitative terms, and all environment-by-trait interactions.
+A one-sided formula specifying exactly how to model abundance as a function of environmental and trait variables (as found in \code{R} and \code{Q} respectively).  Default is to include all terms additively, with quadratics for quantitative terms, and all environment-by-trait interactions.
 }
   \item{method}{
 The function to use to fit the model. Default is \code{\link{manyglm}}, some other available options are \code{\link{glm1path}}, \code{\link{cv.glm1path}} for LASSO-penalised fits, but in principle any model-fitting function that accepts formula input and a family argument should work.
@@ -55,7 +55,7 @@ These functions inherit default behaviour from their fitting functions. e.g. use
 }
 \value{Returns a \code{traitglm} object, a list that contains at least the following components:
 \describe{
-\item{...}{Exactly what is included in output depends on the fitting function - by default, a \code{\link{manyglm}} object is returned, so all usual \code{manyglm} output is included (coefficients, residuals, deviance, etc).}
+\item{\dots}{Exactly what is included in output depends on the fitting function - by default, a \code{\link{manyglm}} object is returned, so all usual \code{manyglm} output is included (coefficients, residuals, deviance, etc).}
 \item{family}{A \code{family} object matching the final model.}
 \item{fourth.corner}{A matrix of fourth corner coefficients. If \code{formula} has been manually entered, this will be a vector not a matrix.}
 \item{R.des}{The reduced-size design matrix for environmental variables, including further arguments:

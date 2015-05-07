@@ -1,6 +1,6 @@
 \name{anova.traitglm}
 \alias{anova.traitglm}
-\title{Testing for a environment-by-trait (fourht corner) interaction by analysis of deviance}
+\title{Testing for a environment-by-trait (fourth corner) interaction by analysis of deviance}
 \description{
 Returns an analysis of deviance from a fourth corner model, as computed using \code{\link{traitglm}}, typically to test for an environment-by-trait interaction. Slowly! This function works via \code{\link{anova.manyglm}}, which uses row-resampling for inference, and it only applies to \code{\link{traitglm}} objects that have been fitted using the (default) \code{\link{manyglm}} function.
 }
@@ -66,7 +66,7 @@ tr = antTraits$traits[abSum>0.25,]
 # now fit the fourth corner model, only as a function of a couple of traits and env variables:
 ft=traitglm(ab,antTraits$env[,1:3],data.frame(tr$Weber,tr$Femur))
 anova(ft,nBoot=49)
-# Note you should refit with a larger number of bootstrap samples (e.g. 999), will take <2 minutes
+# Note you should refit with more bootstrap samples (e.g. 999), should take <2 minutes to run
 
 # for an example using anova.traitglm for multiple fits, uncomment the following lines:
 # ft2=traitglm(antTraits$abund,antTraits$env[,3:4],antTraits$traits[,c(1,3)],
@@ -76,7 +76,7 @@ anova(ft,nBoot=49)
 # ft4=traitglm(antTraits$abund,antTraits$env[,3:4],antTraits$traits[,c(1,3)],
 #   formula=~Shrub.cover:Femur.length+Shrub.cover:Pilosity+Volume.lying.CWD:Femur.length+
 #   Volume.lying.CWD:Pilosity, composition=TRUE) #all interactions only
-# anova(ft2,ft3,ft4) # takes 70 sec to run. Shrub interactions not significant but CWD ones are.
+# anova(ft2,ft3,ft4) # Shrub interactions not significant but CWD interactions are.
 }
 \keyword{models}
 \keyword{regression}
