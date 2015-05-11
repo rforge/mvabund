@@ -3,7 +3,7 @@ Title: Statistical Methods for Analysing Multivariate Abundance Data
 Version: 3.10.4
 Date: 06-05-2015
 Author: Yi Wang, Ulrike Naumann, Stephen Wright and David Warton
-Maintainer: Yi Wang <alice.yi.wang@gmail.com>
+Maintainer: David Warton <David.Warton@unsw.edu.au>
 Description: A set of tools for displaying, modeling and analysing
         multivariate abundance data in community ecology. See
         mvabund-package.Rd for details of overall package organization.

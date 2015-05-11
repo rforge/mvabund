@@ -76,9 +76,9 @@ These functions inherit default behaviour from their fitting functions. e.g. use
 }
 
 \references{
-Warton DI, Shipley B & Hastie T (2015) CATS regression - a model-based approach to studying trait-based community assembly, Methods in Ecology and Evolution 6, 389–398.
-
 Brown AM, Warton DI, Andrew NR, Binns M, Cassis G and Gibb H (2014) The fourth corner solution - using species traits to better understand how species traits interact with their environment, Methods in Ecology and Evolution 5, 344-352.
+
+Warton DI, Shipley B & Hastie T (2015) CATS regression - a model-based approach to studying trait-based community assembly, Methods in Ecology and Evolution 6, 389-398.
 }
 \author{
 David I. Warton <David.Warton@unsw.edu.au>

@@ -47,7 +47,7 @@ The comparison between two or more models by \code{anova.traitglm} will only be 
 }
 
 \references{
-Warton DI, Shipley B & Hastie T (2015) CATS regression - a model-based approach to studying trait-based community assembly, Methods in Ecology and Evolution 6, 389–398.
+Warton DI, Shipley B & Hastie T (2015) CATS regression - a model-based approach to studying trait-based community assembly, Methods in Ecology and Evolution 6, 389-398.
 }
 \author{
 David I. Warton <David.Warton@unsw.edu.au>
