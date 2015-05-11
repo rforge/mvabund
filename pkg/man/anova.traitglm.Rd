@@ -53,7 +53,7 @@ Warton DI, Shipley B & Hastie T (2015) CATS regression - a model-based approach 
 David I. Warton <David.Warton@unsw.edu.au>
 }
 \seealso{
-\code{\link[mvabund:anova.manyglm]{anova.manyglm},\code{\link{traitglm}}
+\code{\link[mvabund:anova.manyglm]{anova.manyglm}},\code{\link{traitglm}}
 }
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \examples{
