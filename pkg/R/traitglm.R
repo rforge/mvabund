@@ -219,7 +219,7 @@ get.polys = function( X, X.des.train=NULL)
 
 
 ################ get.design for getting the design matrix ###################
-get.design = function( R.des, Q.des, L.names, formula = formula, marg.penalty=FALSE, composition = FALSE, col.intercepts = TRUE, any.penalty=TRUE, scaling=NULL, get.fourth=TRUE )
+get.design = function( R.des, Q.des, L.names, formula = formula, marg.penalty=TRUE, composition = FALSE, col.intercepts = TRUE, any.penalty=TRUE, scaling=NULL, get.fourth=TRUE )
 {
 
 # get.design will take matrices of linear env and trait terms, and orthogonal quadratic terms,

@@ -6,8 +6,8 @@ Fits a fourth corner model for abundance as a function of environmental variable
 \description{
 Fits a fourth corner model - a model to study how variation in environmental response across taxa can be explained by their traits. The function to use for fitting can be (pretty well) any predictive model, default is a generalised linear model, another good option is to add a LASSO penalty via \code{glm1path}. Can handle overdispersed counts via  \code{family="negative.binomial"}, which is the default \code{family} argument.
 }
- %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \usage{
+ %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 traitglm(L, R, Q = NULL, family="negative.binomial", formula = NULL, method = "manyglm",
             composition = FALSE, col.intercepts = TRUE, ...)
 }
@@ -86,7 +86,7 @@ David I. Warton <David.Warton@unsw.edu.au>
 \seealso{
 \code{\link{glm1path}}, \code{\link{glm1}}, \code{\link{manyglm}}, \code{\link{family}}, \code{\link[mvabund:residuals.manyglm]{residuals.manyglm}}, \code{\link[mvabund:plot.manyany]{plot.manyany}}
 }
- %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
+
 \examples{
 data(antTraits)
 

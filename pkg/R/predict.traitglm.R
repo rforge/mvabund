@@ -26,10 +26,15 @@ predict.traitglm = function(object, newR=NULL, newQ=NULL, newL=NULL, type="respo
   
   n.sites = dim(R.des.test$X)[1]
   n.spp   = dim(Q.des.test$X)[1]
-  
+
+  if( "composition" %in% names(object$call) == FALSE )
+    object$call$composition = FALSE
+  if( "col.intercepts" %in% names(object$call) == FALSE )
+    object$call$col.intercepts = TRUE
+    
   # get new design matrix values for L
-  X.des.test = get.design( R.des=R.des.test, Q.des=Q.des.test, L.names=rownames(Q.des.test$X), spp.penalty=TRUE, any.penalty=object$any.penalty, scaling=object$scaling )
-  
+  X.des.test = get.design( R.des=R.des.test, Q.des=Q.des.test, L.names=rownames(Q.des.test$X), formula = object$formula, marg.penalty=TRUE, composition =  object$call$composition, col.intercepts = object$call$col.intercepts, any.penalty=object$any.penalty, scaling=object$scaling )
+    
   #    recover()
   # get predicted eta and store in out
   out = X.des.test$X %*% coef(object)

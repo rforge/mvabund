@@ -1,11 +1,10 @@
 \name{anova.traitglm}
 \alias{anova.traitglm}
 \title{Testing for a environment-by-trait (fourth corner) interaction by analysis of deviance}
-\description{
-Returns an analysis of deviance from a fourth corner model, as computed using \code{\link{traitglm}}, typically to test for an environment-by-trait interaction. Slowly! This function works via \code{\link{anova.manyglm}}, which uses row-resampling for inference, and it only applies to \code{\link{traitglm}} objects that have been fitted using the (default) \code{\link{manyglm}} function.
-}
- %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
+\description{Returns an analysis of deviance from a fourth corner model, as computed using \code{\link{traitglm}}, typically to test for an environment-by-trait interaction. Slowly! This function works via \code{\link{anova.manyglm}}, which uses row-resampling for inference, and it only applies to \code{\link{traitglm}} objects that have been fitted using the (default) \code{\link{manyglm}} function.}
+
 \usage{
+ %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \method{anova}{traitglm}(object, \dots, nBoot=99, resamp="pit.trap", test="LR",
                              block = NULL, show.time="all", bootID=NULL)
 }
@@ -43,6 +42,10 @@ All \code{\link{traitglm}} models must be fitted using the \code{\link{manyglm}}
 A list of values as returned by \code{\link{anova.manyglm}}, of which the most relevant element is \code{table} (the analysis of deviance table).
 }
 
+\section{Warning}{
+The comparison between two or more models by \code{anova.traitglm} will only be valid if they are fitted to the same dataset. This may be a problem if there are missing values and R's default of \code{na.action = na.omit} is used. 
+}
+
 \references{
 Warton DI, Shipley B & Hastie T (2015) CATS regression - a model-based approach to studying trait-based community assembly, Methods in Ecology and Evolution 6, 389–398.
 }
@@ -50,9 +53,8 @@ Warton DI, Shipley B & Hastie T (2015) CATS regression - a model-based approach 
 David I. Warton <David.Warton@unsw.edu.au>
 }
 \seealso{
-\code{\link{traitglm}}
+\code{\link[mvabund:anova.manyglm]{anova.manyglm},\code{\link{traitglm}}
 }
-
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \examples{
 data(antTraits)
@@ -72,7 +74,7 @@ anova(ft,nBoot=49)
 # ft2=traitglm(antTraits$abund,antTraits$env[,3:4],antTraits$traits[,c(1,3)],
 #   formula=~1,composition=TRUE) #no fourth corner terms
 # ft3=traitglm(antTraits$abund,antTraits$env[,3:4],antTraits$traits[,c(1,3)],
-#   formula=~Shrub.cover:Femur.length+Shrub.cover:Pilosity,composition=TRUE) #shrub interactions only
+#   formula=~Shrub.cover:Femur.length+Shrub.cover:Pilosity,composition=TRUE) #shrub interactions
 # ft4=traitglm(antTraits$abund,antTraits$env[,3:4],antTraits$traits[,c(1,3)],
 #   formula=~Shrub.cover:Femur.length+Shrub.cover:Pilosity+Volume.lying.CWD:Femur.length+
 #   Volume.lying.CWD:Pilosity, composition=TRUE) #all interactions only
@@ -80,3 +82,5 @@ anova(ft,nBoot=49)
 }
 \keyword{models}
 \keyword{regression}
+\keyword{multivariate}
+
