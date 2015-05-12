@@ -112,7 +112,7 @@ predict(ft,newR=antTraits$env[1:5,])
 # refit using LASSO and less variables, including row effects and only two interaction terms:
 ft1=traitglm(antTraits$abund,antTraits$env[,3:4],antTraits$traits[,c(1,3)],
       formula=~Shrub.cover:Femur.length+Shrub.cover:Pilosity,composition=TRUE,method="glm1path")
-ft1$fourth #notice LASSO penalty has shrunk many interactions to zero
+ft1$fourth #notice LASSO penalty has one interaction to zero
 
 }
 \keyword{models}
