@@ -87,6 +87,7 @@ David I. Warton <David.Warton@unsw.edu.au>
 \code{\link{glm1path}}, \code{\link{glm1}}, \code{\link{manyglm}}, \code{\link{family}}, \code{\link[mvabund:residuals.manyglm]{residuals.manyglm}}, \code{\link[mvabund:plot.manyany]{plot.manyany}}
 }
 
+ %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \examples{
 data(antTraits)
 
@@ -108,9 +109,9 @@ qqnorm(residuals(ft)); abline(c(0,1),col="red") # for a normal quantile plot.
 # predict to the first five sites
 predict(ft,newR=antTraits$env[1:5,])
 
-# refit using LASSO and only use a couple of variables, include row effects and only two interaction terms:
+# refit using LASSO and less variables, including row effects and only two interaction terms:
 ft1=traitglm(antTraits$abund,antTraits$env[,3:4],antTraits$traits[,c(1,3)],
-             formula=~Shrub.cover:Femur.length+Shrub.cover:Pilosity,composition=TRUE,method="glm1path")
+      formula=~Shrub.cover:Femur.length+Shrub.cover:Pilosity,composition=TRUE,method="glm1path")
 ft1$fourth #notice LASSO penalty has shrunk many interactions to zero
 
 }
