@@ -5,11 +5,11 @@
 \title{Statistical methods for analysing multivariate abundance data }
 
 \description{
-This package provides tools for a model-based approach to the analysis of multivariate abundance data in ecology (Warton 2011), where 'abundance' should be interpreted loosely - as well as counts you could have presence/absence, ordinal (via \code{\link{manyany}}, biomass, etc.
+This package provides tools for a model-based approach to the analysis of multivariate abundance data in ecology (Warton 2011), where 'abundance' should be interpreted loosely - as well as counts you could have presence/absence, ordinal or biomass (via \code{\link{manyany}}), etc.
 
-This includes graphical methods for exploring the properties of data and the community-environment association, flexible regression methods for estimating and making robust inferences about the community-environment association, 'fourth corner models' to explain environmental response as a function of traits, and diagnostic plots to check the appropriateness of a fitted model (Wang et. al 2012).
+There are graphical methods for exploring the properties of data and the community-environment association, flexible regression methods for estimating and making robust inferences about the community-environment association, 'fourth corner models' to explain environmental response as a function of traits, and diagnostic plots to check the appropriateness of a fitted model (Wang et. al 2012).
 
-There is an emphasis on design-based inferences about these models, e.g. bootstrapping rows of residuals via \code{anova} calls, or cross-validation across rows, to make multivariate inferences that are robust to failure of assumptions about correlation. The other main theme is presenting diagnostic tools to check assumptions, especially via residual plotting.
+There is an emphasis on design-based inferences about these models, e.g. bootstrapping rows of residuals via \code{anova} calls, or cross-validation across rows, to make multivariate inferences that are robust to failure of assumptions about correlation. Another emphasis is on presenting diagnostic tools to check assumptions, especially via residual plotting.
 }
 
 \details{
@@ -20,7 +20,6 @@ The key functions available in this package are the following.
       \item{\code{\link{plot.mvabund}}}{ draw a range of plots for Multivariate Abundance Data }
       \item{\code{\link{boxplot.mvabund}}}{ draw a range of plots of Model Formulae for Multivariate Abundance Data }
       \item{\code{\link{meanvar.plot}}}{ draw mean-variance plots for Multivariate Abundance Data }
-      \item{\code{\link{plotMvaFactor}}}{ draw a range of plots for Multivariate Abundance Data where the data is split into groups according to a grouping variable}
     }
 
 \bold{For estimating and displaying Linear Models:}
@@ -40,14 +39,12 @@ The key functions available in this package are the following.
     }
 Other generic functions like \code{residuals}, \code{predict}, \code{AIC} can be applied to \code{\link{manyglm}} objects.
 
-\bold{For estimating and displaying 'fourth corner models' with species traits as well as environmental predictors:}
+\bold{For estimating and displaying 'fourth corner models'} with species traits as well as environmental predictors:
     \describe{
       \item{\code{\link{traitglm}}}{predict abundance using a GLM as a function of traits as well as environmental variables}
       \item{\code{\link{anova.traitglm}}}{obtain Analysis of Deviance for a fourth corner model of abundance}
-      \item{\code{plot.traitglm}}{plot diagnostics for a \code{traitglm} object}
-      \item{\code{\link{residuals.manyglm}}}{compute residuals for a \code{traitglm} Object}
     }
-Other generic functions like \code{residuals}, \code{predict}, \code{AIC} can be applied to \code{\link{traitglm}} objects. Note \code{\link{traitglm}} can work slowly, as it fits a single big model to vectorised data (then wants to resample it when you call \code{anova.traitglm}. 
+Other generic functions like \code{plot}, \code{residuals}, \code{predict}, \code{AIC} can be applied to \code{\link{traitglm}} objects. Note \code{\link{traitglm}} can work slowly, as it fits a single big model to vectorised data (then wants to resample it when you call \code{anova.traitglm}). 
 
 \bold{For fitting more flexible models:}
     \describe{
@@ -56,7 +53,7 @@ Other generic functions like \code{residuals}, \code{predict}, \code{AIC} can be
       \item{\code{\link{glm1path}}}{fit a path of Generalised Linear Models with L1 ('LASSO') penalties}
       \item{\code{\link{cv.glm1path}}}{choose the value of the L1 penalty in a \code{glm1path} fit by cross-validation}
   }
-Other generic functions like \code{residuals}, \code{predict}, \code{AIC} can be applied to \code{\link{manyany}} and \code{\link{glm1path}} objects.
+Other generic functions like \code{residuals}, \code{predict}, \code{AIC} can be applied to \code{\link{manyany}} and \code{\link{glm1path}} objects. These functions also can be on the slow side, especially if all rare species are included.
 
 \bold{For providing a data structure:}
     \describe{
@@ -78,20 +75,20 @@ For more details, see the documentation for any of the individual functions list
 }
 \references{
 
-Brown AM, Warton DI, Andrew NR, Binns M, Cassis G and Gibb H (2014) The fourth corner solution - using species traits to better understand how species traits interact with their environment, Methods in Ecology and Evolution 5, 344-352.
+Brown AM, Warton DI, Andrew NR, Binns M, Cassis G and Gibb H (2014) The fourth corner solution - using species traits to better understand how species traits interact with their environment, \emph{Methods in Ecology and Evolution} 5, 344-352.
 
-Warton D.I. (2008a). Raw data graphing: an informative but under-utilized tool for the analysis of multivariate abundances. \emph{Austral Ecology} 33(3), 290-300.
+Warton D.I. (2008a). Raw data graphing: an informative but under-utilized tool for the analysis of multivariate abundances. \emph{Austral Ecology} 33, 290-300.
 
 Warton D.I. (2008b). Penalized normal likelihood and ridge regularization of correlation and covariance matrices. \emph{Journal of the American Statistical Association} 103, 340-349.
 
-Warton D.I. (2011). Regularized sandwich estimators for analysis of high dimensional data using generalized estimating equations. \emph{Biometrics}, 67(1), 116-123.
+Warton D.I. (2011). Regularized sandwich estimators for analysis of high dimensional data using generalized estimating equations. \emph{Biometrics}, 67, 116-123.
 
-Warton DI, Shipley B & Hastie T (2015) CATS regression - a model-based approach to studying trait-based community assembly, Methods in Ecology and Evolution 6, 389-398.
+Warton DI, Shipley B & Hastie T (2015) CATS regression - a model-based approach to studying trait-based community assembly, \emph{Methods in Ecology and Evolution} 6, 389-398.
 
-Warton D. I., Wright S., and Wang, Y. (2012). Distance-based multivariate analyses confound location and dispersion effects. \emph{Methods in Ecology and Evolution}, 3(1), 89-101.
+Warton D. I., Wright S., and Wang, Y. (2012). Distance-based multivariate analyses confound location and dispersion effects. \emph{Methods in Ecology and Evolution}, 3, 89-101.
 
 Wang Y., Neuman U., Wright S. and Warton D. I. (2012). mvabund: an R package
-for model-based analysis of multivariate abundance data. \emph{Methods in Ecology and Evolution}. online 21 Feb 2012. 
+for model-based analysis of multivariate abundance data. \emph{Methods in Ecology and Evolution}, 3, 471-473. 
 
 }
 
