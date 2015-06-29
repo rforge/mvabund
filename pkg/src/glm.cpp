@@ -514,12 +514,13 @@ int NBinGlm::nbinfit(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B)
         // Get initial theta estimates
         iterconv[j]=0.0;  
         if (mmRef->estiMethod==CHI2) {
-           th = getDisper(j, 0.0); 
+           th = getDisper(j, 1.0); 
            while ( iterconv[j]<maxiter ) {
+//printf("th=%.2f, iterconv[%d]=%d\n", th, j, iterconv[j]);
                iterconv[j]++;
                dev_th_b_old = dev[j];
                betaEst(j, 1.0, &tol, th);  // 1-step beta
-               th = th*getDisper(j, th); // 1-step theta 
+               th = getDisper(j, th)/th; 
                tol = ABS((dev[j]-dev_th_b_old)/(ABS(dev[j])+0.1));
                if (tol<eps) break;
          }  }
