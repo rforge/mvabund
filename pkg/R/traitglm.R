@@ -154,6 +154,9 @@ get.polys = function( X, X.des.train=NULL)
 # as well as return orthogonal poly's. Importantly, if training matrices are given as input,
 # these will be used in matrix construction.
 
+    
+    if(is.null(dim(X)))
+      X = data.frame(X)
     n.sites = dim(X)[1]
     n.params  = dim(X)[2]
     if(is.null(X.des.train))
@@ -166,6 +169,17 @@ get.polys = function( X, X.des.train=NULL)
         var.type = X.des.train$var.type
     for (i in 1:n.params)
     {
+        # test if binary quantitative, if so, change to a factor to avoid poly error
+        if(is.factor(X[,i])==FALSE)
+        {
+          testBinary = try(duplicated(X[,i],nmax=2), silent=TRUE)
+          if(class(testBinary)=="logical")
+          {
+            X[,i] = factor(X[,i])
+            warning(paste0("Binary variable '", names(X)[i], "' found and changed to a factor"))
+          }
+        }
+        
         if(is.factor(X[,i]))
         {
             n.levels    = length(levels(X[,i]))
