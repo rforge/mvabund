@@ -169,8 +169,9 @@ get.polys = function( X, X.des.train=NULL)
         var.type = X.des.train$var.type
     for (i in 1:n.params)
     {
-        # test if binary quantitative, if so, change to a factor to avoid poly error
-        if(is.factor(X[,i])==FALSE)
+
+        # test if binary quantitative, if so, change to a factor to avoid poly error.  But only if training data
+        if(is.null(X.des.train$var.type) & is.factor(X[,i])==FALSE)
         {
           testBinary = try(duplicated(X[,i],nmax=2), silent=TRUE)
           if(class(testBinary)=="logical")
