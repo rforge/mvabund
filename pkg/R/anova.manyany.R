@@ -91,6 +91,7 @@ anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$bl
     print("User-entered bootID matrix will be used to generate bootstrap samples")
   }  
   n.levels  = n.rows; unlistIDs = NULL #objects needed for block resampling otherwise ignorable 
+  blockIDs = NULL
   if(is.null(block)==FALSE)
   {
     tb=table(block)
@@ -127,10 +128,9 @@ anova.manyany = function(object, ..., nBoot=99, p.uni="none", block = object1$bl
 
     # set up clusters, pass through arguments
     cl=makeCluster(nCores)
-    argList = list(bootID=bootID,block=block,n.rows=n.rows,n.vars=n.vars,unlistIDs=unlistIDs,n.levels=n.levels,object1=object1,object2=object2,qfn=qfn)
+    argList = list(bootID=bootID, block=block, blockIDs = blockIDs, n.rows=n.rows, n.vars=n.vars, replace=replace, unlistIDs=unlistIDs, n.levels=n.levels, object1=object1, object2=object2, qfn=qfn)
     clusterExport(cl,"argList", envir=environment())
     #clusterExport(cl,c("nBooti","bootID","block","n.rows","n.vars","replace","unlistIDs","n.levels","object1","object2","qfn"), envir=environment())
-recover()
     out=parLapply(cl,bootRows,bootAnova)
     #why not clusterapply??
     stopCluster(cl)
@@ -148,7 +148,7 @@ recover()
   }
   else
   {
-    out = bootAnova(bootRows=1:nBoot,bootID=bootID,block=block,n.rows=n.rows,n.vars=n.vars,replace=replace,unlistIDs=unlistIDs,n.levels=n.levels,object1=object1,object2=object2,qfn=qfn,nCores=1)
+    out = bootAnova(bootRows=1:nBoot,bootID=bootID,block=block, blockIDs=blockIDs, n.rows=n.rows,n.vars=n.vars,replace=replace,unlistIDs=unlistIDs,n.levels=n.levels,object1=object1,object2=object2,qfn=qfn,nCores=1)
     stat.i=out$stati.i
     statj.i = out$statj.ii
   }
@@ -206,12 +206,13 @@ bootAnova = function(bootRows,...)
 {
   nBooti = length(bootRows)
   dots = list(...)
-  if ( any(names(dots)=="nCores") )
+  if ( any(names(dots)=="nCores") ) # if nCores=1, take ... and call it argList, to match parLapply call
   {
     if(dots$nCores==1)
       argList=list(...)
   }
   #initialise parameters for bootstrapping
+
   require(mvabund)
   yMat = matrix(NA,argList$n.rows,argList$n.vars)
   if(argList$object1$family[[1]]$family=="ordinal")
@@ -228,7 +229,7 @@ bootAnova = function(bootRows,...)
   # need to find data frame and call it what it the same as in the original call for analysis
   whichData = which(names(argList$object2$call)=="data")
   assign(as.character(argList$object2$call[[whichData]]),argList$object2$model) 
-  
+    
   #now do the bootstrap
   for(iBoot in 1:length(bootRows))
   {
@@ -242,7 +243,7 @@ bootAnova = function(bootRows,...)
       else
         boot.Resamp[argList$unlistIDs] = unlist(argList$blockIDs[sample(argList$n.levels,replace=argList$replace)]) #unlistIDs is needed to make sure each unlisted blockID ends up in the right place
     }
-    
+
     # resample PIT residuals
     resid.i = as.matrix(argList$object1$residuals[boot.Resamp,])
   
