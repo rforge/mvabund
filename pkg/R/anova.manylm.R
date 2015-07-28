@@ -155,7 +155,7 @@ anova.manylm <- function(object, ..., resamp="perm.resid", test="F", p.uni="none
         topnote <- paste("Model:", deparse(object$call) )
     }
     else {
-        targs <- match.call(call = sys.call(which = 1), expand.dots = FALSE)
+        targs <- match.call(expand.dots = FALSE)
      #   print(targs[[1]])
         if ( targs[[1]] == "example" )
             modelnamelist <- paste("Model ", format(1:nModels))
