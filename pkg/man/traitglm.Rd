@@ -13,16 +13,16 @@ traitglm(L, R, Q = NULL, family="negative.binomial", formula = NULL, method = "m
 }
 \arguments{
   \item{L}{
-A data frame containing the abundances for each taxon (columns) across all sites (rows).
+A data frame (or matrix) containing the abundances for each taxon (columns) across all sites (rows).
 }
   \item{R}{
-A data frame of environmental variables (columns) across all sites (rows).
+A data frame (or matrix) of environmental variables (columns) across all sites (rows).
 }
   \item{Q}{
-A data frame of traits (columns) across all taxa (rows). If not specified, a different environmental response will be specified for each taxon.
+A data frame (or matrix) of traits (columns) across all taxa (rows). If not specified, a different environmental response will be specified for each taxon.
 }
   \item{family}{
-The family of the response variable, see \code{\link{family}}. Negative binomial with unknown overdispersion can be specified as "negative.binomial", and is the default.
+The family of the response variable, see \code{\link{family}}. Negative binomial with unknown overdispersion and a log-link can be specified as "negative.binomial", and is the default.
 }
   \item{formula}{
 A one-sided formula specifying exactly how to model abundance as a function of environmental and trait variables (as found in \code{R} and \code{Q} respectively).  Default is to include all terms additively, with quadratics for quantitative terms, and all environment-by-trait interactions.
@@ -41,9 +41,9 @@ The function to use to fit the model. Default is \code{\link{manyglm}}, some oth
 Arguments passed to the function specified at \code{method} that will be used to fit the model.}
 }
 \details{
-This function fits a fourth corner model, that is, a model to predict abundance across several taxa (stored in \code{L}) as a function of environmental variables (\code{R}) and traits (\code{Q}). The environment-trait interaction can be understood as the fourth corner, giving the set of coefficients that describe how environmental response across taxa varies as traits vary. A species effect is include inthe model (i.e. a different intercept term for each species), so that traits are used to explain patterns in relative abundance across taxa not patterns in absolute abundance.
+This function fits a fourth corner model, that is, a model to predict abundance across several taxa (stored in \code{L}) as a function of environmental variables (\code{R}) and traits (\code{Q}). The environment-trait interaction can be understood as the fourth corner, giving the set of coefficients that describe how environmental response across taxa varies as traits vary. A species effect is include in the model (i.e. a different intercept term for each species), so that traits are used to explain patterns in relative abundance across taxa not patterns in absolute abundance.
 
-The actual function used to fit the model is determined by the user through the \code{method} argument. The default is to use \code{\link{manyglm}} to fit a GLM, although for predictive modelling, it might be better to use a LASSO lenalty as in \code{\link{glm1path}} and \code{\link{cv.glm1path}}. In \code{\link{glm1path}}, the penalty used for BIC calculation is \code{log(dim(L)[1])}, i.e. log(number of sites), as opposed to total number of rows in the fitted model (since \code{L} was turned into a vector for model-fitting).
+The actual function used to fit the model is determined by the user through the \code{method} argument. The default is to use \code{\link{manyglm}} to fit a GLM, although for predictive modelling, it might be better to use a LASSO penalty as in \code{\link{glm1path}} and \code{\link{cv.glm1path}}. In \code{\link{glm1path}}, the penalty used for BIC calculation is \code{log(dim(L)[1])}, i.e. log(number of sites).
 
 The model is fitted by vectorising \code{L} then constructing a big matrix from repeated values of \code{R}, \code{Q}, their quadratic terms (if required) and interactions. Hence this function will hit memory issues if any of these matrices are large, and can slow down (especially if using \code{\link{cv.glm1path}}). If \code{formula} is left unspecified, the design matrix is constructed using all environmental variables and traits specified in \code{R} and \code{Q}, and quadratic terms for any of these variables that are quantitative, and all environment-trait interactions, after standardising these variables. Specifying a one-sided \code{formula} as a function of the variables in \code{R} and \code{Q} would instead give the user control over the precise model that is fitted, and drops the internal standardisations. The arguments \code{composition} and \code{col.intercepts} optionally add terms to the model for row and column total abundance.
 

@@ -6,6 +6,7 @@ traitglm = function( L, R, Q=NULL, family="negative.binomial", formula = NULL, m
 #subfunctions get.design and get.polys defined below.
   
   # extract any arguments that work with cv.glm1path and save separately so they are not passed to glm1path.
+  L = as.data.frame(L)
   allargs <- match.call(expand.dots = FALSE)
   dots <- allargs$...
   if( "best" %in% names(dots) )
